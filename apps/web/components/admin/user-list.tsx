@@ -20,7 +20,7 @@ import { RoleBadge } from "@/components/admin/role-badge"
 import { routes } from "@/config/routes"
 import { useAdminUsers, type RoleFilter } from "@/hooks/queries/admin"
 
-const FILTERS: RoleFilter[] = ["all", "business", "user"]
+const FILTERS: RoleFilter[] = ["all", "business", "user", "admin"]
 
 /** The left pane of the users page: search, filter, sort, and create. */
 export function UserList() {

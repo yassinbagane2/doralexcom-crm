@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import type { UserRole } from "@workspace/auth/roles"
+import type { AssignableRole, UserRole } from "@workspace/auth/roles"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import { useTranslations } from "next-intl"
 
@@ -28,7 +28,8 @@ import { orpc } from "@/lib/orpc"
 export type AdminUser = User
 export type AdminSession = Awaited<ReturnType<typeof fetchUserSessions>>[number]
 
-export type RoleFilter = "all" | Exclude<UserRole, "admin">
+/** "all" means customers: admin accounts only show under their own filter. */
+export type RoleFilter = "all" | UserRole
 
 const PAGE_SIZE = 50
 
@@ -163,6 +164,26 @@ export function useBanUser(user: AdminUser) {
     onSuccess: async () => {
       await invalidateAccounts(queryClient)
       toast.success(t("banned", { email: user.email }))
+    },
+  })
+}
+
+export function useSetUserRole(user: AdminUser) {
+  const t = useTranslations("AdminRole")
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (role: AssignableRole) =>
+      unwrap(authClient.admin.setRole({ userId: user.id, role })),
+    onSuccess: async (_, role) => {
+      await invalidateAccounts(queryClient)
+      // A business's organization link changes meaning with the role.
+      await queryClient.invalidateQueries({
+        queryKey: orpc.admin.organizations.key(),
+      })
+      toast.success(
+        t("changed", { email: user.email, role: t(`roles.${role}`) })
+      )
     },
   })
 }

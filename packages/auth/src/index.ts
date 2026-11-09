@@ -4,7 +4,11 @@ import * as schema from "@workspace/db/schema"
 import { and, asc, eq, inArray } from "drizzle-orm"
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { APIError, createAuthMiddleware } from "better-auth/api"
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api"
 import { admin } from "better-auth/plugins/admin"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import { openAPI } from "better-auth/plugins/open-api"
@@ -18,7 +22,13 @@ import {
   isOrganizationType,
   organizationAdditionalFields,
 } from "./organization"
-import { ac, DEFAULT_USER_ROLE, getUserRole, roles } from "./roles"
+import {
+  ac,
+  ASSIGNABLE_ROLES,
+  DEFAULT_USER_ROLE,
+  getUserRole,
+  roles,
+} from "./roles"
 import {
   findPasswordViolation,
   PASSWORD_MAX_LENGTH,
@@ -160,6 +170,11 @@ const authOptions = {
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/admin/set-role") {
+        await assertRoleChangeAllowed(ctx)
+        return
+      }
+
       const field = PASSWORD_FIELD_BY_PATH[ctx.path]
       if (!field) return
 
@@ -180,6 +195,38 @@ const authOptions = {
 } satisfies BetterAuthOptions
 
 export const auth = betterAuth(authOptions)
+
+/**
+ * The admin plugin lets any admin set any role on anyone, itself included. An
+ * admin changing their own role could remove the last admin and lock everyone
+ * out of the dashboard, so that is refused. Another admin can still do it, so
+ * at least one admin always remains: the one making the change.
+ */
+async function assertRoleChangeAllowed(
+  ctx: Parameters<Parameters<typeof createAuthMiddleware>[0]>[0]
+) {
+  const body = ctx.body as { userId?: unknown; role?: unknown } | undefined
+  const requested = Array.isArray(body?.role) ? body.role : [body?.role]
+
+  // Not an admin session: the endpoint's own middleware rejects it.
+  const session = await getSessionFromCtx(ctx)
+  if (!session || typeof body?.userId !== "string") return
+
+  if (body.userId === session.user.id) {
+    throw new APIError("FORBIDDEN", {
+      code: "CANNOT_CHANGE_OWN_ROLE",
+      message: "You can't change your own role",
+    })
+  }
+
+  const assignable: readonly unknown[] = ASSIGNABLE_ROLES
+  if (!requested.every((role) => assignable.includes(role))) {
+    throw new APIError("BAD_REQUEST", {
+      code: "ROLE_NOT_ASSIGNABLE",
+      message: "That role can't be assigned from the dashboard",
+    })
+  }
+}
 
 /**
  * Rejects an unknown organization type, and clears identifiers that are empty

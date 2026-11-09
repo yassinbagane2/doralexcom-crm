@@ -1,26 +1,17 @@
 {
-  "AppShell": {
+  "Navigation": {
+    "label": "Main",
     "home": "Home",
-    "navLabel": "Main",
     "users": "Users",
-    "admin": "Admin"
-  },
-  "AccountNav": {
-    "label": "Account",
     "profile": "Profile",
     "security": "Security",
     "organization": "Organization",
-    "preferences": "Preferences"
-  },
-  "UserMenu": {
-    "open": "Open account menu",
-    "account": "Account",
-    "security": "Security",
-    "organization": "Organization",
     "preferences": "Preferences",
+    "accountSettings": "Account settings",
+    "backToDashboard": "Back to dashboard",
+    "openMenu": "Open account menu",
     "signOut": "Sign out",
-    "adminDashboard": "Admin dashboard",
-    "users": "Users"
+    "adminBadge": "Admin"
   },
   "Preferences": {
     "metaTitle": "Preferences",

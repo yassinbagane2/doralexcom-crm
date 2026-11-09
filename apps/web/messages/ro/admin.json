@@ -13,11 +13,6 @@
     "generate": "Generează",
     "passwordHint": "Trimite-o în siguranță. O poate schimba din contul său."
   },
-  "AdminNav": {
-    "badge": "Admin",
-    "home": "Acasă",
-    "users": "Utilizatori"
-  },
   "AdminHome": {
     "metaTitle": "Acasă",
     "title": "Acasă",
@@ -53,7 +48,8 @@
     "filters": {
       "all": "Toți",
       "business": "Firme",
-      "user": "Utilizatori"
+      "user": "Utilizatori",
+      "admin": "Administratori"
     },
     "sortNewest": "Cele mai noi întâi",
     "sortOldest": "Cele mai vechi întâi",
@@ -116,7 +112,8 @@
     "deleteBusinessWarning": "Contul și organizația pe care o deține sunt șterse definitiv. Utilizatorii ei rămân, dar pierd accesul la organizație. Acțiunea nu poate fi anulată.",
     "deleteConfirmLabel": "Scrie {email} pentru a confirma",
     "deleteSubmit": "Șterge contul",
-    "deleted": "{email} a fost șters"
+    "deleted": "{email} a fost șters",
+    "changeRole": "Schimbă rolul"
   },
   "AdminBan": {
     "title": "Suspendă contul",
@@ -164,5 +161,27 @@
     "removeTitle": "Elimini {name}?",
     "removeDescription": "Contul este șters și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
     "removeSubmit": "Elimină utilizatorul"
+  },
+  "AdminRole": {
+    "title": "Schimbă rolul",
+    "role": "Rol",
+    "submit": "Schimbă rolul",
+    "roles": {
+      "business": "Firmă",
+      "user": "Utilizator",
+      "admin": "Administrator"
+    },
+    "hints": {
+      "business": "Deține o organizație și creează conturi de utilizator în ea.",
+      "user": "Aparține organizației unei firme și nu creează conturi.",
+      "admin": "Administrează platforma: toate conturile, rolurile și suspendările."
+    },
+    "warnings": {
+      "business": "I se va cere să configureze o organizație la următoarea autentificare. Firma din care face deja parte ca utilizator nu este afectată.",
+      "user": "Pierde posibilitatea de a crea conturi. O organizație pe care o deține rămâne neschimbată, iar ceilalți membri își păstrează accesul.",
+      "admin": "Primește acces complet la panoul de administrare, inclusiv schimbarea rolurilor și ștergerea conturilor. Fă asta doar pentru persoane de încredere.",
+      "demoteAdmin": "Pierde accesul la panoul de administrare. Rolul se actualizează în câteva minute, iar apoi poate fi făcut din nou Administrator."
+    },
+    "changed": "{email} este acum {role}"
   }
 }

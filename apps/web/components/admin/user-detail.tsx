@@ -27,11 +27,13 @@ import {
   Mail,
   ShieldCheck,
   Trash,
+  Users,
 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
+import { ChangeRoleDialog } from "@/components/admin/change-role-dialog"
 import { BanUserDialog } from "@/components/admin/ban-user-dialog"
 import {
   SectionTitle,
@@ -51,6 +53,7 @@ import {
   type AdminSession,
   type AdminUser,
 } from "@/hooks/queries/admin"
+import { authClient } from "@/lib/auth-client"
 import { formatDate, formatRelative } from "@/lib/format"
 import { parseUserAgent } from "@/lib/user-agent"
 
@@ -213,10 +216,13 @@ export function UserDetail({
 
 function UserActions({ user }: { user: AdminUser }) {
   const t = useTranslations("AdminUser")
-  const [dialog, setDialog] = useState<"ban" | "delete" | null>(null)
+  const [dialog, setDialog] = useState<"role" | "ban" | "delete" | null>(null)
   const unban = useUnbanUser(user)
   const revokeSessions = useRevokeUserSessions(user)
   const isAdmin = getUserRole(user.role) === "admin"
+  const { data: session } = authClient.useSession()
+  // The server refuses it too; hiding it just avoids a dead-end menu item.
+  const isSelf = session?.user.id === user.id
 
   return (
     <>
@@ -245,9 +251,17 @@ function UserActions({ user }: { user: AdminUser }) {
             <Logout size={16} color="currentColor" />
             {t("revokeSessions")}
           </DropdownMenuItem>
-          {isAdmin ? null : (
+          {isSelf ? null : (
             <>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDialog("role")}>
+                <Users size={16} />
+                {t("changeRole")}
+              </DropdownMenuItem>
+            </>
+          )}
+          {isAdmin ? null : (
+            <>
               {user.banned ? (
                 <DropdownMenuItem
                   disabled={unban.isPending}
@@ -274,6 +288,11 @@ function UserActions({ user }: { user: AdminUser }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <ChangeRoleDialog
+        user={user}
+        open={dialog === "role"}
+        onOpenChange={(open) => setDialog(open ? "role" : null)}
+      />
       <BanUserDialog
         user={user}
         open={dialog === "ban"}

@@ -1,26 +1,17 @@
 {
-  "AppShell": {
+  "Navigation": {
+    "label": "Principal",
     "home": "Acasă",
-    "navLabel": "Principal",
     "users": "Utilizatori",
-    "admin": "Admin"
-  },
-  "AccountNav": {
-    "label": "Cont",
     "profile": "Profil",
     "security": "Securitate",
     "organization": "Organizație",
-    "preferences": "Preferințe"
-  },
-  "UserMenu": {
-    "open": "Deschide meniul contului",
-    "account": "Cont",
-    "security": "Securitate",
-    "organization": "Organizație",
     "preferences": "Preferințe",
+    "accountSettings": "Setările contului",
+    "backToDashboard": "Înapoi la panou",
+    "openMenu": "Deschide meniul contului",
     "signOut": "Deconectare",
-    "adminDashboard": "Panou de administrare",
-    "users": "Utilizatori"
+    "adminBadge": "Admin"
   },
   "Preferences": {
     "metaTitle": "Preferințe",

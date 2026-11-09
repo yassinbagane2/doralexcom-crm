@@ -13,11 +13,6 @@
     "generate": "Generate",
     "passwordHint": "Share it with them securely. They can change it from their account."
   },
-  "AdminNav": {
-    "badge": "Admin",
-    "home": "Home",
-    "users": "Users"
-  },
   "AdminHome": {
     "metaTitle": "Home",
     "title": "Home",
@@ -53,7 +48,8 @@
     "filters": {
       "all": "All",
       "business": "Businesses",
-      "user": "Users"
+      "user": "Users",
+      "admin": "Admins"
     },
     "sortNewest": "Newest first",
     "sortOldest": "Oldest first",
@@ -116,7 +112,8 @@
     "deleteBusinessWarning": "The account and the organization it owns are removed for good. Its users stay, but lose access to the organization. This can't be undone.",
     "deleteConfirmLabel": "Type {email} to confirm",
     "deleteSubmit": "Delete account",
-    "deleted": "{email} deleted"
+    "deleted": "{email} deleted",
+    "changeRole": "Change role"
   },
   "AdminBan": {
     "title": "Suspend account",
@@ -164,5 +161,27 @@
     "removeTitle": "Remove {name}?",
     "removeDescription": "Their account is deleted and they're signed out everywhere. This can't be undone.",
     "removeSubmit": "Remove user"
+  },
+  "AdminRole": {
+    "title": "Change role",
+    "role": "Role",
+    "submit": "Change role",
+    "roles": {
+      "business": "Business",
+      "user": "User",
+      "admin": "Admin"
+    },
+    "hints": {
+      "business": "Owns an organization and creates user accounts inside it.",
+      "user": "Belongs to a business's organization and creates no accounts.",
+      "admin": "Runs the platform: manages every account, role and suspension."
+    },
+    "warnings": {
+      "business": "They'll be asked to set up an organization the next time they sign in. Any business they already belong to as a user is unaffected.",
+      "user": "They lose the ability to create accounts. An organization they own stays as it is, and its other members keep access.",
+      "admin": "They get full access to the admin dashboard, including changing roles and deleting accounts. Only do this for people you trust.",
+      "demoteAdmin": "They lose access to the admin dashboard. Their role updates within a few minutes, and they can be made Admin again later."
+    },
+    "changed": "{email} is now {role}"
   }
 }

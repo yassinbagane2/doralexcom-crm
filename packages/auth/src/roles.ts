@@ -14,6 +14,15 @@ export const USER_ROLES = ["admin", "business", "user"] as const
 
 export type UserRole = (typeof USER_ROLES)[number]
 
+/** Roles an admin can move an account between from the dashboard. */
+export const ASSIGNABLE_ROLES = [
+  "admin",
+  "business",
+  "user",
+] as const satisfies readonly UserRole[]
+
+export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number]
+
 /** Accounts made without an explicit role. */
 export const DEFAULT_USER_ROLE: UserRole = "user"
 

@@ -1,11 +1,10 @@
 import { getTranslations } from "next-intl/server"
 
-import { AccountNav } from "@/components/account/account-nav"
 import { VerifyEmailBanner } from "@/components/account/verify-email-banner"
-import { getUserRole } from "@workspace/auth/roles"
-
+import { DashboardBody } from "@/components/admin/dashboard"
 import { requireSession } from "@/lib/auth"
 
+/** The account pages. Their links are in the sidebar (see navigation.ts). */
 export default async function AccountLayout({
   children,
 }: {
@@ -15,18 +14,11 @@ export default async function AccountLayout({
   const t = await getTranslations("AccountLayout")
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-medium tracking-[-0.02em]">
-          {t("title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
+    <DashboardBody title={t("title")} description={t("description")}>
+      <div className="flex w-full max-w-3xl flex-col gap-6">
+        {user.emailVerified ? null : <VerifyEmailBanner email={user.email} />}
+        <div>{children}</div>
       </div>
-
-      {user.emailVerified ? null : <VerifyEmailBanner email={user.email} />}
-
-      <AccountNav role={getUserRole(user.role)} />
-      <div>{children}</div>
-    </div>
+    </DashboardBody>
   )
 }
