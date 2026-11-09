@@ -4,6 +4,8 @@ import type { UserRole } from "@workspace/auth/roles"
 import {
   Building2,
   BuildingOffice,
+  Contact,
+  Home,
   LayoutDashboard,
   Logout,
   UserCircle,
@@ -243,6 +245,21 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       icon: Building2,
       link: routes.properties,
       if: isBusiness,
+    },
+    {
+      id: "tenants",
+      title: t("tenants"),
+      icon: Contact,
+      link: routes.tenants,
+      if: isBusiness,
+    },
+    // User routes
+    {
+      id: "tenancy",
+      title: t("tenancy"),
+      icon: Home,
+      link: routes.tenancy,
+      if: role === "user",
     },
   ]
 }

@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 import {
   index,
   numeric,
@@ -8,10 +8,11 @@ import {
   uuid,
 } from "drizzle-orm/pg-core"
 
-import { organization, user } from "./auth"
+import { organization } from "./auth"
 
 /*
- * Something a business rents out. Keep the `type` and `currency` lists in step
+ * Something a business rents out. Who occupies it, and when, lives on its
+ * leases (./tenant.ts). Keep the `type` and `currency` lists in step
  * with packages/api/src/property.ts, which the web forms read: the router's
  * inserts fail the typecheck if the two drift apart.
  */
@@ -44,33 +45,11 @@ export const property = pgTable(
     currency: text("currency", { enum: ["RON", "EUR"] })
       .default("RON")
       .notNull(),
-    /**
-     * Who lives or works there: one of the business's `user` accounts. A
-     * property with a tenant is in use and can't be deleted. Deleting the
-     * account leaves the property vacant rather than taking it along.
-     */
-    tenantId: uuid("tenant_id").references(() => user.id, {
-      onDelete: "set null",
-    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [
-    index("property_organizationId_idx").on(table.organizationId),
-    index("property_tenantId_idx").on(table.tenantId),
-  ]
+  (table) => [index("property_organizationId_idx").on(table.organizationId)]
 )
-
-export const propertyRelations = relations(property, ({ one }) => ({
-  organization: one(organization, {
-    fields: [property.organizationId],
-    references: [organization.id],
-  }),
-  tenant: one(user, {
-    fields: [property.tenantId],
-    references: [user.id],
-  }),
-}))

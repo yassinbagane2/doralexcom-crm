@@ -1,0 +1,218 @@
+{
+  "Tenants": {
+    "metaTitle": "Chiriași",
+    "title": "Chiriași",
+    "description": "Persoanele și firmele cărora le închiriezi. Fiecare se conectează cu propriul cont pentru a-și vedea contractele și notițele pe care le partajezi.",
+    "add": "Adaugă chiriaș",
+    "filterLabel": "Arată chiriașii",
+    "groups": {
+      "all": "Toți",
+      "current": "Actuali",
+      "incoming": "Care se mută",
+      "outgoing": "Care pleacă",
+      "previous": "Foști"
+    },
+    "groupsEmpty": {
+      "current": "Nimeni nu ocupă acum vreuna dintre proprietățile tale.",
+      "incoming": "Nu urmează să se mute nimeni.",
+      "outgoing": "Nu urmează să plece nimeni.",
+      "previous": "Niciun chiriaș nu a plecat încă."
+    },
+    "search": "Caută chiriași sau proprietăți",
+    "noResults": "Niciun chiriaș nu corespunde căutării.",
+    "emptyTitle": "Niciun chiriaș încă",
+    "emptyDescription": "Adaugă un chiriaș, apoi atribuie-i o proprietate.",
+    "noContactDetails": "Fără date de contact",
+    "andMore": "+{count}",
+    "noLease": "Fără contract",
+    "owes": "Datorează",
+    "actionsLabel": "Acțiuni pentru {name}",
+    "copy": "Copiază",
+    "copyName": "{name} (copie)",
+    "created": "{name} a fost adăugat",
+    "updated": "{name} a fost salvat",
+    "deleted": "Chiriaș șters",
+    "fields": {
+      "name": "Nume",
+      "email": "Email",
+      "phone": "Telefon",
+      "address": "Adresă de corespondență",
+      "contactName": "Nume",
+      "relation": "Relație",
+      "password": "Parolă inițială",
+      "contactEmail": "Email"
+    },
+    "placeholders": {
+      "name": "Ana Popescu sau Firma SRL",
+      "address": "Str. Lipscani 5, București",
+      "relation": "Soț/soție, contabil, garant…"
+    },
+    "contactsTitle": "Alte contacte",
+    "contactsEmpty": "Persoane de contactat în legătură cu chiriașul: familie, garant, contabil.",
+    "addContact": "Adaugă contact",
+    "removeContact": "Elimină contactul",
+    "sheet": {
+      "create": {
+        "title": "Adaugă un chiriaș",
+        "description": "Creează contul de conectare al chiriașului. Proprietățile le atribui din pagina sa.",
+        "submit": "Adaugă chiriaș"
+      },
+      "edit": {
+        "title": "Editează chiriașul",
+        "description": "Modificările aduse la {name} se aplică imediat.",
+        "submit": "Salvează modificările"
+      },
+      "copy": {
+        "title": "Copiază chiriașul",
+        "description": "Pornește de la datele și contactele lui {name}. Copia este un cont nou, așa că are nevoie de propriul email și propria parolă.",
+        "submit": "Adaugă chiriaș"
+      }
+    },
+    "validation": {
+      "nameRequired": "Introdu un nume",
+      "contactNameRequired": "Introdu numele contactului",
+      "emailInvalid": "Introdu o adresă de email validă",
+      "phoneInvalid": "Introdu un număr de telefon valid",
+      "tooLong": "Folosește mai puțin de {max} de caractere"
+    },
+    "emailHint": "Se va conecta cu acest email și își va vedea contractele și notițele pe care le partajezi.",
+    "emailLocked": "Emailul de conectare. Nu poate fi schimbat de aici.",
+    "generatePassword": "Generează",
+    "passwordHint": "Transmite-i-o în siguranță. O poate schimba din contul său."
+  },
+  "Tenant": {
+    "metaTitle": "Chiriaș",
+    "notFound": "Acest chiriaș nu există sau a fost șters.",
+    "back": "Chiriași",
+    "noLease": "Fără contract",
+    "groups": {
+      "current": "Actual",
+      "incoming": "Se mută",
+      "outgoing": "Pleacă",
+      "previous": "Fost"
+    },
+    "actions": "Acțiuni pentru chiriaș",
+    "edit": "Editează",
+    "copy": "Copiază",
+    "delete": "Șterge",
+    "leasesTitle": "Proprietăți",
+    "assign": "Atribuie proprietate",
+    "leasesEmpty": "Nicio proprietate atribuită încă.",
+    "detailsTitle": "Date de contact",
+    "noContactDetails": "Nicio dată de contact înregistrată.",
+    "account": "Se conectează cu",
+    "contactsTitle": "Alte contacte",
+    "contactsEmpty": "Niciun alt contact.",
+    "notesTitle": "Notițe",
+    "notePlaceholder": "Scrie o notiță…",
+    "visibilityLabel": "Cine poate vedea notița",
+    "visibility": {
+      "private": "Doar tu",
+      "shared": "Vizibilă chiriașului"
+    },
+    "visibilityBadge": {
+      "private": "Privată",
+      "shared": "Partajată cu chiriașul"
+    },
+    "addNote": "Adaugă notiță",
+    "notesEmpty": "Nicio notiță încă.",
+    "removeNote": "Șterge notița",
+    "deleteTitle": "Ștergi {name}?",
+    "deleteDescription": "Contul, contactele și notițele sale sunt eliminate și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
+    "deleteWithLeasesDescription": "Contul, contactele, notițele și {count, plural, one {contractul} other {cele # contracte}} sunt eliminate și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
+    "deleteSubmit": "Șterge chiriașul",
+    "cantDeleteTitle": "{name} nu poate fi șters",
+    "cantDeleteDescription": "Pentru acest chiriaș sunt înregistrate plăți de chirie, așa că rămâne în evidență. Reziliază-i contractele în schimb.",
+    "close": "Închide",
+    "suspended": "Suspendat"
+  },
+  "Leases": {
+    "created": "Proprietate atribuită",
+    "updated": "Contract salvat",
+    "deleted": "Contract eliminat",
+    "paymentRecorded": "Plată înregistrată",
+    "status": {
+      "upcoming": "Se mută pe {date}",
+      "active": "Din {date}",
+      "ending": "Pleacă pe {date}",
+      "ended": "A plecat pe {date}"
+    },
+    "terminated": "Reziliat",
+    "period": "{start} → {end}",
+    "openEnded": "fără dată de ieșire",
+    "perMonth": "{amount}/lună",
+    "actionsLabel": "Acțiuni pentru {property}",
+    "recordPayment": "Înregistrează plata",
+    "edit": "Editează datele și chiria",
+    "terminate": "Reziliază contractul",
+    "delete": "Elimină contractul",
+    "paymentsTitle": "Plăți",
+    "removePayment": "Șterge plata",
+    "assignTitle": "Atribuie o proprietate",
+    "assignDescription": "Chiriașul o ocupă de la data intrării și până la data ieșirii, dacă există.",
+    "assignSubmit": "Atribuie proprietatea",
+    "editTitle": "Editează contractul",
+    "editDescription": "Datele și chiria pentru {property}.",
+    "propertyPlaceholder": "Alege o proprietate",
+    "noProperties": "Adaugă mai întâi o proprietate din pagina Proprietăți.",
+    "rentHint": "Pe lună, plătită în avans de la data intrării.",
+    "fields": {
+      "property": "Proprietate",
+      "startDate": "Data intrării",
+      "endDate": "Data ieșirii",
+      "exitDate": "Data ieșirii",
+      "rent": "Chirie",
+      "currency": "Monedă",
+      "amount": "Sumă ({currency})",
+      "paidOn": "Plătită pe",
+      "note": "Notă",
+      "tenant": "Chiriaș"
+    },
+    "paymentTitle": "Înregistrează o plată",
+    "paymentDescription": "Chirie primită pentru {property}, în {currency}.",
+    "notePlaceholder": "Transfer bancar, numerar…",
+    "paymentSubmit": "Înregistrează plata",
+    "terminateTitle": "Reziliază contractul",
+    "terminateDescription": "{property} se eliberează după data ieșirii. Contractul nu mai poate fi modificat după aceea.",
+    "terminateSubmit": "Reziliază contractul",
+    "terminatedTitle": "Contract reziliat",
+    "terminatedDescription": "{property} se eliberează după {date}.",
+    "done": "Gata",
+    "deleteTitle": "Elimini contractul pentru {property}?",
+    "deleteDescription": "Folosește această opțiune pentru un contract introdus din greșeală. Pentru a încheia un contract real, reziliază-l.",
+    "deleteSubmit": "Elimină contractul",
+    "balance": {
+      "due": "Chirie facturată",
+      "paid": "Plătit",
+      "projected": "Sold la zi",
+      "final": "Sold final",
+      "owes": "Datorează {amount}",
+      "refund": "De restituit {amount}",
+      "settled": "Achitat"
+    },
+    "validation": {
+      "propertyRequired": "Alege o proprietate",
+      "dateRequired": "Introdu o dată",
+      "endBeforeStart": "Data ieșirii nu poate fi înaintea datei intrării",
+      "amountRequired": "Introdu o sumă",
+      "amountInvalid": "Introdu un număr pozitiv",
+      "tenantRequired": "Alege un chiriaș"
+    },
+    "assignTenantTitle": "Atribuie un chiriaș pentru {property}",
+    "assignTenantSubmit": "Atribuie chiriașul",
+    "tenantPlaceholder": "Alege un chiriaș",
+    "noTenants": "Adaugă mai întâi un chiriaș din pagina Chiriași."
+  },
+  "Tenancy": {
+    "metaTitle": "Locuința mea",
+    "title": "Locuința mea",
+    "description": "Spațiile pe care le închiriezi și notițele de la proprietar.",
+    "empty": "Proprietarul nu a asociat încă un contract contului tău.",
+    "landlord": "Închiriat de la {name}",
+    "rent": "{amount}/lună",
+    "until": "până pe {date}",
+    "doorCode": "Cod interfon",
+    "notesTitle": "De la proprietar",
+    "notesEmpty": "Nicio notiță încă."
+  }
+}

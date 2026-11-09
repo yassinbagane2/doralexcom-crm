@@ -25,11 +25,9 @@
     "deleteTitle": "Delete {name}?",
     "deleteDescription": "The property and everything recorded about it are removed. This can't be undone.",
     "deleteSubmit": "Delete property",
-    "inUseTitle": "{name} is occupied",
-    "inUseDescription": "{tenant} lives or works here, so it can't be deleted. Edit the property and set it to vacant first.",
+    "inUseTitle": "{name} is in use",
+    "inUseDescription": "{tenant} has a current or upcoming lease here, so it can't be deleted. End or remove the lease from the tenant's page first.",
     "rentHint": "Per month.",
-    "tenantHint": "Picked from your users. Leave vacant if nobody occupies it.",
-    "tenantHintNoUsers": "Tenants are picked from your users. Add them on the Users page.",
     "types": {
       "apartment": "Apartment",
       "building": "Building",
@@ -55,7 +53,6 @@
       "currency": "Currency",
       "phone": "Phone",
       "doorCode": "Door code",
-      "tenant": "Tenant",
       "description": "Description"
     },
     "placeholders": {
@@ -86,6 +83,12 @@
       "amountInvalid": "Enter a positive number",
       "phoneInvalid": "Enter a valid phone number",
       "tooLong": "Keep it under {max} characters"
-    }
+    },
+    "occupied": "Occupied",
+    "incoming": "{name} from {date}",
+    "leaving": "Leaving {date}",
+    "viewTenant": "View tenant {name}",
+    "viewTenantShort": "View tenant",
+    "assignTenant": "Assign tenant"
   }
 }

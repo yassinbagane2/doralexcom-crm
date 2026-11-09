@@ -22,9 +22,17 @@ export function useCreateBusinessUser() {
   return useMutation(
     orpc.business.createUser.mutationOptions({
       onSuccess: async (_, input) => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.business.listUsers.key(),
-        })
+        // A business's users are its tenants: refresh both views of them,
+        // and the properties whose occupants they are.
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: orpc.business.listUsers.key(),
+          }),
+          queryClient.invalidateQueries({ queryKey: orpc.tenant.key() }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.property.list.key(),
+          }),
+        ])
         toast.success(t("created", { email: input.email }))
       },
     })
@@ -38,9 +46,17 @@ export function useRemoveBusinessUser() {
   return useMutation(
     orpc.business.removeUser.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: orpc.business.listUsers.key(),
-        })
+        // A business's users are its tenants: refresh both views of them,
+        // and the properties whose occupants they are.
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: orpc.business.listUsers.key(),
+          }),
+          queryClient.invalidateQueries({ queryKey: orpc.tenant.key() }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.property.list.key(),
+          }),
+        ])
         toast.success(t("removed"))
       },
     })

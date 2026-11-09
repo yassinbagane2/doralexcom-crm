@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./context": "./src/context.ts",
     "./routers": "./src/routers/index.ts",
-    "./property": "./src/property.ts"
+    "./property": "./src/property.ts",
+    "./lease": "./src/lease.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -25,11 +25,9 @@
     "deleteTitle": "Ștergi {name}?",
     "deleteDescription": "Proprietatea și tot ce este înregistrat despre ea sunt eliminate. Acțiunea nu poate fi anulată.",
     "deleteSubmit": "Șterge proprietatea",
-    "inUseTitle": "{name} este ocupată",
-    "inUseDescription": "{tenant} locuiește sau lucrează aici, așa că nu poate fi ștearsă. Editează proprietatea și marcheaz-o ca liberă mai întâi.",
+    "inUseTitle": "{name} este în folosință",
+    "inUseDescription": "{tenant} are un contract în curs sau viitor aici, așa că nu poate fi ștearsă. Încheie sau elimină mai întâi contractul din pagina chiriașului.",
     "rentHint": "Pe lună.",
-    "tenantHint": "Ales dintre utilizatorii tăi. Las-o liberă dacă nu o ocupă nimeni.",
-    "tenantHintNoUsers": "Chiriașii se aleg dintre utilizatorii tăi. Adaugă-i din pagina Utilizatori.",
     "types": {
       "apartment": "Apartament",
       "building": "Clădire",
@@ -55,7 +53,6 @@
       "currency": "Monedă",
       "phone": "Telefon",
       "doorCode": "Cod interfon",
-      "tenant": "Chiriaș",
       "description": "Descriere"
     },
     "placeholders": {
@@ -86,6 +83,12 @@
       "amountInvalid": "Introdu un număr pozitiv",
       "phoneInvalid": "Introdu un număr de telefon valid",
       "tooLong": "Folosește mai puțin de {max} de caractere"
-    }
+    },
+    "occupied": "Ocupată",
+    "incoming": "{name} din {date}",
+    "leaving": "Pleacă pe {date}",
+    "viewTenant": "Vezi chiriașul {name}",
+    "viewTenantShort": "Vezi chiriașul",
+    "assignTenant": "Atribuie chiriaș"
   }
 }

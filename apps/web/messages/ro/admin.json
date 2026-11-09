@@ -159,7 +159,7 @@
     "emptyDescription": "Adaugă persoanele care lucrează cu tine.",
     "removeLabel": "Elimină {name}",
     "removeTitle": "Elimini {name}?",
-    "removeDescription": "Contul este șters și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
+    "removeDescription": "Contul, eventualele contracte și notițe sunt șterse și este deconectat de peste tot. Utilizatorii cu plăți de chirie înregistrate nu pot fi eliminați. Acțiunea nu poate fi anulată.",
     "removeSubmit": "Elimină utilizatorul"
   },
   "AdminRole": {

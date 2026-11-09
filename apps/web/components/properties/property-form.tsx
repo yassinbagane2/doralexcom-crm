@@ -27,11 +27,7 @@ import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
-import { useBusinessUsers } from "@/hooks/queries/business"
 import type { Property, PropertyInput } from "@/hooks/queries/property"
-
-/** The tenant picker's "nobody" option. Never a valid account id. */
-const VACANT = "vacant"
 
 export interface PropertyFormValues {
   type: PropertyType
@@ -43,7 +39,6 @@ export interface PropertyFormValues {
   phone: string
   doorCode: string
   description: string
-  tenantId: string
 }
 
 export const EMPTY_PROPERTY: PropertyFormValues = {
@@ -56,14 +51,10 @@ export const EMPTY_PROPERTY: PropertyFormValues = {
   phone: "",
   doorCode: "",
   description: "",
-  tenantId: VACANT,
 }
 
-/** An existing property as form values; `copy` leaves the tenant behind. */
-export function toFormValues(
-  property: Property,
-  { copy = false }: { copy?: boolean } = {}
-): PropertyFormValues {
+/** An existing property as form values, to edit it or start a copy. */
+export function toFormValues(property: Property): PropertyFormValues {
   return {
     type: property.type,
     name: property.name,
@@ -74,7 +65,6 @@ export function toFormValues(
     phone: property.phone ?? "",
     doorCode: property.doorCode ?? "",
     description: property.description ?? "",
-    tenantId: copy ? VACANT : (property.tenant?.id ?? VACANT),
   }
 }
 
@@ -112,9 +102,6 @@ function usePropertySchema() {
       }),
       doorCode: text(PROPERTY_LIMITS.doorCode),
       description: text(PROPERTY_LIMITS.description),
-      tenantId: z
-        .string()
-        .transform((value) => (value === VACANT ? null : value)),
     }) satisfies z.ZodType<PropertyInput, PropertyFormValues>
   }, [t])
 }
@@ -125,14 +112,11 @@ function usePropertySchema() {
  */
 export function PropertyForm({
   defaultValues,
-  currentTenant,
   submitLabel,
   isPending,
   onSubmit,
 }: {
   defaultValues: PropertyFormValues
-  /** The tenant on file, so it shows by name before the users list loads. */
-  currentTenant?: { id: string; name: string } | null
   submitLabel: string
   isPending: boolean
   onSubmit: (input: PropertyInput) => void
@@ -140,7 +124,6 @@ export function PropertyForm({
   const t = useTranslations("Properties")
   const tc = useTranslations("Common")
   const schema = usePropertySchema()
-  const { data: users } = useBusinessUsers()
 
   const form = useForm<
     z.input<typeof schema>,
@@ -160,18 +143,6 @@ export function PropertyForm({
     value,
     label: value,
   }))
-  const tenants = (users ?? []).map((user) => ({
-    value: user.id,
-    label: user.name,
-  }))
-  if (
-    currentTenant &&
-    !tenants.some((item) => item.value === currentTenant.id)
-  ) {
-    tenants.unshift({ value: currentTenant.id, label: currentTenant.name })
-  }
-  const tenantItems = [{ value: VACANT, label: t("vacant") }, ...tenants]
-
   const optional = (
     <span className="font-normal text-muted-foreground">
       ({tc("optional").toLowerCase()})
@@ -361,41 +332,6 @@ export function PropertyForm({
           </FieldError>
         </Field>
       </div>
-
-      <Field>
-        <Label htmlFor="property-tenant">{t("fields.tenant")}</Label>
-        <Controller
-          control={form.control}
-          name="tenantId"
-          render={({ field }) => (
-            <Select
-              items={tenantItems}
-              value={field.value}
-              onValueChange={(value) => value && field.onChange(value)}
-            >
-              <SelectTrigger id="property-tenant">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {tenantItems.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>
-                    {value === VACANT ? (
-                      <span className="text-muted-foreground">{label}</span>
-                    ) : (
-                      label
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        <p className="text-xs text-muted-foreground">
-          {users && users.length === 0
-            ? t("tenantHintNoUsers")
-            : t("tenantHint")}
-        </p>
-      </Field>
 
       <Field>
         <Label htmlFor="property-description">

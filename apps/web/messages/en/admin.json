@@ -159,7 +159,7 @@
     "emptyDescription": "Add the people who work with you.",
     "removeLabel": "Remove {name}",
     "removeTitle": "Remove {name}?",
-    "removeDescription": "Their account is deleted and they're signed out everywhere. This can't be undone.",
+    "removeDescription": "Their account, any leases and notes are deleted and they're signed out everywhere. Users with recorded rent payments can't be removed. This can't be undone.",
     "removeSubmit": "Remove user"
   },
   "AdminRole": {

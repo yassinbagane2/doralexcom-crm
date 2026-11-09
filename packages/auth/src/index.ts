@@ -74,6 +74,20 @@ const authOptions = {
   },
   user: {
     deleteUser: { enabled: true },
+    additionalFields: {
+      /**
+       * What a business records about a tenant (a `user` account): phone,
+       * mailing address, other contacts. Written only by the API's tenant
+       * router: never accepted from sign-up or updateUser, and never sent to
+       * the client with the session.
+       */
+      metadata: {
+        type: "json",
+        required: false,
+        input: false,
+        returned: false,
+      },
+    },
   },
   session: {
     // Lets proxy.ts and server components read the session without a DB hit.

@@ -1,5 +1,3 @@
-import { ORPCError } from "@orpc/server"
-import { auth } from "@workspace/auth"
 import { newPasswordSchema } from "@workspace/auth/password"
 import { db } from "@workspace/db"
 import { member, session, user } from "@workspace/db/schema"
@@ -7,7 +5,7 @@ import { and, desc, eq, max, ne } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
-import { callAuth } from "../lib/auth-error"
+import { createTenantAccount, deleteTenantAccount } from "../lib/tenant"
 
 const businessUserSchema = z.object({
   id: z.string(),
@@ -71,66 +69,19 @@ export const businessRouter = o.prefix("/business").router({
       })
     )
     .output(z.object({ id: z.string() }))
-    .handler(async ({ input, context }) => {
-      // No request headers: the trusted server is creating the account, so the
-      // admin plugin's own permission check (admins only) doesn't apply. The
-      // role is fixed here, never taken from the caller.
-      const { user: created } = await callAuth(() =>
-        auth.api.createUser({
-          body: {
-            name: input.name,
-            email: input.email,
-            password: input.password,
-            role: "user",
-          },
-        })
-      )
-
-      try {
-        await callAuth(() =>
-          auth.api.addMember({
-            body: {
-              userId: created.id,
-              organizationId: context.organizationId,
-              role: "member",
-            },
-          })
-        )
-      } catch (error) {
-        // An account outside any business would be stranded: undo it.
-        await db.delete(user).where(eq(user.id, created.id))
-        throw error
-      }
-
-      return { id: created.id }
-    }),
+    .handler(async ({ input, context }) => ({
+      id: await createTenantAccount(context.organizationId, input),
+    })),
 
   removeUser: businessProcedure
     .route({ method: "DELETE", path: "/users/{userId}", tags: ["business"] })
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: z.uuid() }))
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
-      const target = await db
-        .select({ role: user.role })
-        .from(member)
-        .innerJoin(user, eq(user.id, member.userId))
-        .where(
-          and(
-            eq(member.organizationId, context.organizationId),
-            eq(member.userId, input.userId)
-          )
-        )
-        .limit(1)
-
       // Only accounts this business created: never itself, never another
-      // business or an admin that happens to share the organization.
-      if (!target[0] || target[0].role !== "user") {
-        throw new ORPCError("NOT_FOUND", { message: "User not found." })
-      }
-
-      // Sessions, credentials and the membership go with it (FK cascade).
-      await db.delete(user).where(eq(user.id, input.userId))
-
+      // business or an admin that happens to share the organization. A
+      // tenant with recorded rent payments stays.
+      await deleteTenantAccount(context.organizationId, input.userId)
       return { success: true }
     }),
 })

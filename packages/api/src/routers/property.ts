@@ -1,7 +1,18 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { member, property, user } from "@workspace/db/schema"
-import { and, desc, eq, isNull } from "drizzle-orm"
+import { lease, payment, property, user } from "@workspace/db/schema"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNull,
+  notExists,
+  or,
+  sql,
+} from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
@@ -28,7 +39,6 @@ const propertyInput = z.object({
   phone: optionalText(PROPERTY_LIMITS.phone),
   rent: optionalAmount(PROPERTY_LIMITS.rent),
   currency: z.enum(RENT_CURRENCIES),
-  tenantId: z.uuid().nullable(),
 })
 
 const propertySchema = z.object({
@@ -42,39 +52,45 @@ const propertySchema = z.object({
   phone: z.string().nullable(),
   rent: z.number().nullable(),
   currency: z.enum(RENT_CURRENCIES),
-  tenant: z
-    .object({ id: z.string(), name: z.string(), email: z.string() })
-    .nullable(),
+  /**
+   * Leases that hold it now or later (plus any that ended yesterday, so the
+   * reader's own "today" decides). The web app picks the occupant from these.
+   */
+  leases: z.array(
+    z.object({
+      id: z.string(),
+      startDate: z.string(),
+      endDate: z.string().nullable(),
+      tenant: z.object({
+        id: z.string(),
+        name: z.string(),
+        email: z.string().nullable(),
+      }),
+    })
+  ),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
 
-/**
- * Tenants are the `user` accounts this business created, the same ones it
- * manages on its users page. Never itself, another business, or an admin.
- */
-async function assertTenant(organizationId: string, tenantId: string | null) {
-  if (!tenantId) return
-
-  const [tenant] = await db
-    .select({ role: user.role })
-    .from(member)
-    .innerJoin(user, eq(user.id, member.userId))
+/** Leases of this property still running, or not yet started. */
+const openLeases = (propertyId: typeof property.id) =>
+  db
+    .select({ one: sql`1` })
+    .from(lease)
     .where(
       and(
-        eq(member.organizationId, organizationId),
-        eq(member.userId, tenantId)
+        eq(lease.propertyId, propertyId),
+        or(isNull(lease.endDate), gte(lease.endDate, sql`current_date`))
       )
     )
-    .limit(1)
 
-  if (!tenant || tenant.role !== "user") {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "That tenant isn't one of your users.",
-      data: { code: "TENANT_NOT_FOUND" },
-    })
-  }
-}
+/** Rent ever received on any lease of this property. */
+const paymentsOn = (propertyId: typeof property.id) =>
+  db
+    .select({ one: sql`1` })
+    .from(payment)
+    .innerJoin(lease, eq(lease.id, payment.leaseId))
+    .where(eq(lease.propertyId, propertyId))
 
 function notFound() {
   return new ORPCError("NOT_FOUND", {
@@ -93,16 +109,38 @@ export const propertyRouter = o.prefix("/properties").router({
     .output(z.array(propertySchema))
     .handler(async ({ context }) => {
       const rows = await db
-        .select({
-          property,
-          tenant: { id: user.id, name: user.name, email: user.email },
-        })
+        .select()
         .from(property)
-        .leftJoin(user, eq(user.id, property.tenantId))
         .where(eq(property.organizationId, context.organizationId))
         .orderBy(desc(property.createdAt))
 
-      return rows.map(({ property: row, tenant }) => ({
+      const leases = rows.length
+        ? await db
+            .select({
+              id: lease.id,
+              propertyId: lease.propertyId,
+              startDate: lease.startDate,
+              endDate: lease.endDate,
+              tenant: { id: user.id, name: user.name, email: user.email },
+            })
+            .from(lease)
+            .innerJoin(user, eq(user.id, lease.tenantId))
+            .where(
+              and(
+                inArray(
+                  lease.propertyId,
+                  rows.map((row) => row.id)
+                ),
+                or(
+                  isNull(lease.endDate),
+                  gte(lease.endDate, sql`current_date - 1`)
+                )
+              )
+            )
+            .orderBy(asc(lease.startDate))
+        : []
+
+      return rows.map((row) => ({
         id: row.id,
         type: row.type,
         name: row.name,
@@ -113,7 +151,14 @@ export const propertyRouter = o.prefix("/properties").router({
         phone: row.phone,
         rent: row.rent,
         currency: row.currency,
-        tenant,
+        leases: leases
+          .filter((l) => l.propertyId === row.id)
+          .map((l) => ({
+            id: l.id,
+            startDate: l.startDate,
+            endDate: l.endDate,
+            tenant: l.tenant,
+          })),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       }))
@@ -124,8 +169,6 @@ export const propertyRouter = o.prefix("/properties").router({
     .input(propertyInput)
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
-      await assertTenant(context.organizationId, input.tenantId)
-
       const [created] = await db
         .insert(property)
         .values({ ...input, organizationId: context.organizationId })
@@ -140,7 +183,6 @@ export const propertyRouter = o.prefix("/properties").router({
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const { id, ...values } = input
-      await assertTenant(context.organizationId, values.tenantId)
 
       const [updated] = await db
         .update(property)
@@ -168,25 +210,39 @@ export const propertyRouter = o.prefix("/properties").router({
         eq(property.organizationId, context.organizationId)
       )
 
-      // The vacancy check and the delete are one statement, so a tenant
-      // assigned a moment ago can't slip past it.
+      // The checks and the delete are one statement, so a lease signed a
+      // moment ago can't slip past them. Past leases without payments go
+      // along with the property (FK cascade).
       const deleted = await db
         .delete(property)
-        .where(and(scope, isNull(property.tenantId)))
+        .where(
+          and(
+            scope,
+            notExists(openLeases(property.id)),
+            notExists(paymentsOn(property.id))
+          )
+        )
         .returning({ id: property.id })
 
       if (deleted.length > 0) return { success: true }
 
-      const existing = await db.query.property.findFirst({
-        where: scope,
-        columns: { id: true },
-      })
+      const [existing] = await db
+        .select({
+          inUse: sql<boolean>`exists ${openLeases(property.id)}`,
+        })
+        .from(property)
+        .where(scope)
 
       if (!existing) throw notFound()
 
-      throw new ORPCError("CONFLICT", {
-        message: "This property has a tenant. Remove them before deleting it.",
-        data: { code: "PROPERTY_IN_USE" },
-      })
+      throw existing.inUse
+        ? new ORPCError("CONFLICT", {
+            message: "This property has a current or upcoming lease.",
+            data: { code: "PROPERTY_IN_USE" },
+          })
+        : new ORPCError("CONFLICT", {
+            message: "Rent payments are recorded on this property.",
+            data: { code: "PROPERTY_HAS_PAYMENTS" },
+          })
     }),
 })

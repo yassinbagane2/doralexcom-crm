@@ -67,8 +67,15 @@
     "NO_ORGANIZATION": "Set up your organization first.",
     "YOU_CANNOT_BAN_YOURSELF": "You can't suspend your own account",
     "YOU_CANNOT_REMOVE_YOURSELF": "You can't delete your own account here",
-    "PROPERTY_IN_USE": "This property has a tenant. Set it to vacant before deleting it.",
+    "PROPERTY_IN_USE": "This property has a current or upcoming lease, so it can't be deleted.",
     "PROPERTY_NOT_FOUND": "That property no longer exists",
-    "TENANT_NOT_FOUND": "That tenant isn't one of your users"
+    "TENANT_NOT_FOUND": "That tenant no longer exists",
+    "PROPERTY_HAS_PAYMENTS": "Rent payments are recorded on this property, so it can't be deleted.",
+    "TENANT_HAS_PAYMENTS": "Rent payments are recorded for this tenant, so it can't be deleted.",
+    "LEASE_NOT_FOUND": "That lease no longer exists",
+    "LEASE_OVERLAP": "Another lease already covers those dates for this property",
+    "LEASE_TERMINATED": "This lease has been terminated and can't be changed",
+    "LEASE_HAS_PAYMENTS": "Rent payments are recorded on this lease, so it can't be deleted.",
+    "LEASE_END_BEFORE_START": "The exit date can't come before the entry date"
   }
 }

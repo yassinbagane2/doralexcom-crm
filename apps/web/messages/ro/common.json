@@ -67,8 +67,15 @@
     "NO_ORGANIZATION": "Configurează mai întâi organizația.",
     "YOU_CANNOT_BAN_YOURSELF": "Nu îți poți suspenda propriul cont",
     "YOU_CANNOT_REMOVE_YOURSELF": "Nu îți poți șterge propriul cont de aici",
-    "PROPERTY_IN_USE": "Proprietatea are un chiriaș. Marcheaz-o ca liberă înainte de a o șterge.",
+    "PROPERTY_IN_USE": "Proprietatea are un contract în curs sau viitor, așa că nu poate fi ștearsă.",
     "PROPERTY_NOT_FOUND": "Proprietatea nu mai există",
-    "TENANT_NOT_FOUND": "Chiriașul nu este unul dintre utilizatorii tăi"
+    "TENANT_NOT_FOUND": "Chiriașul nu mai există",
+    "PROPERTY_HAS_PAYMENTS": "Pe această proprietate sunt înregistrate plăți de chirie, așa că nu poate fi ștearsă.",
+    "TENANT_HAS_PAYMENTS": "Pentru acest chiriaș sunt înregistrate plăți de chirie, așa că nu poate fi șters.",
+    "LEASE_NOT_FOUND": "Contractul nu mai există",
+    "LEASE_OVERLAP": "Un alt contract acoperă deja aceste date pentru proprietate",
+    "LEASE_TERMINATED": "Contractul a fost reziliat și nu mai poate fi modificat",
+    "LEASE_HAS_PAYMENTS": "Pe acest contract sunt înregistrate plăți de chirie, așa că nu poate fi șters.",
+    "LEASE_END_BEFORE_START": "Data ieșirii nu poate fi înaintea datei intrării"
   }
 }

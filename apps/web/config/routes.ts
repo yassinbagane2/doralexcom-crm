@@ -14,6 +14,10 @@ export const routes = {
   users: "/users",
   /** Business accounts: the properties they rent out. */
   properties: "/properties",
+  /** Business accounts: the people they rent to. */
+  tenants: "/tenants",
+  /** User accounts linked to a tenant record: their own leases and notes. */
+  tenancy: "/tenancy",
   admin: "/admin",
   adminUsers: "/admin/users",
 } as const
@@ -32,6 +36,8 @@ export const PROTECTED_ROUTES: readonly string[] = [
   routes.onboarding,
   routes.users,
   routes.properties,
+  routes.tenants,
+  routes.tenancy,
   routes.admin,
 ]
 

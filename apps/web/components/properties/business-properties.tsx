@@ -1,5 +1,6 @@
 "use client"
 
+import { leaseStatus, localToday } from "@workspace/api/lease"
 import { PROPERTY_TYPES, type PropertyType } from "@workspace/api/property"
 import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
@@ -28,6 +29,7 @@ import {
 } from "@workspace/ui/components/ui/sheet"
 import {
   Building2,
+  Contact,
   Copy,
   DotsHorizontal,
   Loader2,
@@ -38,6 +40,7 @@ import {
   Trash,
 } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
+import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
 import { useDeferredValue, useMemo, useState } from "react"
 
@@ -47,7 +50,9 @@ import {
   toFormValues,
 } from "@/components/properties/property-form"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
+import { LeaseDialog } from "@/components/tenants/lease-dialogs"
 import { UserAvatar } from "@/components/user-avatar"
+import { routes } from "@/config/routes"
 import {
   useCreateProperty,
   useDeleteProperty,
@@ -55,7 +60,21 @@ import {
   useUpdateProperty,
   type Property,
 } from "@/hooks/queries/property"
-import { formatArea, formatMoney } from "@/lib/format"
+import { formatArea, formatDate, formatMoney } from "@/lib/format"
+
+type PropertyLease = Property["leases"][number]
+
+/** Who's in the property today, and who moves in next. */
+function occupancy(property: Property, today: string) {
+  let current: PropertyLease | null = null
+  let next: PropertyLease | null = null
+  for (const lease of property.leases) {
+    const status = leaseStatus(lease, today)
+    if (status === "active" || status === "ending") current = lease
+    else if (status === "upcoming") next ??= lease
+  }
+  return { current, next }
+}
 
 type Editor =
   | { mode: "create" }
@@ -71,9 +90,14 @@ export function BusinessProperties() {
   const { data: properties, isPending } = useProperties()
   const [editor, setEditor] = useState<Editor | null>(null)
   const [deleting, setDeleting] = useState<Property | null>(null)
+  const [assigning, setAssigning] = useState<Property | null>(null)
+  // The dialog keeps its property while it animates closed.
+  const [assignTarget, setAssignTarget] = useState<Property | null>(null)
+  if (assigning && assigning !== assignTarget) setAssignTarget(assigning)
   const [search, setSearch] = useState("")
   const [type, setType] = useState<TypeFilter>("all")
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase())
+  const today = localToday()
 
   // "Apt. 2" before "Apt. 10".
   const sorted = useMemo(() => {
@@ -90,7 +114,11 @@ export function BusinessProperties() {
     (property) =>
       (type === "all" || property.type === type) &&
       (!deferredSearch ||
-        [property.name, property.address, property.tenant?.name]
+        [
+          property.name,
+          property.address,
+          ...property.leases.map((lease) => lease.tenant.name),
+        ]
           .filter(Boolean)
           .some((value) => value!.toLocaleLowerCase().includes(deferredSearch)))
   )
@@ -99,7 +127,9 @@ export function BusinessProperties() {
   const presentTypes = PROPERTY_TYPES.filter((value) =>
     sorted.some((property) => property.type === value)
   )
-  const occupied = sorted.filter((property) => property.tenant).length
+  const occupied = sorted.filter(
+    (property) => occupancy(property, today).current
+  ).length
 
   return (
     <div className="flex flex-col gap-6">
@@ -205,8 +235,10 @@ export function BusinessProperties() {
             <PropertyRow
               key={property.id}
               property={property}
+              today={today}
               onEdit={() => setEditor({ mode: "edit", property })}
               onCopy={() => setEditor({ mode: "copy", property })}
+              onAssign={() => setAssigning(property)}
               onDelete={() => setDeleting(property)}
             />
           ))}
@@ -216,25 +248,33 @@ export function BusinessProperties() {
       <PropertySheet editor={editor} onClose={() => setEditor(null)} />
       <DeletePropertyDialog
         property={deleting}
+        today={today}
         onClose={() => setDeleting(null)}
-        onEdit={(property) => {
-          setDeleting(null)
-          setEditor({ mode: "edit", property })
-        }}
       />
+      {assignTarget ? (
+        <LeaseDialog
+          property={assignTarget}
+          open={assigning !== null}
+          onOpenChange={(open) => !open && setAssigning(null)}
+        />
+      ) : null}
     </div>
   )
 }
 
 function PropertyRow({
   property,
+  today,
   onEdit,
   onCopy,
+  onAssign,
   onDelete,
 }: {
   property: Property
+  today: string
   onEdit: () => void
   onCopy: () => void
+  onAssign: () => void
   onDelete: () => void
 }) {
   const t = useTranslations("Properties")
@@ -249,6 +289,7 @@ function PropertyRow({
         })
       : null,
   ].filter(Boolean)
+  const { current, next } = occupancy(property, today)
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">
@@ -283,17 +324,8 @@ function PropertyRow({
             <span key={fact}>{fact}</span>
           ))}
         </span>
-        <span className="hidden w-44 shrink-0 justify-end md:flex">
-          <TenantCell tenant={property.tenant} />
-        </span>
       </button>
-      <span className="md:hidden">
-        {property.tenant ? (
-          <UserAvatar name={property.tenant.name} className="size-7" />
-        ) : (
-          <Badge variant="outline">{t("vacant")}</Badge>
-        )}
-      </span>
+      <OccupantCell current={current} next={next} onAssign={onAssign} />
 
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -316,6 +348,10 @@ function PropertyRow({
             <Copy className="size-4" />
             {t("copy")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={onAssign}>
+            <Contact className="size-4" />
+            {t("assignTenant")}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
             <Trash size={16} />
@@ -327,23 +363,62 @@ function PropertyRow({
   )
 }
 
-function TenantCell({ tenant }: { tenant: Property["tenant"] }) {
+function OccupantCell({
+  current,
+  next,
+  onAssign,
+}: {
+  current: PropertyLease | null
+  next: PropertyLease | null
+  onAssign: () => void
+}) {
   const t = useTranslations("Properties")
+  const locale = useLocale()
 
-  if (!tenant) {
-    return <Badge variant="outline">{t("vacant")}</Badge>
+  if (!current) {
+    return (
+      <span className="flex shrink-0 flex-col items-end gap-1 md:w-44">
+        <Badge variant="outline">{t("vacant")}</Badge>
+        {next ? null : (
+          <button
+            type="button"
+            onClick={onAssign}
+            className="hidden text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
+          >
+            {t("assignTenant")}
+          </button>
+        )}
+        {next ? (
+          <Link
+            href={`${routes.tenants}/${next.tenant.id}`}
+            className="hidden max-w-44 truncate text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
+          >
+            {t("incoming", {
+              name: next.tenant.name,
+              date: formatDate(next.startDate, locale),
+            })}
+          </Link>
+        ) : null}
+      </span>
+    )
   }
 
   return (
-    <span className="flex min-w-0 items-center gap-2">
-      <UserAvatar name={tenant.name} className="size-7" />
-      <span className="flex min-w-0 flex-col">
-        <span className="truncate text-sm">{tenant.name}</span>
+    <Link
+      href={`${routes.tenants}/${current.tenant.id}`}
+      aria-label={t("viewTenant", { name: current.tenant.name })}
+      className="flex min-w-0 shrink-0 items-center gap-2 rounded-md outline-none hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50 md:w-44"
+    >
+      <UserAvatar name={current.tenant.name} className="size-7" />
+      <span className="hidden min-w-0 flex-col md:flex">
+        <span className="truncate text-sm">{current.tenant.name}</span>
         <span className="truncate text-xs text-muted-foreground">
-          {tenant.email}
+          {current.endDate
+            ? t("leaving", { date: formatDate(current.endDate, locale) })
+            : (current.tenant.email ?? t("occupied"))}
         </span>
       </span>
-    </span>
+    </Link>
   )
 }
 
@@ -367,7 +442,7 @@ function PropertySheet({
     ? EMPTY_PROPERTY
     : mode === "copy"
       ? {
-          ...toFormValues(source, { copy: true }),
+          ...toFormValues(source),
           name: t("copyName", { name: source.name }),
         }
       : toFormValues(source)
@@ -396,7 +471,6 @@ function PropertySheet({
             // A fresh form for each property, so the last one's values never leak in.
             key={`${mode}-${source?.id ?? "new"}`}
             defaultValues={defaultValues}
-            currentTenant={mode === "edit" ? source?.tenant : null}
             submitLabel={t(`sheet.${mode}.submit`)}
             isPending={create.isPending || update.isPending}
             onSubmit={(input) => {
@@ -417,17 +491,18 @@ function PropertySheet({
 }
 
 /**
- * Deleting is refused while someone occupies the property. The server makes
- * the same check; this just says so up front and points to the fix.
+ * Deleting is refused while a lease holds the property, now or later. The
+ * server makes the same check (and refuses once rent has been paid on it);
+ * this just says so up front and points to the tenant.
  */
 function DeletePropertyDialog({
   property,
+  today,
   onClose,
-  onEdit,
 }: {
   property: Property | null
+  today: string
   onClose: () => void
-  onEdit: (property: Property) => void
 }) {
   const t = useTranslations("Properties")
   const tCommon = useTranslations("Common")
@@ -435,7 +510,13 @@ function DeletePropertyDialog({
   const [shown, setShown] = useState(property)
   if (property && property !== shown) setShown(property)
 
-  const tenant = shown?.tenant
+  const holder = shown
+    ? (() => {
+        const { current, next } = occupancy(shown, today)
+        return current ?? next
+      })()
+    : null
+  const tenant = holder?.tenant
 
   return (
     <Dialog
@@ -463,10 +544,9 @@ function DeletePropertyDialog({
           <Button variant="outline" onClick={onClose}>
             {tCommon("cancel")}
           </Button>
-          {tenant && shown ? (
-            <Button onClick={() => onEdit(shown)}>
-              <Pencil className="size-4" />
-              {t("edit")}
+          {tenant ? (
+            <Button render={<Link href={`${routes.tenants}/${tenant.id}`} />}>
+              {t("viewTenantShort")}
             </Button>
           ) : (
             <Button
