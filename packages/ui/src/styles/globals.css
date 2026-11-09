@@ -1,0 +1,292 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tailwind's automatic source detection is rooted at this file, so it only sees
+ * the `ui` package. Every consumer directory has to be registered by hand.
+ */
+@source "../**/*.{ts,tsx}";
+@source "../../../../apps/web/app/**/*.{ts,tsx}";
+@source "../../../../apps/web/components/**/*.{ts,tsx}";
+@source "../../../../apps/web/hooks/**/*.{ts,tsx}";
+@source "../../../../apps/web/lib/**/*.{ts,tsx}";
+@source "../../../../apps/web/providers/**/*.{ts,tsx}";
+
+/*
+ * Palette scales. Tailwind tree-shakes anything in `@theme` that no utility
+ * references, so these emit no CSS until something writes `bg-brand-100` or
+ * `text-neutral-500` — they override Tailwind's defaults rather than adding
+ * weight. The corollary: `var(--color-brand-500)` is NOT safe to reference from
+ * an inline style. Use the semantic tokens in `:root` below, which are declared
+ * directly and therefore always present.
+ */
+@theme {
+  /*
+   * Neutrals carry a faint violet cast (hue 286) rather than being pure gray.
+   * It's imperceptible on its own but keeps the grays from reading cold next to
+   * the brand accent, and it's what makes the monochrome surfaces feel
+   * deliberate instead of default.
+   */
+  --color-neutral-50: oklch(0.985 0 286);
+  --color-neutral-100: oklch(0.97 0.001 286);
+  --color-neutral-200: oklch(0.944 0.004 286);
+  --color-neutral-300: oklch(0.865 0.005 286);
+  --color-neutral-400: oklch(0.771 0.006 286);
+  --color-neutral-500: oklch(0.617 0.008 286);
+  --color-neutral-600: oklch(0.487 0.008 286);
+  --color-neutral-700: oklch(0.36 0.008 286);
+  --color-neutral-800: oklch(0.262 0.007 286);
+  --color-neutral-900: oklch(0.201 0.004 286);
+  --color-neutral-950: oklch(0.169 0.004 286);
+
+  /* Brand violet — the single accent allowed to interrupt the monochrome. */
+  --color-brand-50: oklch(0.977 0.014 286);
+  --color-brand-100: oklch(0.95 0.032 286);
+  --color-brand-200: oklch(0.906 0.06 286.5);
+  --color-brand-300: oklch(0.836 0.104 287);
+  --color-brand-400: oklch(0.732 0.164 287);
+  --color-brand-500: oklch(0.628 0.216 287.5);
+  --color-brand-600: oklch(0.552 0.246 288);
+  --color-brand-700: oklch(0.485 0.234 288);
+  --color-brand-800: oklch(0.412 0.196 288);
+  --color-brand-900: oklch(0.356 0.155 288);
+  --color-brand-950: oklch(0.245 0.104 288);
+
+  /*
+   * Shadows are near-flat: the template separates surfaces with 1px borders,
+   * not elevation. These exist for the few floating elements (dropdowns, the
+   * sticky search panel) that genuinely need to lift off the page.
+   */
+  --shadow-xs: 0 1px 2px oklch(0.169 0.004 286 / 0.04);
+  --shadow-sm: 0 1px 3px oklch(0.169 0.004 286 / 0.05);
+  --shadow-md: 0 4px 16px oklch(0.169 0.004 286 / 0.06);
+  --shadow-lg: 0 8px 32px oklch(0.169 0.004 286 / 0.08);
+  --shadow-xl: 0 16px 48px oklch(0.169 0.004 286 / 0.1);
+
+  /*
+   * Named `2xs`, not `xxs`, deliberately. `cn` runs tailwind-merge, which
+   * classifies a `text-*` class as a font size only when the suffix matches its
+   * t-shirt-size pattern (`2xs` does, `xxs` does not). Under the wrong name it
+   * gets treated as a text *colour* and silently deletes whatever real colour
+   * class sits next to it.
+   */
+  --text-2xs: 0.6875rem;
+
+  /* Shared entrance curve — a soft overshoot-free ease-out. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+ * Inline so utilities compile to `var(--background)` rather than the value
+ * resolved at `:root`. That's what lets a subtree re-theme itself — a `.dark`
+ * island inside a light page, for instance — instead of inheriting one fixed
+ * set of colors.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 286);
+  --foreground: oklch(0.178 0.002 286);
+  --card: oklch(1 0 286);
+  --card-foreground: oklch(0.178 0.002 286);
+  --popover: oklch(1 0 286);
+  --popover-foreground: oklch(0.178 0.002 286);
+
+  /* Near-black, not pure black — pure black on white is harsh at large sizes. */
+  --primary: oklch(0.178 0.002 286);
+  --primary-foreground: oklch(0.985 0 286);
+  --secondary: oklch(0.97 0.001 286);
+  --secondary-foreground: oklch(0.178 0.002 286);
+  --muted: oklch(0.97 0.001 286);
+  --muted-foreground: oklch(0.487 0.008 286);
+  --accent: oklch(0.97 0.001 286);
+  --accent-foreground: oklch(0.178 0.002 286);
+
+  --brand: oklch(0.552 0.246 288);
+  --brand-foreground: oklch(0.985 0 286);
+  --brand-subtle: oklch(0.95 0.032 286);
+
+  --success: oklch(0.596 0.145 163.2);
+  --success-foreground: oklch(1 0 286);
+  --warning: oklch(0.75 0.16 70);
+  --warning-foreground: oklch(0.178 0.002 286);
+  --destructive: oklch(0.577 0.245 27.3);
+  --destructive-foreground: oklch(1 0 286);
+
+  --border: oklch(0.921 0.003 286);
+  --input: oklch(0.921 0.003 286);
+  --ring: oklch(0.552 0.246 288);
+
+  --chart-1: oklch(0.552 0.246 288);
+  --chart-2: oklch(0.732 0.164 287);
+  --chart-3: oklch(0.36 0.008 286);
+  --chart-4: oklch(0.617 0.008 286);
+  --chart-5: oklch(0.865 0.005 286);
+
+  --sidebar: oklch(0.985 0 286);
+  --sidebar-foreground: oklch(0.178 0.002 286);
+  --sidebar-primary: oklch(0.178 0.002 286);
+  --sidebar-primary-foreground: oklch(0.985 0 286);
+  --sidebar-accent: oklch(0.97 0.001 286);
+  --sidebar-accent-foreground: oklch(0.178 0.002 286);
+  --sidebar-border: oklch(0.921 0.003 286);
+  --sidebar-ring: oklch(0.552 0.246 288);
+
+  --radius: 0.625rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.169 0.004 286);
+  --foreground: oklch(0.97 0.001 286);
+  --card: oklch(0.201 0.004 286);
+  --card-foreground: oklch(0.97 0.001 286);
+  --popover: oklch(0.201 0.004 286);
+  --popover-foreground: oklch(0.97 0.001 286);
+
+  --primary: oklch(0.97 0.001 286);
+  --primary-foreground: oklch(0.178 0.002 286);
+  --secondary: oklch(0.237 0.008 286);
+  --secondary-foreground: oklch(0.97 0.001 286);
+  --muted: oklch(0.237 0.008 286);
+  --muted-foreground: oklch(0.708 0.007 286);
+  --accent: oklch(0.262 0.007 286);
+  --accent-foreground: oklch(0.97 0.001 286);
+
+  /* Lifted and desaturated — the light-mode violet vibrates on dark. */
+  --brand: oklch(0.673 0.19 287);
+  --brand-foreground: oklch(0.169 0.004 286);
+  --brand-subtle: oklch(0.285 0.075 288);
+
+  --success: oklch(0.696 0.17 162.5);
+  --success-foreground: oklch(0.169 0.004 286);
+  --warning: oklch(0.8 0.15 75);
+  --warning-foreground: oklch(0.169 0.004 286);
+  --destructive: oklch(0.704 0.191 22.2);
+  --destructive-foreground: oklch(0.985 0 286);
+
+  --border: oklch(0.97 0.001 286 / 10%);
+  --input: oklch(0.97 0.001 286 / 15%);
+  --ring: oklch(0.673 0.19 287);
+
+  --chart-1: oklch(0.673 0.19 287);
+  --chart-2: oklch(0.836 0.104 287);
+  --chart-3: oklch(0.865 0.005 286);
+  --chart-4: oklch(0.617 0.008 286);
+  --chart-5: oklch(0.36 0.008 286);
+
+  --sidebar: oklch(0.201 0.004 286);
+  --sidebar-foreground: oklch(0.97 0.001 286);
+  --sidebar-primary: oklch(0.97 0.001 286);
+  --sidebar-primary-foreground: oklch(0.178 0.002 286);
+  --sidebar-accent: oklch(0.262 0.007 286);
+  --sidebar-accent-foreground: oklch(0.97 0.001 286);
+  --sidebar-border: oklch(0.97 0.001 286 / 10%);
+  --sidebar-ring: oklch(0.673 0.19 287);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background text-foreground;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Keyboard focus only — clicking a button shouldn't draw a ring. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    @apply bg-brand text-brand-foreground;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+}

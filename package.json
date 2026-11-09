@@ -1,0 +1,32 @@
+{
+  "name": "tube",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:server": "turbo dev --filter=server",
+    "build": "turbo build",
+    "lint": "oxlint --max-warnings 0 .",
+    "lint:fix": "oxlint --fix --max-warnings 0 .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "typecheck": "turbo typecheck",
+    "check": "pnpm lint && pnpm typecheck && pnpm format:check",
+    "db:generate": "pnpm --filter @workspace/db db:generate",
+    "db:migrate": "pnpm --filter @workspace/db db:migrate",
+    "db:push": "pnpm --filter @workspace/db db:push",
+    "db:studio": "pnpm --filter @workspace/db db:studio",
+    "auth:generate": "pnpm --filter @workspace/auth generate"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0",
+    "turbo": "^2.11.10",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": "^22.18.0 || >=24.11.0"
+  }
+}

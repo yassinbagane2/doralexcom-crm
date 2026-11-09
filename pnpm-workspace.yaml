@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+enableGlobalVirtualStore: false
+
+allowBuilds:
+  esbuild: true
+  sharp: true

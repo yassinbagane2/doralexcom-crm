@@ -1,0 +1,31 @@
+{
+  "name": "server",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "with-env": "dotenv -e ../../.env --",
+    "dev": "pnpm with-env tsx watch src/index.ts",
+    "build": "tsdown",
+    "start": "pnpm with-env node dist/index.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "@orpc/openapi": "^1.16.2",
+    "@orpc/server": "^1.16.2",
+    "@orpc/zod": "^1.16.2",
+    "@t3-oss/env-core": "^0.13.11",
+    "@workspace/api": "workspace:*",
+    "@workspace/auth": "workspace:*",
+    "hono": "^4.13.17",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "dotenv-cli": "^11.1.0",
+    "tsdown": "^0.23.7",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
