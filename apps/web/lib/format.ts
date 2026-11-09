@@ -33,3 +33,18 @@ export function formatRelative(date: Date | string, locale: string) {
 
   return null
 }
+
+/** "1.250 lei", "€850" — whole amounts drop their decimals. */
+export function formatMoney(amount: number, currency: string, locale: string) {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+/** Square metres, e.g. "72,5 m²". */
+export function formatArea(squareMetres: number, locale: string) {
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(squareMetres)} m²`
+}

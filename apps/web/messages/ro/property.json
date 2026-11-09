@@ -1,0 +1,91 @@
+{
+  "Properties": {
+    "metaTitle": "Proprietăți",
+    "title": "Proprietăți",
+    "description": "Apartamente, birouri, garaje și tot ce închiriezi.",
+    "summary": "{total, plural, one {# proprietate} few {# proprietăți} other {# de proprietăți}} · {occupied} ocupate · {vacant} libere",
+    "add": "Adaugă proprietate",
+    "search": "Caută după nume, adresă sau chiriaș",
+    "filterLabel": "Filtrează după tip",
+    "filterAll": "Toate",
+    "noResults": "Nicio proprietate nu corespunde căutării.",
+    "emptyTitle": "Nicio proprietate încă",
+    "emptyDescription": "Adaugă primul spațiu pe care îl închiriezi.",
+    "vacant": "Liberă",
+    "perMonth": "{amount}/lună",
+    "edit": "Editează",
+    "editLabel": "Editează {name}",
+    "copy": "Copiază",
+    "copyName": "{name} (copie)",
+    "delete": "Șterge",
+    "actionsLabel": "Acțiuni pentru {name}",
+    "created": "{name} a fost adăugată",
+    "updated": "{name} a fost salvată",
+    "deleted": "Proprietate ștearsă",
+    "deleteTitle": "Ștergi {name}?",
+    "deleteDescription": "Proprietatea și tot ce este înregistrat despre ea sunt eliminate. Acțiunea nu poate fi anulată.",
+    "deleteSubmit": "Șterge proprietatea",
+    "inUseTitle": "{name} este ocupată",
+    "inUseDescription": "{tenant} locuiește sau lucrează aici, așa că nu poate fi ștearsă. Editează proprietatea și marcheaz-o ca liberă mai întâi.",
+    "rentHint": "Pe lună.",
+    "tenantHint": "Ales dintre utilizatorii tăi. Las-o liberă dacă nu o ocupă nimeni.",
+    "tenantHintNoUsers": "Chiriașii se aleg dintre utilizatorii tăi. Adaugă-i din pagina Utilizatori.",
+    "types": {
+      "apartment": "Apartament",
+      "building": "Clădire",
+      "office": "Birou",
+      "garage": "Garaj",
+      "parking": "Loc de parcare",
+      "other": "Altele"
+    },
+    "typesPlural": {
+      "apartment": "Apartamente",
+      "building": "Clădiri",
+      "office": "Birouri",
+      "garage": "Garaje",
+      "parking": "Parcări",
+      "other": "Altele"
+    },
+    "fields": {
+      "type": "Tip",
+      "name": "Nume",
+      "address": "Adresă",
+      "surfaceArea": "Suprafață",
+      "rent": "Chirie",
+      "currency": "Monedă",
+      "phone": "Telefon",
+      "doorCode": "Cod interfon",
+      "tenant": "Chiriaș",
+      "description": "Descriere"
+    },
+    "placeholders": {
+      "name": "Ap. 12",
+      "address": "Str. Victoriei 10, București",
+      "description": "Etaj, camere, mobilare, orice merită reținut."
+    },
+    "sheet": {
+      "create": {
+        "title": "Adaugă o proprietate",
+        "description": "Înregistrează un spațiu pe care îl închiriezi.",
+        "submit": "Adaugă proprietate"
+      },
+      "edit": {
+        "title": "Editează proprietatea",
+        "description": "Modificările aduse la {name} se aplică imediat.",
+        "submit": "Salvează modificările"
+      },
+      "copy": {
+        "title": "Copiază proprietatea",
+        "description": "Pornește de la {name}. Schimbă ce diferă, apoi salveaz-o ca proprietate nouă.",
+        "submit": "Adaugă proprietate"
+      }
+    },
+    "validation": {
+      "nameRequired": "Introdu un nume",
+      "addressRequired": "Introdu o adresă",
+      "amountInvalid": "Introdu un număr pozitiv",
+      "phoneInvalid": "Introdu un număr de telefon valid",
+      "tooLong": "Folosește mai puțin de {max} de caractere"
+    }
+  }
+}

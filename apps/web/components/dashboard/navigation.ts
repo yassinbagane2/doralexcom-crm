@@ -2,6 +2,7 @@
 
 import type { UserRole } from "@workspace/auth/roles"
 import {
+  Building2,
   BuildingOffice,
   LayoutDashboard,
   Logout,
@@ -14,7 +15,6 @@ import { useMemo, type ComponentType } from "react"
 
 import { matchesRoute, routes } from "@/config/routes"
 import { useSignOut } from "@/hooks/queries/auth"
-
 
 export type NavigationIcon = ComponentType<{
   size?: number
@@ -237,6 +237,13 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       link: routes.users,
       if: isBusiness,
     },
+    {
+      id: "properties",
+      title: t("properties"),
+      icon: Building2,
+      link: routes.properties,
+      if: isBusiness,
+    },
   ]
 }
 
@@ -255,5 +262,5 @@ const accountRoutesList = (role: UserRole, t: Translate): Route[] => [
     icon: BuildingOffice,
     link: routes.accountOrganization,
     if: role === "business",
-  }
+  },
 ]

@@ -66,6 +66,9 @@
     "BANNED_USER": "Your account has been suspended.",
     "NO_ORGANIZATION": "Set up your organization first.",
     "YOU_CANNOT_BAN_YOURSELF": "You can't suspend your own account",
-    "YOU_CANNOT_REMOVE_YOURSELF": "You can't delete your own account here"
+    "YOU_CANNOT_REMOVE_YOURSELF": "You can't delete your own account here",
+    "PROPERTY_IN_USE": "This property has a tenant. Set it to vacant before deleting it.",
+    "PROPERTY_NOT_FOUND": "That property no longer exists",
+    "TENANT_NOT_FOUND": "That tenant isn't one of your users"
   }
 }

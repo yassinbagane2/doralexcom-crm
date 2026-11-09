@@ -3,6 +3,7 @@ import type { RouterClient } from "@orpc/server"
 import { publicProcedure } from "../index"
 import { adminRouter } from "./admin"
 import { businessRouter } from "./business"
+import { propertyRouter } from "./property"
 import { userRouter } from "./user"
 
 export const appRouter = {
@@ -12,6 +13,7 @@ export const appRouter = {
   user: userRouter,
   admin: adminRouter,
   business: businessRouter,
+  property: propertyRouter,
 }
 
 export type AppRouter = typeof appRouter

@@ -3,12 +3,14 @@ import enAdmin from "./en/admin.json"
 import enAuth from "./en/auth.json"
 import enCommon from "./en/common.json"
 import enOrganization from "./en/organization.json"
+import enProperty from "./en/property.json"
 import enShell from "./en/shell.json"
 import roAccount from "./ro/account.json"
 import roAdmin from "./ro/admin.json"
 import roAuth from "./ro/auth.json"
 import roCommon from "./ro/common.json"
 import roOrganization from "./ro/organization.json"
+import roProperty from "./ro/property.json"
 import roShell from "./ro/shell.json"
 
 import type { Locale } from "@/i18n/locale"
@@ -25,6 +27,7 @@ const en = {
   ...enOrganization,
   ...enShell,
   ...enAdmin,
+  ...enProperty,
 }
 
 export type Messages = typeof en
@@ -36,6 +39,7 @@ const ro = {
   ...roOrganization,
   ...roShell,
   ...roAdmin,
+  ...roProperty,
 } satisfies Messages
 
 export const messages: Record<Locale, Messages> = { en, ro }

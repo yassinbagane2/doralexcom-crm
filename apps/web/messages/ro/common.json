@@ -66,6 +66,9 @@
     "BANNED_USER": "Contul tău a fost suspendat.",
     "NO_ORGANIZATION": "Configurează mai întâi organizația.",
     "YOU_CANNOT_BAN_YOURSELF": "Nu îți poți suspenda propriul cont",
-    "YOU_CANNOT_REMOVE_YOURSELF": "Nu îți poți șterge propriul cont de aici"
+    "YOU_CANNOT_REMOVE_YOURSELF": "Nu îți poți șterge propriul cont de aici",
+    "PROPERTY_IN_USE": "Proprietatea are un chiriaș. Marcheaz-o ca liberă înainte de a o șterge.",
+    "PROPERTY_NOT_FOUND": "Proprietatea nu mai există",
+    "TENANT_NOT_FOUND": "Chiriașul nu este unul dintre utilizatorii tăi"
   }
 }

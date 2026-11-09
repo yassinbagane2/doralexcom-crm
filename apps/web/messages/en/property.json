@@ -1,0 +1,91 @@
+{
+  "Properties": {
+    "metaTitle": "Properties",
+    "title": "Properties",
+    "description": "Apartments, offices, garages and everything else you rent out.",
+    "summary": "{total, plural, one {# property} other {# properties}} · {occupied} occupied · {vacant} vacant",
+    "add": "Add property",
+    "search": "Search by name, address or tenant",
+    "filterLabel": "Filter by type",
+    "filterAll": "All",
+    "noResults": "No properties match your search.",
+    "emptyTitle": "No properties yet",
+    "emptyDescription": "Add the first place you rent out.",
+    "vacant": "Vacant",
+    "perMonth": "{amount}/mo",
+    "edit": "Edit",
+    "editLabel": "Edit {name}",
+    "copy": "Copy",
+    "copyName": "{name} (copy)",
+    "delete": "Delete",
+    "actionsLabel": "Actions for {name}",
+    "created": "{name} added",
+    "updated": "{name} saved",
+    "deleted": "Property deleted",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "The property and everything recorded about it are removed. This can't be undone.",
+    "deleteSubmit": "Delete property",
+    "inUseTitle": "{name} is occupied",
+    "inUseDescription": "{tenant} lives or works here, so it can't be deleted. Edit the property and set it to vacant first.",
+    "rentHint": "Per month.",
+    "tenantHint": "Picked from your users. Leave vacant if nobody occupies it.",
+    "tenantHintNoUsers": "Tenants are picked from your users. Add them on the Users page.",
+    "types": {
+      "apartment": "Apartment",
+      "building": "Building",
+      "office": "Office",
+      "garage": "Garage",
+      "parking": "Parking spot",
+      "other": "Other"
+    },
+    "typesPlural": {
+      "apartment": "Apartments",
+      "building": "Buildings",
+      "office": "Offices",
+      "garage": "Garages",
+      "parking": "Parking",
+      "other": "Other"
+    },
+    "fields": {
+      "type": "Type",
+      "name": "Name",
+      "address": "Address",
+      "surfaceArea": "Surface area",
+      "rent": "Rent",
+      "currency": "Currency",
+      "phone": "Phone",
+      "doorCode": "Door code",
+      "tenant": "Tenant",
+      "description": "Description"
+    },
+    "placeholders": {
+      "name": "Apt. 12",
+      "address": "Str. Victoriei 10, Bucharest",
+      "description": "Floor, rooms, furnishing, anything worth remembering."
+    },
+    "sheet": {
+      "create": {
+        "title": "Add a property",
+        "description": "Record a place you rent out.",
+        "submit": "Add property"
+      },
+      "edit": {
+        "title": "Edit property",
+        "description": "Changes to {name} apply right away.",
+        "submit": "Save changes"
+      },
+      "copy": {
+        "title": "Copy property",
+        "description": "Starts from {name}. Change what differs, then save it as a new property.",
+        "submit": "Add property"
+      }
+    },
+    "validation": {
+      "nameRequired": "Enter a name",
+      "addressRequired": "Enter an address",
+      "amountInvalid": "Enter a positive number",
+      "phoneInvalid": "Enter a valid phone number",
+      "tooLong": "Keep it under {max} characters"
+    }
+  }
+}
