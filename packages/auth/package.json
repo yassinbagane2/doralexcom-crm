@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./password": "./src/password.ts"
+    "./password": "./src/password.ts",
+    "./organization": "./src/organization.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,6 +18,7 @@
     "@t3-oss/env-core": "^0.13.11",
     "@workspace/db": "workspace:*",
     "better-auth": "^1.7.18",
+    "drizzle-orm": "^0.45.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {

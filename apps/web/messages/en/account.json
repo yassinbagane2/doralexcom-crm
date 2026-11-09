@@ -1,0 +1,126 @@
+{
+  "AccountLayout": {
+    "title": "Account",
+    "description": "Manage your profile and how you sign in."
+  },
+  "AccountSecurity": {
+    "metaTitle": "Security"
+  },
+  "AccountOverview": {
+    "title": "Overview",
+    "description": "A summary of your account.",
+    "memberSince": "Member since",
+    "signInMethods": "Sign-in methods",
+    "activeSessions": "Active sessions",
+    "password": "Password",
+    "passkeyCount": "{count, plural, one {# passkey} other {# passkeys}}",
+    "none": "None"
+  },
+  "AccountProfile": {
+    "title": "Profile",
+    "description": "How you appear across the app.",
+    "name": "Name",
+    "email": "Email",
+    "emailDescription": "Your email is your sign-in name and can't be changed here.",
+    "updated": "Profile updated"
+  },
+  "AccountDelete": {
+    "title": "Delete account",
+    "description": "Permanently remove your account and everything tied to it.",
+    "trigger": "Delete account",
+    "dialogTitle": "Delete your account?",
+    "dialogDescription": "Your profile, passkeys and sessions are removed immediately. This can't be undone.",
+    "submit": "Delete account",
+    "deleted": "Your account has been deleted"
+  },
+  "AccountPasswordConfirm": {
+    "password": "Password"
+  },
+  "AccountPassword": {
+    "title": "Password",
+    "description": "Changing it signs you out everywhere else.",
+    "current": "Current password",
+    "new": "New password",
+    "currentRequired": "Enter your current password",
+    "reused": "Choose a password you haven't used here",
+    "submit": "Change password",
+    "changed": "Password changed. Other devices were signed out."
+  },
+  "AccountTwoFactor": {
+    "title": "Two-factor authentication",
+    "description": "Ask for a code from your authenticator app after your password.",
+    "authenticatorApp": "Authenticator app",
+    "on": "On",
+    "off": "Off",
+    "newBackupCodes": "New backup codes",
+    "turnOff": "Turn off",
+    "setUp": "Set up",
+    "enableTitle": "Set up two-factor authentication",
+    "enableDescription": "Confirm your password to continue.",
+    "scanTitle": "Scan the QR code",
+    "scanDescription": "Use an authenticator app such as 1Password, Authy or Google Authenticator, then enter the code it shows.",
+    "cantScan": "Can't scan? Enter this key instead:",
+    "codeLabel": "Authentication code",
+    "turnOn": "Turn on",
+    "saveCodesTitle": "Save your backup codes",
+    "newCodesTitle": "Your new backup codes",
+    "codesDescription": "If you lose your authenticator, each code signs you in once. Store them somewhere safe: they won't be shown again.",
+    "savedThem": "I've saved them",
+    "regenerateTitle": "Generate new backup codes",
+    "regenerateDescription": "Your current backup codes stop working as soon as new ones are generated.",
+    "generateCodes": "Generate codes",
+    "disableTitle": "Turn off two-factor authentication?",
+    "disableDescription": "Signing in will only need your password or a passkey.",
+    "enabled": "Two-factor authentication is on",
+    "disabled": "Two-factor authentication is off",
+    "totpUnavailable": "Authenticator app setup isn't available."
+  },
+  "AccountBackupCodes": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy. Select the codes and copy them manually.",
+    "download": "Download",
+    "fileName": "backup-codes.txt"
+  },
+  "AccountPasskeys": {
+    "title": "Passkeys",
+    "description": "Sign in without a password, using your device's fingerprint, face or PIN.",
+    "fallbackName": "Passkey",
+    "addedOn": "Added {date}",
+    "remove": "Remove {name}",
+    "removeUnnamed": "Remove passkey",
+    "empty": "No passkeys yet. Add one to sign in with your fingerprint, face or device PIN.",
+    "add": "Add passkey",
+    "dialogTitle": "Add a passkey",
+    "dialogDescription": "Name it after the device or password manager that holds it, then follow your browser's prompt.",
+    "nameLabel": "Name (optional)",
+    "namePlaceholder": "MacBook Touch ID",
+    "added": "Passkey added",
+    "removed": "Passkey removed"
+  },
+  "AccountSessions": {
+    "title": "Sessions",
+    "description": "Devices signed in to your account. Sign out any you don't recognise.",
+    "thisDevice": "This device",
+    "lastActive": "Active {time}",
+    "lastActiveJustNow": "Active just now",
+    "signOut": "Sign out",
+    "signOutOthers": "Sign out of all other devices",
+    "unknownDevice": "Unknown device",
+    "unknownBrowser": "Unknown browser",
+    "browserOnSystem": "{browser} on {system}",
+    "revoked": "Session signed out",
+    "revokedOthers": "Signed out of all other devices"
+  },
+  "AccountVerifyEmail": {
+    "banner": "Verify <b>{email}</b> to secure your account.",
+    "sendCode": "Send code",
+    "dialogTitle": "Check your email",
+    "dialogDescription": "Enter the {length}-digit code we sent to {email}.",
+    "codeLabel": "Verification code",
+    "resend": "Resend code",
+    "verify": "Verify",
+    "sent": "Verification code sent",
+    "verified": "Email verified"
+  }
+}

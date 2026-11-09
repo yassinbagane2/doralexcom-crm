@@ -1,0 +1,67 @@
+{
+  "Common": {
+    "appName": "Tube",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "optional": "Optional",
+    "dismiss": "Dismiss",
+    "retry": "Retry"
+  },
+  "Theme": {
+    "label": "Theme",
+    "description": "Switch between light and dark mode.",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "Language": {
+    "label": "Language",
+    "description": "The language the app is shown in.",
+    "change": "Change language"
+  },
+  "Validation": {
+    "nameRequired": "Enter your name",
+    "nameTooLong": "Name is too long",
+    "emailInvalid": "Enter a valid email address",
+    "passwordRequired": "Enter your password",
+    "passwordTooShort": "Password must be at least {min} characters",
+    "passwordTooLong": "Password must be at most {max} characters",
+    "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordSpecial": "Password must contain at least one special character",
+    "passwordHint": "At least {min} characters, with an uppercase letter and a symbol.",
+    "passwordsMismatch": "Passwords don't match",
+    "codeInvalid": "Enter the {length}-digit code"
+  },
+  "Errors": {
+    "generic": "Something went wrong. Please try again.",
+    "INVALID_EMAIL_OR_PASSWORD": "Invalid email or password",
+    "INVALID_PASSWORD": "Incorrect password",
+    "INVALID_EMAIL": "Invalid email",
+    "USER_NOT_FOUND": "No account found with that email",
+    "USER_ALREADY_EXISTS": "An account with this email already exists",
+    "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL": "An account with this email already exists. Use another email.",
+    "EMAIL_NOT_VERIFIED": "Your email address isn't verified yet",
+    "EMAIL_ALREADY_VERIFIED": "Your email address is already verified",
+    "PASSWORD_TOO_SHORT": "Password is too short",
+    "PASSWORD_TOO_LONG": "Password is too long",
+    "PASSWORD_POLICY": "Password must contain an uppercase letter and a special character",
+    "SESSION_EXPIRED": "Your session expired. Sign in again to continue.",
+    "SESSION_NOT_FRESH": "For your security, sign in again to continue.",
+    "INVALID_OTP": "That code isn't right",
+    "OTP_EXPIRED": "That code has expired. Request a new one.",
+    "OTP_HAS_EXPIRED": "That code has expired. Request a new one.",
+    "TOO_MANY_ATTEMPTS": "Too many attempts",
+    "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE": "Too many attempts. Request a new code.",
+    "INVALID_CODE": "That code isn't right",
+    "INVALID_BACKUP_CODE": "That backup code isn't right",
+    "ACCOUNT_TEMPORARILY_LOCKED": "Too many failed attempts. Your account is temporarily locked. Try again later.",
+    "INVALID_TWO_FACTOR_COOKIE": "Your sign-in attempt expired. Start again.",
+    "ORGANIZATION_ALREADY_EXISTS": "An organization with this name already exists",
+    "YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS": "You already have an organization",
+    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "You're not allowed to change this organization"
+  }
+}

@@ -1,11 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  newPasswordSchema,
-  PASSWORD_MIN_LENGTH,
-} from "@workspace/auth/password"
-import { Alert } from "@workspace/ui/components/ui/alert"
+import { PASSWORD_MIN_LENGTH } from "@workspace/auth/password"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Field, FieldError } from "@workspace/ui/components/ui/field"
 import { Input } from "@workspace/ui/components/ui/input"
@@ -13,17 +9,19 @@ import { Label } from "@workspace/ui/components/ui/label"
 import { OTPInput } from "@workspace/ui/components/ui/otp-input"
 import { PasswordInput } from "@workspace/ui/components/ui/password-input"
 import { PasswordStrength } from "@workspace/ui/components/ui/password-strength"
-import { toast } from "@workspace/ui/components/ui/sonner"
+import { toast } from "@workspace/ui/components/motion/toaster"
 import { Loader2 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { useMemo, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { AuthHeader } from "@/components/auth/auth-header"
 import { routes } from "@/config/routes"
 import { useRequestPasswordReset, useResetPassword } from "@/hooks/queries/auth"
+import { useNewPasswordSchema } from "@/hooks/use-new-password-schema"
 
 const OTP_LENGTH = 6
 
@@ -41,20 +39,27 @@ export function ForgotPasswordForm() {
   return <RequestCodeStep onSent={setEmail} />
 }
 
-const requestSchema = z.object({
-  email: z.email("Enter a valid email address"),
-})
+function useRequestSchema() {
+  const t = useTranslations("Validation")
+
+  return useMemo(() => z.object({ email: z.email(t("emailInvalid")) }), [t])
+}
+
+type RequestValues = z.infer<ReturnType<typeof useRequestSchema>>
 
 function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
+  const t = useTranslations("ForgotPassword")
+  const tShared = useTranslations("AuthShared")
+  const requestSchema = useRequestSchema()
   const requestReset = useRequestPasswordReset()
 
-  const form = useForm<z.infer<typeof requestSchema>>({
+  const form = useForm<RequestValues>({
     resolver: zodResolver(requestSchema),
     defaultValues: { email: "" },
   })
   const { errors } = form.formState
 
-  function onSubmit({ email }: z.infer<typeof requestSchema>) {
+  function onSubmit({ email }: RequestValues) {
     const normalized = email.toLowerCase()
     requestReset.mutate(normalized, { onSuccess: () => onSent(normalized) })
   }
@@ -62,8 +67,8 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        title="Reset your password"
-        description="Enter the email you signed up with and we'll send you a code."
+        title={t("requestTitle")}
+        description={t("requestDescription")}
       />
 
       <form
@@ -71,17 +76,13 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-5"
       >
-        {requestReset.error ? (
-          <Alert variant="destructive">{requestReset.error.message}</Alert>
-        ) : null}
-
         <Field>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{tShared("emailLabel")}</Label>
           <Input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="name@example.com"
+            placeholder={tShared("emailPlaceholder")}
             aria-invalid={Boolean(errors.email)}
             aria-describedby="email-error"
             {...form.register("email")}
@@ -91,7 +92,7 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
 
         <Button type="submit" size="lg" disabled={requestReset.isPending}>
           {requestReset.isPending ? <Loader2 className="animate-spin" /> : null}
-          Send code
+          {t("sendCode")}
         </Button>
       </form>
 
@@ -100,12 +101,23 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
   )
 }
 
-const resetSchema = z.object({
-  otp: z.string().length(OTP_LENGTH, "Enter the 6-digit code"),
-  password: newPasswordSchema,
-})
+function useResetSchema() {
+  const t = useTranslations("Validation")
+  const passwordSchema = useNewPasswordSchema()
 
-type ResetValues = z.infer<typeof resetSchema>
+  return useMemo(
+    () =>
+      z.object({
+        otp: z
+          .string()
+          .length(OTP_LENGTH, t("codeInvalid", { length: OTP_LENGTH })),
+        password: passwordSchema,
+      }),
+    [t, passwordSchema]
+  )
+}
+
+type ResetValues = z.infer<ReturnType<typeof useResetSchema>>
 
 function ResetPasswordStep({
   email,
@@ -114,6 +126,8 @@ function ResetPasswordStep({
   email: string
   onRestart: () => void
 }) {
+  const t = useTranslations("ForgotPassword")
+  const resetSchema = useResetSchema()
   const router = useRouter()
   const resetPassword = useResetPassword()
 
@@ -128,7 +142,7 @@ function ResetPasswordStep({
       { email, ...values },
       {
         onSuccess: () => {
-          toast.success("Password reset. Sign in with your new password.")
+          toast.success(t("success"))
           router.replace(routes.signIn)
         },
       }
@@ -138,14 +152,14 @@ function ResetPasswordStep({
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        title="Check your email"
-        description={
-          <>
-            If an account exists for{" "}
-            <span className="font-medium text-foreground">{email}</span>, we
-            sent it a {OTP_LENGTH}-digit code.
-          </>
-        }
+        title={t("checkEmailTitle")}
+        description={t.rich("checkEmailDescription", {
+          email,
+          length: OTP_LENGTH,
+          highlight: (chunks) => (
+            <span className="font-medium text-foreground">{chunks}</span>
+          ),
+        })}
       />
 
       <form
@@ -153,16 +167,13 @@ function ResetPasswordStep({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-5"
       >
-        {resetPassword.error ? (
-          <Alert variant="destructive">{resetPassword.error.message}</Alert>
-        ) : null}
-
         <Controller
           control={form.control}
           name="otp"
           render={({ field }) => (
             <OTPInput
-              label="Code"
+              label={t("codeLabel")}
+              aria-label={t("codeLabel")}
               length={OTP_LENGTH}
               value={field.value}
               onChange={field.onChange}
@@ -174,7 +185,7 @@ function ResetPasswordStep({
         />
 
         <Field>
-          <Label htmlFor="password">New password</Label>
+          <Label htmlFor="password">{t("newPasswordLabel")}</Label>
           <PasswordInput
             id="password"
             autoComplete="new-password"
@@ -195,11 +206,11 @@ function ResetPasswordStep({
           {resetPassword.isPending ? (
             <Loader2 className="animate-spin" />
           ) : null}
-          Reset password
+          {t("submit")}
         </Button>
 
         <Button type="button" variant="ghost" onClick={onRestart}>
-          Use a different email
+          {t("differentEmail")}
         </Button>
       </form>
     </div>
@@ -207,15 +218,20 @@ function ResetPasswordStep({
 }
 
 function BackToSignIn() {
+  const t = useTranslations("ForgotPassword")
+
   return (
     <p className="text-center text-sm text-muted-foreground">
-      Remembered it?{" "}
-      <Link
-        href={routes.signIn}
-        className="font-medium text-foreground underline-offset-4 hover:underline"
-      >
-        Back to sign in
-      </Link>
+      {t.rich("rememberedIt", {
+        link: (chunks) => (
+          <Link
+            href={routes.signIn}
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            {chunks}
+          </Link>
+        ),
+      })}
     </p>
   )
 }

@@ -1,6 +1,10 @@
-import { toast } from "@workspace/ui/components/ui/sonner"
-import { isServer, QueryCache, QueryClient } from "@tanstack/react-query"
+import { isServer, QueryClient } from "@tanstack/react-query"
 
+/*
+ * Failed reads and writes are toasted from one place, `RequestErrorToasts` in
+ * components/providers.tsx, where the message can be translated. Pass
+ * `meta: { silent: true }` to a query or mutation that should stay quiet.
+ */
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -10,17 +14,6 @@ function makeQueryClient() {
         refetchOnWindowFocus: false,
       },
     },
-    queryCache: new QueryCache({
-      // Failed reads surface here once instead of in every component. Pass
-      // `meta: { silent: true }` for background polls that should stay quiet.
-      onError: (error, query) => {
-        if (query.meta?.silent) return
-
-        toast.error(error.message, {
-          action: { label: "Retry", onClick: () => query.fetch() },
-        })
-      },
-    }),
   })
 }
 

@@ -1,7 +1,8 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "@workspace/ui/components/ui/sonner"
+import { toast } from "@workspace/ui/components/motion/toaster"
+import { useTranslations } from "next-intl"
 
 import { authClient, unwrap } from "@/lib/auth-client"
 import { orpc } from "@/lib/orpc"
@@ -24,27 +25,27 @@ function useInvalidateSessions() {
 }
 
 export function useRevokeSession() {
+  const t = useTranslations("AccountSessions")
   const invalidateSessions = useInvalidateSessions()
 
   return useMutation({
     mutationFn: (token: string) => unwrap(authClient.revokeSession({ token })),
     onSuccess: async () => {
       await invalidateSessions()
-      toast.success("Session signed out")
+      toast.success(t("revoked"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }
 
 export function useRevokeOtherSessions() {
+  const t = useTranslations("AccountSessions")
   const invalidateSessions = useInvalidateSessions()
 
   return useMutation({
     mutationFn: () => unwrap(authClient.revokeOtherSessions()),
     onSuccess: async () => {
       await invalidateSessions()
-      toast.success("Signed out of all other devices")
+      toast.success(t("revokedOthers"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }

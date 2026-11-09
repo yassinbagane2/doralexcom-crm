@@ -1,8 +1,7 @@
-const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" })
-
-const relativeFormatter = new Intl.RelativeTimeFormat("en", {
-  numeric: "auto",
-})
+/*
+ * Dates in the reader's language. Callers pass the active locale, from
+ * `useLocale()` in client components or `getLocale()` on the server.
+ */
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 365 * 24 * 60 * 60],
@@ -12,19 +11,25 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["minute", 60],
 ]
 
-export function formatDate(date: Date | string) {
-  return dateFormatter.format(new Date(date))
+export function formatDate(date: Date | string, locale: string) {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+    new Date(date)
+  )
 }
 
-/** "5 minutes ago", "yesterday"… and "just now" under a minute. */
-export function formatRelative(date: Date | string) {
+/**
+ * "5 minutes ago", "yesterday"… or null under a minute, so the caller can say
+ * "just now" in its own words.
+ */
+export function formatRelative(date: Date | string, locale: string) {
   const seconds = (new Date(date).getTime() - Date.now()) / 1000
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
 
   for (const [unit, size] of UNITS) {
     if (Math.abs(seconds) >= size) {
-      return relativeFormatter.format(Math.round(seconds / size), unit)
+      return formatter.format(Math.round(seconds / size), unit)
     }
   }
 
-  return "just now"
+  return null
 }

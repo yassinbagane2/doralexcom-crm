@@ -1,6 +1,5 @@
 "use client"
 
-import { Alert } from "@workspace/ui/components/ui/alert"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Checkbox } from "@workspace/ui/components/ui/checkbox"
 import { Field } from "@workspace/ui/components/ui/field"
@@ -10,6 +9,7 @@ import { OTPInput } from "@workspace/ui/components/ui/otp-input"
 import { Loader2 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { AuthHeader } from "@/components/auth/auth-header"
@@ -18,21 +18,14 @@ import { useVerifyTwoFactor } from "@/hooks/queries/auth"
 
 const TOTP_LENGTH = 6
 
+/** How long a trusted device skips the second step (Better Auth's default). */
+const TRUST_DEVICE_DAYS = 30
+
 type Method = "totp" | "backup-code"
 
-const COPY: Record<Method, { title: string; description: string }> = {
-  totp: {
-    title: "Two-factor authentication",
-    description: "Enter the 6-digit code from your authenticator app.",
-  },
-  "backup-code": {
-    title: "Use a backup code",
-    description:
-      "Enter one of the backup codes you saved when you turned on two-factor authentication. Each code works once.",
-  },
-}
-
 export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
+  const t = useTranslations("TwoFactor")
+  const tShared = useTranslations("AuthShared")
   const router = useRouter()
   const verify = useVerifyTwoFactor()
 
@@ -66,10 +59,17 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <AuthHeader
-        title={COPY[method].title}
-        description={COPY[method].description}
-      />
+      {method === "totp" ? (
+        <AuthHeader
+          title={t("totpTitle")}
+          description={t("totpDescription", { length: TOTP_LENGTH })}
+        />
+      ) : (
+        <AuthHeader
+          title={t("backupTitle")}
+          description={t("backupDescription")}
+        />
+      )}
 
       <form
         noValidate
@@ -79,13 +79,9 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
         }}
         className="flex flex-col gap-5"
       >
-        {verify.error ? (
-          <Alert variant="destructive">{verify.error.message}</Alert>
-        ) : null}
-
         {method === "totp" ? (
           <OTPInput
-            aria-label="Authentication code"
+            aria-label={t("codeAriaLabel")}
             length={TOTP_LENGTH}
             value={code}
             onChange={setCode}
@@ -97,7 +93,7 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
           />
         ) : (
           <Field>
-            <Label htmlFor="backup-code">Backup code</Label>
+            <Label htmlFor="backup-code">{t("backupCodeLabel")}</Label>
             <Input
               id="backup-code"
               autoComplete="one-time-code"
@@ -116,7 +112,7 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
             checked={trustDevice}
             onCheckedChange={setTrustDevice}
           />
-          Trust this device for 30 days
+          {t("trustDevice", { days: TRUST_DEVICE_DAYS })}
         </Label>
 
         <Button
@@ -125,13 +121,11 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
           disabled={verify.isPending || code.trim() === ""}
         >
           {verify.isPending ? <Loader2 className="animate-spin" /> : null}
-          Verify
+          {t("submit")}
         </Button>
 
         <Button type="button" variant="ghost" onClick={switchMethod}>
-          {method === "totp"
-            ? "Use a backup code instead"
-            : "Use your authenticator app instead"}
+          {method === "totp" ? t("useBackupCode") : t("useAuthenticator")}
         </Button>
       </form>
 
@@ -140,7 +134,7 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
           href={routes.signIn}
           className="font-medium text-foreground underline-offset-4 hover:underline"
         >
-          Back to sign in
+          {tShared("backToSignIn")}
         </Link>
       </p>
     </div>

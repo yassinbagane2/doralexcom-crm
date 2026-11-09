@@ -1,6 +1,8 @@
 /*
  * Just enough user-agent parsing to label a session "Chrome on macOS". Order
  * matters: Edge and Opera also claim to be Chrome, and Chrome claims Safari.
+ * Returns the parts rather than a sentence, so the caller can word it in the
+ * active language.
  */
 
 const BROWSERS: [RegExp, string][] = [
@@ -24,12 +26,12 @@ function match(userAgent: string, table: [RegExp, string][]) {
   return table.find(([pattern]) => pattern.test(userAgent))?.[1]
 }
 
-export function describeUserAgent(userAgent: string | null | undefined) {
-  if (!userAgent) {
-    return "Unknown device"
-  }
+/** Null when there's no user agent at all; either part may be unknown. */
+export function parseUserAgent(userAgent: string | null | undefined) {
+  if (!userAgent) return null
 
-  const browser = match(userAgent, BROWSERS) ?? "Unknown browser"
-  const system = match(userAgent, SYSTEMS)
-  return system ? `${browser} on ${system}` : browser
+  return {
+    browser: match(userAgent, BROWSERS),
+    system: match(userAgent, SYSTEMS),
+  }
 }

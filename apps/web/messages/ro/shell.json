@@ -1,0 +1,34 @@
+{
+  "AppShell": {
+    "home": "Acasă"
+  },
+  "AccountNav": {
+    "label": "Cont",
+    "profile": "Profil",
+    "security": "Securitate",
+    "organization": "Organizație",
+    "preferences": "Preferințe"
+  },
+  "UserMenu": {
+    "open": "Deschide meniul contului",
+    "account": "Cont",
+    "security": "Securitate",
+    "organization": "Organizație",
+    "preferences": "Preferințe",
+    "signOut": "Deconectare"
+  },
+  "Preferences": {
+    "metaTitle": "Preferințe",
+    "appearanceTitle": "Aspect",
+    "appearanceDescription": "Cum arată aplicația pe acest dispozitiv.",
+    "languageTitle": "Limbă",
+    "languageDescription": "Salvată pe acest dispozitiv."
+  },
+  "Home": {
+    "title": "Proiectul e gata!",
+    "body": "Autentificarea, organizațiile, pagina de cont și protecția rutelor sunt configurate. Începe să construiești în <code>app/(app)</code>.",
+    "goToAccount": "Mergi la contul tău",
+    "signIn": "Autentificare",
+    "createAccount": "Creează un cont"
+  }
+}

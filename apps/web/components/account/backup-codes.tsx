@@ -1,12 +1,14 @@
 "use client"
 
 import { Button } from "@workspace/ui/components/ui/button"
-import { toast } from "@workspace/ui/components/ui/sonner"
+import { toast } from "@workspace/ui/components/motion/toaster"
 import { Check, Download } from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 /** Shown once, right after the codes are generated; the server keeps hashes. */
 export function BackupCodes({ codes }: { codes: string[] }) {
+  const t = useTranslations("AccountBackupCodes")
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -14,7 +16,7 @@ export function BackupCodes({ codes }: { codes: string[] }) {
       await navigator.clipboard.writeText(codes.join("\n"))
       setCopied(true)
     } catch {
-      toast.error("Couldn't copy. Select the codes and copy them manually.")
+      toast.error(t("copyFailed"))
     }
   }
 
@@ -23,7 +25,7 @@ export function BackupCodes({ codes }: { codes: string[] }) {
     const url = URL.createObjectURL(file)
     const link = Object.assign(document.createElement("a"), {
       href: url,
-      download: "backup-codes.txt",
+      download: t("fileName"),
     })
     link.click()
     URL.revokeObjectURL(url)
@@ -39,11 +41,11 @@ export function BackupCodes({ codes }: { codes: string[] }) {
       <div className="flex gap-2">
         <Button type="button" size="sm" variant="outline" onClick={copy}>
           {copied ? <Check /> : null}
-          {copied ? "Copied" : "Copy"}
+          {copied ? t("copied") : t("copy")}
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={download}>
           <Download size={16} />
-          Download
+          {t("download")}
         </Button>
       </div>
     </div>

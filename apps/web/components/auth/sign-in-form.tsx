@@ -1,7 +1,6 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Alert } from "@workspace/ui/components/ui/alert"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Checkbox } from "@workspace/ui/components/ui/checkbox"
 import {
@@ -16,24 +15,36 @@ import { Separator } from "@workspace/ui/components/ui/separator"
 import { Fingerprint, Loader2 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useSyncExternalStore } from "react"
+import { useTranslations } from "next-intl"
+import { useMemo, useSyncExternalStore } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { REDIRECT_PARAM, routes } from "@/config/routes"
 import { usePasskeySignIn, useSignIn } from "@/hooks/queries/auth"
 
-const signInSchema = z.object({
-  email: z.email("Enter a valid email address"),
-  // No policy check here: an account made under an older policy must still
-  // be able to sign in.
-  password: z.string().min(1, "Enter your password"),
-  rememberMe: z.boolean(),
-})
+function useSignInSchema() {
+  const t = useTranslations("Validation")
 
-type SignInValues = z.infer<typeof signInSchema>
+  return useMemo(
+    () =>
+      z.object({
+        email: z.email(t("emailInvalid")),
+        // No policy check here: an account made under an older policy must
+        // still be able to sign in.
+        password: z.string().min(1, t("passwordRequired")),
+        rememberMe: z.boolean(),
+      }),
+    [t]
+  )
+}
+
+type SignInValues = z.infer<ReturnType<typeof useSignInSchema>>
 
 export function SignInForm({ redirectTo }: { redirectTo: string }) {
+  const t = useTranslations("SignIn")
+  const tShared = useTranslations("AuthShared")
+  const signInSchema = useSignInSchema()
   const router = useRouter()
   const signIn = useSignIn()
   const passkeySignIn = usePasskeySignIn()
@@ -75,7 +86,6 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
   }
 
   const isPending = signIn.isPending || passkeySignIn.isPending
-  const error = signIn.error ?? passkeySignIn.error
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,15 +94,13 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-5"
       >
-        {error ? <Alert variant="destructive">{error.message}</Alert> : null}
-
         <Field>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{tShared("emailLabel")}</Label>
           <Input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="name@example.com"
+            placeholder={tShared("emailPlaceholder")}
             aria-invalid={Boolean(errors.email)}
             aria-describedby="email-error"
             {...form.register("email")}
@@ -102,12 +110,12 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
 
         <Field>
           <FieldHeader>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{tShared("passwordLabel")}</Label>
             <Link
               href={routes.forgotPassword}
               className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              Forgot password?
+              {t("forgotPassword")}
             </Link>
           </FieldHeader>
           <PasswordInput
@@ -128,12 +136,12 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
             checked={form.watch("rememberMe")}
             onCheckedChange={(checked) => form.setValue("rememberMe", checked)}
           />
-          Keep me signed in
+          {t("rememberMe")}
         </Label>
 
         <Button type="submit" size="lg" disabled={isPending}>
           {signIn.isPending ? <Loader2 className="animate-spin" /> : null}
-          Sign in
+          {t("submit")}
         </Button>
       </form>
 
@@ -141,7 +149,7 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
         <>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <Separator className="flex-1" />
-            or
+            {t("or")}
             <Separator className="flex-1" />
           </div>
 
@@ -157,19 +165,22 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
             ) : (
               <Fingerprint size={16} />
             )}
-            Sign in with a passkey
+            {t("passkey")}
           </Button>
         </>
       ) : null}
 
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link
-          href={routes.signUp}
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Sign up
-        </Link>
+        {t.rich("noAccount", {
+          link: (chunks) => (
+            <Link
+              href={routes.signUp}
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </div>
   )

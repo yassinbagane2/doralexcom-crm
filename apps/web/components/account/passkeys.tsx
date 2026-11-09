@@ -14,6 +14,7 @@ import { Field } from "@workspace/ui/components/ui/field"
 import { Input } from "@workspace/ui/components/ui/input"
 import { Label } from "@workspace/ui/components/ui/label"
 import { Loader2, Trash } from "@workspace/ui/icons"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
@@ -24,6 +25,8 @@ import {
 import { formatDate } from "@/lib/format"
 
 export function Passkeys() {
+  const t = useTranslations("AccountPasskeys")
+  const locale = useLocale()
   const { data: passkeys, isPending } = usePasskeys()
   const deletePasskey = useDeletePasskey()
 
@@ -37,16 +40,22 @@ export function Passkeys() {
             <li key={passkey.id} className="flex items-center gap-3 px-4 py-3">
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium">
-                  {passkey.name || "Passkey"}
+                  {passkey.name || t("fallbackName")}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Added {formatDate(passkey.createdAt)}
+                  {t("addedOn", {
+                    date: formatDate(passkey.createdAt, locale),
+                  })}
                 </span>
               </div>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Remove ${passkey.name || "passkey"}`}
+                aria-label={
+                  passkey.name
+                    ? t("remove", { name: passkey.name })
+                    : t("removeUnnamed")
+                }
                 disabled={deletePasskey.isPending}
                 onClick={() => deletePasskey.mutate(passkey.id)}
               >
@@ -56,10 +65,7 @@ export function Passkeys() {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          No passkeys yet. Add one to sign in with your fingerprint, face or
-          device PIN.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("empty")}</p>
       )}
 
       <AddPasskeyDialog />
@@ -68,6 +74,8 @@ export function Passkeys() {
 }
 
 function AddPasskeyDialog() {
+  const t = useTranslations("AccountPasskeys")
+  const tCommon = useTranslations("Common")
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const addPasskey = useAddPasskey()
@@ -83,15 +91,12 @@ function AddPasskeyDialog() {
       <DialogTrigger
         render={<Button variant="outline" className="self-start" />}
       >
-        Add passkey
+        {t("add")}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader className="mb-5">
-          <DialogTitle>Add a passkey</DialogTitle>
-          <DialogDescription>
-            Name it after the device or password manager that holds it, then
-            follow your browser&apos;s prompt.
-          </DialogDescription>
+          <DialogTitle>{t("dialogTitle")}</DialogTitle>
+          <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
 
         <form
@@ -103,10 +108,10 @@ function AddPasskeyDialog() {
           }}
         >
           <Field>
-            <Label htmlFor="passkey-name">Name (optional)</Label>
+            <Label htmlFor="passkey-name">{t("nameLabel")}</Label>
             <Input
               id="passkey-name"
-              placeholder="MacBook Touch ID"
+              placeholder={t("namePlaceholder")}
               value={name}
               onChange={(event) => setName(event.target.value)}
               autoFocus
@@ -115,13 +120,13 @@ function AddPasskeyDialog() {
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose render={<Button type="button" variant="ghost" />}>
-              Cancel
+              {tCommon("cancel")}
             </DialogClose>
             <Button type="submit" disabled={addPasskey.isPending}>
               {addPasskey.isPending ? (
                 <Loader2 className="animate-spin" />
               ) : null}
-              Continue
+              {tCommon("continue")}
             </Button>
           </div>
         </form>

@@ -1,0 +1,60 @@
+{
+  "Organization": {
+    "typeLegend": "Who rents out the properties?",
+    "types": {
+      "personal": {
+        "title": "Personal landlord",
+        "description": "You rent out property you own, as a private person."
+      },
+      "business": {
+        "title": "Business",
+        "description": "A company or agency that owns or manages rentals."
+      },
+      "institution": {
+        "title": "Institution",
+        "description": "A public body, association or foundation."
+      }
+    },
+    "typeLabel": "Type",
+    "nameLabel": {
+      "personal": "Your name",
+      "business": "Company name",
+      "institution": "Institution name"
+    },
+    "namePlaceholder": {
+      "personal": "Ion Popescu",
+      "business": "Acme Imobiliare SRL",
+      "institution": "Primăria Sectorului 1"
+    },
+    "nameHint": {
+      "personal": "Shown to tenants on contracts and receipts.",
+      "business": "The registered legal name, as it appears on contracts.",
+      "institution": "The official name, as it appears on contracts."
+    },
+    "taxIdLabel": {
+      "business": "Tax ID (CUI)",
+      "institution": "Fiscal code (CIF)"
+    },
+    "registrationNumberLabel": "Trade register no.",
+    "validation": {
+      "nameRequired": "Enter a name",
+      "nameTooLong": "Name is too long",
+      "taxIdInvalid": "Enter a valid code, e.g. RO12345678",
+      "registrationNumberTooLong": "Registration number is too long"
+    }
+  },
+  "Onboarding": {
+    "metaTitle": "Set up your organization",
+    "step": "Last step",
+    "title": "Set up your organization",
+    "description": "Tell us who rents out the properties. You can change this later in your account settings.",
+    "submit": "Create organization",
+    "signOut": "Sign out"
+  },
+  "OrganizationSettings": {
+    "metaTitle": "Organization",
+    "title": "Organization",
+    "description": "Whether you rent as a private person, a business or an institution, and the details that go on your documents.",
+    "saved": "Organization updated"
+  }
+}

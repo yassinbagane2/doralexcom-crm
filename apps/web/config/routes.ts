@@ -4,15 +4,21 @@ export const routes = {
   signUp: "/sign-up",
   forgotPassword: "/forgot-password",
   twoFactor: "/two-factor",
+  onboarding: "/onboarding",
   account: "/account",
   accountSecurity: "/account/security",
+  accountOrganization: "/account/organization",
+  accountPreferences: "/account/preferences",
 } as const
 
 /** Where a visitor lands after signing in, when nothing else was requested. */
 export const DEFAULT_SIGNED_IN_ROUTE = routes.account
 
 /** Need a session. Each entry also covers everything nested under it. */
-export const PROTECTED_ROUTES: readonly string[] = [routes.account]
+export const PROTECTED_ROUTES: readonly string[] = [
+  routes.account,
+  routes.onboarding,
+]
 
 /** Only make sense signed out. Signed-in visitors are sent on instead. */
 export const AUTH_ROUTES: readonly string[] = [

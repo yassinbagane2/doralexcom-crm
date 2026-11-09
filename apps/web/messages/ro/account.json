@@ -1,0 +1,126 @@
+{
+  "AccountLayout": {
+    "title": "Cont",
+    "description": "Gestionează-ți profilul și modul în care te autentifici."
+  },
+  "AccountSecurity": {
+    "metaTitle": "Securitate"
+  },
+  "AccountOverview": {
+    "title": "Prezentare generală",
+    "description": "Un rezumat al contului tău.",
+    "memberSince": "Membru din",
+    "signInMethods": "Metode de autentificare",
+    "activeSessions": "Sesiuni active",
+    "password": "Parolă",
+    "passkeyCount": "{count, plural, one {# cheie de acces} few {# chei de acces} other {# de chei de acces}}",
+    "none": "Niciuna"
+  },
+  "AccountProfile": {
+    "title": "Profil",
+    "description": "Cum apari în aplicație.",
+    "name": "Nume",
+    "email": "Email",
+    "emailDescription": "Emailul este numele cu care te autentifici și nu poate fi schimbat aici.",
+    "updated": "Profilul a fost actualizat"
+  },
+  "AccountDelete": {
+    "title": "Șterge contul",
+    "description": "Elimină definitiv contul și tot ce ține de el.",
+    "trigger": "Șterge contul",
+    "dialogTitle": "Îți ștergi contul?",
+    "dialogDescription": "Profilul, cheile de acces și sesiunile tale sunt eliminate imediat. Acțiunea nu poate fi anulată.",
+    "submit": "Șterge contul",
+    "deleted": "Contul tău a fost șters"
+  },
+  "AccountPasswordConfirm": {
+    "password": "Parolă"
+  },
+  "AccountPassword": {
+    "title": "Parolă",
+    "description": "Schimbarea ei te deconectează de pe toate celelalte dispozitive.",
+    "current": "Parola actuală",
+    "new": "Parola nouă",
+    "currentRequired": "Introdu parola actuală",
+    "reused": "Alege o parolă pe care nu ai mai folosit-o aici",
+    "submit": "Schimbă parola",
+    "changed": "Parola a fost schimbată. Celelalte dispozitive au fost deconectate."
+  },
+  "AccountTwoFactor": {
+    "title": "Autentificare în doi pași",
+    "description": "Cere un cod din aplicația de autentificare după parolă.",
+    "authenticatorApp": "Aplicație de autentificare",
+    "on": "Activată",
+    "off": "Dezactivată",
+    "newBackupCodes": "Coduri de rezervă noi",
+    "turnOff": "Dezactivează",
+    "setUp": "Configurează",
+    "enableTitle": "Configurează autentificarea în doi pași",
+    "enableDescription": "Confirmă parola pentru a continua.",
+    "scanTitle": "Scanează codul QR",
+    "scanDescription": "Folosește o aplicație de autentificare precum 1Password, Authy sau Google Authenticator, apoi introdu codul afișat.",
+    "cantScan": "Nu poți scana? Introdu în schimb această cheie:",
+    "codeLabel": "Cod de autentificare",
+    "turnOn": "Activează",
+    "saveCodesTitle": "Salvează codurile de rezervă",
+    "newCodesTitle": "Noile tale coduri de rezervă",
+    "codesDescription": "Dacă pierzi accesul la aplicația de autentificare, fiecare cod te autentifică o singură dată. Păstrează-le într-un loc sigur: nu vor mai fi afișate.",
+    "savedThem": "Le-am salvat",
+    "regenerateTitle": "Generează coduri de rezervă noi",
+    "regenerateDescription": "Codurile de rezervă actuale nu mai funcționează imediat ce sunt generate altele noi.",
+    "generateCodes": "Generează codurile",
+    "disableTitle": "Dezactivezi autentificarea în doi pași?",
+    "disableDescription": "Pentru autentificare îți vor trebui doar parola sau o cheie de acces.",
+    "enabled": "Autentificarea în doi pași este activată",
+    "disabled": "Autentificarea în doi pași este dezactivată",
+    "totpUnavailable": "Configurarea cu aplicație de autentificare nu este disponibilă."
+  },
+  "AccountBackupCodes": {
+    "copy": "Copiază",
+    "copied": "Copiat",
+    "copyFailed": "Nu s-a putut copia. Selectează codurile și copiază-le manual.",
+    "download": "Descarcă",
+    "fileName": "coduri-de-rezerva.txt"
+  },
+  "AccountPasskeys": {
+    "title": "Chei de acces",
+    "description": "Autentifică-te fără parolă, cu amprenta, recunoașterea facială sau PIN-ul dispozitivului.",
+    "fallbackName": "Cheie de acces",
+    "addedOn": "Adăugată pe {date}",
+    "remove": "Elimină {name}",
+    "removeUnnamed": "Elimină cheia de acces",
+    "empty": "Nu ai încă nicio cheie de acces. Adaugă una ca să te autentifici cu amprenta, fața sau PIN-ul dispozitivului.",
+    "add": "Adaugă o cheie de acces",
+    "dialogTitle": "Adaugă o cheie de acces",
+    "dialogDescription": "Denumește-o după dispozitivul sau managerul de parole în care este salvată, apoi urmează instrucțiunile browserului.",
+    "nameLabel": "Nume (opțional)",
+    "namePlaceholder": "MacBook Touch ID",
+    "added": "Cheia de acces a fost adăugată",
+    "removed": "Cheia de acces a fost eliminată"
+  },
+  "AccountSessions": {
+    "title": "Sesiuni",
+    "description": "Dispozitivele conectate la contul tău. Deconectează-le pe cele pe care nu le recunoști.",
+    "thisDevice": "Acest dispozitiv",
+    "lastActive": "Ultima activitate: {time}",
+    "lastActiveJustNow": "Ultima activitate: chiar acum",
+    "signOut": "Deconectează",
+    "signOutOthers": "Deconectează toate celelalte dispozitive",
+    "unknownDevice": "Dispozitiv necunoscut",
+    "unknownBrowser": "Browser necunoscut",
+    "browserOnSystem": "{browser} pe {system}",
+    "revoked": "Sesiunea a fost închisă",
+    "revokedOthers": "Toate celelalte dispozitive au fost deconectate"
+  },
+  "AccountVerifyEmail": {
+    "banner": "Verifică adresa <b>{email}</b> pentru a-ți securiza contul.",
+    "sendCode": "Trimite codul",
+    "dialogTitle": "Verifică-ți emailul",
+    "dialogDescription": "Introdu codul de {length} cifre pe care l-am trimis la {email}.",
+    "codeLabel": "Cod de verificare",
+    "resend": "Retrimite codul",
+    "verify": "Verifică",
+    "sent": "Codul de verificare a fost trimis",
+    "verified": "Emailul a fost verificat"
+  }
+}

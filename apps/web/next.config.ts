@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import createNextIntlPlugin from "next-intl/plugin"
 
 // Fails the build early when a public variable is missing.
 import "./env"
@@ -9,4 +10,6 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@workspace/ui", "@workspace/auth", "@workspace/db"],
 }
 
-export default nextConfig
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
+
+export default withNextIntl(nextConfig)

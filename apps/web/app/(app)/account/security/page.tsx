@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
 import { ChangePasswordForm } from "@/components/account/change-password-form"
 import { Passkeys } from "@/components/account/passkeys"
@@ -7,37 +8,41 @@ import { SettingsSection } from "@/components/account/settings-section"
 import { TwoFactorSettings } from "@/components/account/two-factor-settings"
 import { requireSession } from "@/lib/auth"
 
-export const metadata: Metadata = { title: "Security" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("AccountSecurity")
+  return { title: t("metaTitle") }
+}
 
 export default async function SecurityPage() {
   const { user, session } = await requireSession()
+  const t = await getTranslations()
 
   return (
     <>
       <SettingsSection
-        title="Password"
-        description="Changing it signs you out everywhere else."
+        title={t("AccountPassword.title")}
+        description={t("AccountPassword.description")}
       >
         <ChangePasswordForm />
       </SettingsSection>
 
       <SettingsSection
-        title="Two-factor authentication"
-        description="Ask for a code from your authenticator app after your password."
+        title={t("AccountTwoFactor.title")}
+        description={t("AccountTwoFactor.description")}
       >
         <TwoFactorSettings enabled={Boolean(user.twoFactorEnabled)} />
       </SettingsSection>
 
       <SettingsSection
-        title="Passkeys"
-        description="Sign in without a password, using your device's fingerprint, face or PIN."
+        title={t("AccountPasskeys.title")}
+        description={t("AccountPasskeys.description")}
       >
         <Passkeys />
       </SettingsSection>
 
       <SettingsSection
-        title="Sessions"
-        description="Devices signed in to your account. Sign out any you don't recognise."
+        title={t("AccountSessions.title")}
+        description={t("AccountSessions.description")}
       >
         <Sessions currentSessionId={session.id} />
       </SettingsSection>

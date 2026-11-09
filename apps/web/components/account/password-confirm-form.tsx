@@ -1,12 +1,12 @@
 "use client"
 
-import { Alert } from "@workspace/ui/components/ui/alert"
 import { Button } from "@workspace/ui/components/ui/button"
 import { DialogClose } from "@workspace/ui/components/ui/dialog"
 import { Field } from "@workspace/ui/components/ui/field"
 import { Label } from "@workspace/ui/components/ui/label"
 import { PasswordInput } from "@workspace/ui/components/ui/password-input"
 import { Loader2 } from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 /**
@@ -17,15 +17,15 @@ export function PasswordConfirmForm({
   submitLabel,
   destructive = false,
   isPending,
-  error,
   onSubmit,
 }: {
   submitLabel: string
   destructive?: boolean
   isPending: boolean
-  error: Error | null
   onSubmit: (password: string) => void
 }) {
+  const t = useTranslations("AccountPasswordConfirm")
+  const tCommon = useTranslations("Common")
   const id = useId()
   const [password, setPassword] = useState("")
 
@@ -38,10 +38,8 @@ export function PasswordConfirmForm({
         if (password) onSubmit(password)
       }}
     >
-      {error ? <Alert variant="destructive">{error.message}</Alert> : null}
-
       <Field>
-        <Label htmlFor={id}>Password</Label>
+        <Label htmlFor={id}>{t("password")}</Label>
         <PasswordInput
           id={id}
           autoComplete="current-password"
@@ -53,7 +51,7 @@ export function PasswordConfirmForm({
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <DialogClose render={<Button type="button" variant="ghost" />}>
-          Cancel
+          {tCommon("cancel")}
         </DialogClose>
         <Button
           type="submit"

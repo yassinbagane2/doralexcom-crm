@@ -1,5 +1,11 @@
 import { passkeyClient } from "@better-auth/passkey/client"
-import { emailOTPClient, twoFactorClient } from "better-auth/client/plugins"
+import { organizationAdditionalFields } from "@workspace/auth/organization"
+import {
+  emailOTPClient,
+  inferOrgAdditionalFields,
+  organizationClient,
+  twoFactorClient,
+} from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
 import { env } from "@/env"
@@ -7,7 +13,16 @@ import { env } from "@/env"
 /** Talks to Better Auth on the API server, carrying the session cookie. */
 export const authClient = createAuthClient({
   baseURL: env.NEXT_PUBLIC_SERVER_URL,
-  plugins: [emailOTPClient(), twoFactorClient(), passkeyClient()],
+  plugins: [
+    emailOTPClient(),
+    twoFactorClient(),
+    passkeyClient(),
+    organizationClient({
+      schema: inferOrgAdditionalFields({
+        organization: { additionalFields: organizationAdditionalFields },
+      }),
+    }),
+  ],
 })
 
 export type Session = typeof authClient.$Infer.Session

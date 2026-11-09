@@ -1,35 +1,41 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  newPasswordSchema,
-  PASSWORD_MIN_LENGTH,
-} from "@workspace/auth/password"
+import { PASSWORD_MIN_LENGTH } from "@workspace/auth/password"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Field, FieldError } from "@workspace/ui/components/ui/field"
 import { Label } from "@workspace/ui/components/ui/label"
 import { PasswordInput } from "@workspace/ui/components/ui/password-input"
 import { PasswordStrength } from "@workspace/ui/components/ui/password-strength"
 import { Loader2 } from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { useChangePassword } from "@/hooks/queries/user"
+import { useNewPasswordSchema } from "@/hooks/use-new-password-schema"
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Enter your current password"),
-    newPassword: newPasswordSchema,
-  })
-  .refine((values) => values.newPassword !== values.currentPassword, {
-    message: "Choose a password you haven't used here",
-    path: ["newPassword"],
-  })
-
-type ChangePasswordValues = z.infer<typeof changePasswordSchema>
+type ChangePasswordValues = { currentPassword: string; newPassword: string }
 
 export function ChangePasswordForm() {
+  const t = useTranslations("AccountPassword")
+  const newPasswordSchema = useNewPasswordSchema()
   const changePassword = useChangePassword()
+
+  const changePasswordSchema = useMemo(
+    () =>
+      z
+        .object({
+          currentPassword: z.string().min(1, t("currentRequired")),
+          newPassword: newPasswordSchema,
+        })
+        .refine((values) => values.newPassword !== values.currentPassword, {
+          message: t("reused"),
+          path: ["newPassword"],
+        }),
+    [t, newPasswordSchema]
+  )
 
   const form = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -48,7 +54,7 @@ export function ChangePasswordForm() {
       className="flex flex-col gap-5"
     >
       <Field>
-        <Label htmlFor="current-password">Current password</Label>
+        <Label htmlFor="current-password">{t("current")}</Label>
         <PasswordInput
           id="current-password"
           autoComplete="current-password"
@@ -62,7 +68,7 @@ export function ChangePasswordForm() {
       </Field>
 
       <Field>
-        <Label htmlFor="new-password">New password</Label>
+        <Label htmlFor="new-password">{t("new")}</Label>
         <PasswordInput
           id="new-password"
           autoComplete="new-password"
@@ -85,7 +91,7 @@ export function ChangePasswordForm() {
         disabled={changePassword.isPending}
       >
         {changePassword.isPending ? <Loader2 className="animate-spin" /> : null}
-        Change password
+        {t("submit")}
       </Button>
     </form>
   )

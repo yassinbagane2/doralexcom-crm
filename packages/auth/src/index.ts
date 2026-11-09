@@ -1,15 +1,22 @@
 import { passkey } from "@better-auth/passkey"
 import { db } from "@workspace/db"
 import * as schema from "@workspace/db/schema"
+import { and, asc, eq, inArray } from "drizzle-orm"
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import { openAPI } from "better-auth/plugins/open-api"
+import { organization } from "better-auth/plugins/organization"
 import { twoFactor } from "better-auth/plugins/two-factor"
 
 import { OTP_EXPIRES_IN, sendVerificationOTP } from "./email"
 import { env } from "./env"
+import {
+  hasLegalIdentifiers,
+  isOrganizationType,
+  organizationAdditionalFields,
+} from "./organization"
 import {
   findPasswordViolation,
   PASSWORD_MAX_LENGTH,
@@ -50,7 +57,15 @@ const authOptions = {
     sendOnSignUp: true,
   },
   user: {
-    deleteUser: { enabled: true },
+    deleteUser: {
+      enabled: true,
+      // Memberships go with the user (FK cascade), but an organization they
+      // own would be left behind with nobody able to manage it. Remove those,
+      // unless someone else also owns it.
+      beforeDelete: async (user) => {
+        await deleteSolelyOwnedOrganizations(user.id)
+      },
+    },
   },
   session: {
     // Lets proxy.ts and server components read the session without a DB hit.
@@ -82,6 +97,26 @@ const authOptions = {
       },
     }),
     twoFactor({ issuer: APP_NAME }),
+    organization({
+      // One organization per signup for now; the onboarding screen creates it.
+      organizationLimit: 1,
+      schema: {
+        organization: { additionalFields: organizationAdditionalFields },
+      },
+      // Better Auth stores enum-typed additional fields without checking them.
+      organizationHooks: {
+        beforeCreateOrganization: async ({ organization }) => ({
+          data: normalizeOrganizationFields(organization, {
+            requireType: true,
+          }),
+        }),
+        beforeUpdateOrganization: async ({ organization }) => ({
+          data: normalizeOrganizationFields(organization, {
+            requireType: false,
+          }),
+        }),
+      },
+    }),
     passkey({
       rpName: APP_NAME,
       // WebAuthn ceremonies run on the web app, not on the API host.
@@ -90,6 +125,20 @@ const authOptions = {
     }),
     openAPI(),
   ],
+  databaseHooks: {
+    session: {
+      create: {
+        // A new session starts in the user's first organization, so pages can
+        // rely on `activeOrganizationId` instead of looking it up each time.
+        before: async (session) => ({
+          data: {
+            ...session,
+            activeOrganizationId: await findFirstOrganizationId(session.userId),
+          },
+        }),
+      },
+    },
+  },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       const field = PASSWORD_FIELD_BY_PATH[ctx.path]
@@ -112,6 +161,84 @@ const authOptions = {
 } satisfies BetterAuthOptions
 
 export const auth = betterAuth(authOptions)
+
+/**
+ * Rejects an unknown organization type, and clears identifiers that are empty
+ * or don't apply to it: a personal landlord has no fiscal code, only businesses register with
+ * the trade register.
+ */
+function normalizeOrganizationFields(
+  data: Record<string, unknown>,
+  { requireType }: { requireType: boolean }
+) {
+  const { type } = data
+
+  // Forms send "" for a field the user emptied; store that as "not set".
+  const cleared = {
+    ...(data.taxId === "" ? { taxId: null } : {}),
+    ...(data.registrationNumber === "" ? { registrationNumber: null } : {}),
+  }
+
+  if (type === undefined && !requireType) return cleared
+
+  if (!isOrganizationType(type)) {
+    throw new APIError("BAD_REQUEST", {
+      code: "INVALID_ORGANIZATION_TYPE",
+      message: "Organization type must be personal, business or institution",
+    })
+  }
+
+  return {
+    ...cleared,
+    ...(hasLegalIdentifiers(type) ? {} : { taxId: null }),
+    ...(type === "business" ? {} : { registrationNumber: null }),
+  }
+}
+
+async function findFirstOrganizationId(userId: string) {
+  const membership = await db.query.member.findFirst({
+    where: eq(schema.member.userId, userId),
+    orderBy: asc(schema.member.createdAt),
+    columns: { organizationId: true },
+  })
+
+  return membership?.organizationId ?? null
+}
+
+async function deleteSolelyOwnedOrganizations(userId: string) {
+  const owned = await db
+    .select({ organizationId: schema.member.organizationId })
+    .from(schema.member)
+    .where(
+      and(eq(schema.member.userId, userId), eq(schema.member.role, "owner"))
+    )
+
+  if (owned.length === 0) return
+
+  const ownedIds = owned.map((row) => row.organizationId)
+  const owners = await db
+    .select({
+      organizationId: schema.member.organizationId,
+      userId: schema.member.userId,
+    })
+    .from(schema.member)
+    .where(
+      and(
+        inArray(schema.member.organizationId, ownedIds),
+        eq(schema.member.role, "owner")
+      )
+    )
+
+  const soleOwned = ownedIds.filter((id) =>
+    owners.every((row) => row.organizationId !== id || row.userId === userId)
+  )
+
+  if (soleOwned.length > 0) {
+    await db
+      .delete(schema.organization)
+      .where(inArray(schema.organization.id, soleOwned))
+  }
+}
 
 export type Session = typeof auth.$Infer.Session
 export type User = Session["user"]

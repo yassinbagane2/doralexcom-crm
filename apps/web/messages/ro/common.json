@@ -1,0 +1,67 @@
+{
+  "Common": {
+    "appName": "Tube",
+    "save": "Salvează",
+    "saveChanges": "Salvează modificările",
+    "cancel": "Anulează",
+    "continue": "Continuă",
+    "back": "Înapoi",
+    "optional": "Opțional",
+    "dismiss": "Închide",
+    "retry": "Reîncearcă"
+  },
+  "Theme": {
+    "label": "Temă",
+    "description": "Comută între modul luminos și cel întunecat.",
+    "switchToLight": "Treci la modul luminos",
+    "switchToDark": "Treci la modul întunecat",
+    "light": "Luminos",
+    "dark": "Întunecat"
+  },
+  "Language": {
+    "label": "Limbă",
+    "description": "Limba în care este afișată aplicația.",
+    "change": "Schimbă limba"
+  },
+  "Validation": {
+    "nameRequired": "Introdu numele",
+    "nameTooLong": "Numele este prea lung",
+    "emailInvalid": "Introdu o adresă de email validă",
+    "passwordRequired": "Introdu parola",
+    "passwordTooShort": "Parola trebuie să aibă cel puțin {min} caractere",
+    "passwordTooLong": "Parola poate avea cel mult {max} caractere",
+    "passwordUppercase": "Parola trebuie să conțină cel puțin o literă mare",
+    "passwordSpecial": "Parola trebuie să conțină cel puțin un caracter special",
+    "passwordHint": "Cel puțin {min} caractere, cu o literă mare și un simbol.",
+    "passwordsMismatch": "Parolele nu coincid",
+    "codeInvalid": "Introdu codul de {length} cifre"
+  },
+  "Errors": {
+    "generic": "Ceva nu a funcționat. Încearcă din nou.",
+    "INVALID_EMAIL_OR_PASSWORD": "Email sau parolă incorectă",
+    "INVALID_PASSWORD": "Parolă incorectă",
+    "INVALID_EMAIL": "Email invalid",
+    "USER_NOT_FOUND": "Nu există niciun cont cu acest email",
+    "USER_ALREADY_EXISTS": "Există deja un cont cu acest email",
+    "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL": "Există deja un cont cu acest email. Folosește alt email.",
+    "EMAIL_NOT_VERIFIED": "Adresa de email nu este încă verificată",
+    "EMAIL_ALREADY_VERIFIED": "Adresa de email este deja verificată",
+    "PASSWORD_TOO_SHORT": "Parola este prea scurtă",
+    "PASSWORD_TOO_LONG": "Parola este prea lungă",
+    "PASSWORD_POLICY": "Parola trebuie să conțină o literă mare și un caracter special",
+    "SESSION_EXPIRED": "Sesiunea a expirat. Autentifică-te din nou pentru a continua.",
+    "SESSION_NOT_FRESH": "Pentru siguranța ta, autentifică-te din nou pentru a continua.",
+    "INVALID_OTP": "Codul nu este corect",
+    "OTP_EXPIRED": "Codul a expirat. Cere unul nou.",
+    "OTP_HAS_EXPIRED": "Codul a expirat. Cere unul nou.",
+    "TOO_MANY_ATTEMPTS": "Prea multe încercări",
+    "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE": "Prea multe încercări. Cere un cod nou.",
+    "INVALID_CODE": "Codul nu este corect",
+    "INVALID_BACKUP_CODE": "Codul de rezervă nu este corect",
+    "ACCOUNT_TEMPORARILY_LOCKED": "Prea multe încercări eșuate. Contul este blocat temporar. Încearcă mai târziu.",
+    "INVALID_TWO_FACTOR_COOKIE": "Încercarea de autentificare a expirat. Începe din nou.",
+    "ORGANIZATION_ALREADY_EXISTS": "Există deja o organizație cu acest nume",
+    "YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS": "Ai deja o organizație",
+    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "Nu ai permisiunea să modifici această organizație"
+  }
+}

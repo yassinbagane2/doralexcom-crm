@@ -7,8 +7,8 @@ import { routes } from "@/config/routes"
 import { authClient, unwrap } from "@/lib/auth-client"
 
 /*
- * Sign-in and recovery flows. These hooks don't toast: each form shows its
- * own error inline, next to the fields it's about.
+ * Sign-in and recovery flows. Failures toast from one place, see
+ * `RequestErrorToasts` in components/providers.tsx.
  */
 
 export function useSignIn() {

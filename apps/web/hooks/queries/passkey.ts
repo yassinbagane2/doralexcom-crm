@@ -1,7 +1,8 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "@workspace/ui/components/ui/sonner"
+import { toast } from "@workspace/ui/components/motion/toaster"
+import { useTranslations } from "next-intl"
 
 import { authClient, unwrap } from "@/lib/auth-client"
 import { orpc } from "@/lib/orpc"
@@ -24,6 +25,7 @@ function useInvalidatePasskeys() {
 }
 
 export function useAddPasskey() {
+  const t = useTranslations("AccountPasskeys")
   const invalidatePasskeys = useInvalidatePasskeys()
 
   return useMutation({
@@ -31,13 +33,13 @@ export function useAddPasskey() {
       unwrap(authClient.passkey.addPasskey({ name: name || undefined })),
     onSuccess: async () => {
       await invalidatePasskeys()
-      toast.success("Passkey added")
+      toast.success(t("added"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }
 
 export function useDeletePasskey() {
+  const t = useTranslations("AccountPasskeys")
   const invalidatePasskeys = useInvalidatePasskeys()
 
   return useMutation({
@@ -45,8 +47,7 @@ export function useDeletePasskey() {
       unwrap(authClient.passkey.deletePasskey({ id })),
     onSuccess: async () => {
       await invalidatePasskeys()
-      toast.success("Passkey removed")
+      toast.success(t("removed"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }

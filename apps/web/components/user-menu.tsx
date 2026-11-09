@@ -7,7 +7,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/ui/dropdown-menu"
-import { Logout, ShieldCheck, UserCircle } from "@workspace/ui/icons"
+import {
+  AdjustmentsHorizontalIcon,
+  BuildingOffice,
+  Logout,
+  ShieldCheck,
+  UserCircle,
+} from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 
 import { UserAvatar } from "@/components/user-avatar"
@@ -15,12 +22,13 @@ import { routes } from "@/config/routes"
 import { useSignOut } from "@/hooks/queries/auth"
 
 export function UserMenu({ name, email }: { name: string; email: string }) {
+  const t = useTranslations("UserMenu")
   const signOut = useSignOut()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Open account menu"
+        aria-label={t("open")}
         className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <UserAvatar name={name} />
@@ -36,11 +44,19 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href={routes.account} />}>
           <UserCircle size={16} />
-          Account
+          {t("account")}
         </DropdownMenuItem>
         <DropdownMenuItem render={<Link href={routes.accountSecurity} />}>
           <ShieldCheck size={16} />
-          Security
+          {t("security")}
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href={routes.accountOrganization} />}>
+          <BuildingOffice size={16} />
+          {t("organization")}
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href={routes.accountPreferences} />}>
+          <AdjustmentsHorizontalIcon size={16} />
+          {t("preferences")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -48,7 +64,7 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           onClick={() => signOut.mutate()}
         >
           <Logout size={16} color="currentColor" />
-          Sign out
+          {t("signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

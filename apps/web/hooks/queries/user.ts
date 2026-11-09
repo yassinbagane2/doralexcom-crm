@@ -1,8 +1,9 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { toast } from "@workspace/ui/components/ui/sonner"
+import { toast } from "@workspace/ui/components/motion/toaster"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import { routes } from "@/config/routes"
 import { useRefreshSession } from "@/hooks/use-refresh-session"
@@ -15,6 +16,7 @@ export function useAccountOverview() {
 }
 
 export function useUpdateProfile() {
+  const t = useTranslations("AccountProfile")
   const refreshSession = useRefreshSession()
 
   return useMutation({
@@ -22,13 +24,13 @@ export function useUpdateProfile() {
       unwrap(authClient.updateUser(input)),
     onSuccess: async () => {
       await refreshSession()
-      toast.success("Profile updated")
+      toast.success(t("updated"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }
 
 export function useChangePassword() {
+  const t = useTranslations("AccountPassword")
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -39,13 +41,14 @@ export function useChangePassword() {
     onSuccess: () => {
       // Other devices were signed out, so their sessions are gone.
       void queryClient.invalidateQueries()
-      toast.success("Password changed. Other devices were signed out.")
+      toast.success(t("changed"))
     },
-    onError: (error) => toast.error(error.message),
   })
 }
 
 export function useSendVerificationEmail() {
+  const t = useTranslations("AccountVerifyEmail")
+
   return useMutation({
     mutationFn: (email: string) =>
       unwrap(
@@ -54,12 +57,12 @@ export function useSendVerificationEmail() {
           type: "email-verification",
         })
       ),
-    onSuccess: () => toast.success("Verification code sent"),
-    onError: (error) => toast.error(error.message),
+    onSuccess: () => toast.success(t("sent")),
   })
 }
 
 export function useVerifyEmail() {
+  const t = useTranslations("AccountVerifyEmail")
   const refreshSession = useRefreshSession()
 
   return useMutation({
@@ -67,19 +70,20 @@ export function useVerifyEmail() {
       unwrap(authClient.emailOtp.verifyEmail(input)),
     onSuccess: async () => {
       await refreshSession()
-      toast.success("Email verified")
+      toast.success(t("verified"))
     },
   })
 }
 
 export function useDeleteAccount() {
+  const t = useTranslations("AccountDelete")
   const router = useRouter()
 
   return useMutation({
     mutationFn: (password: string) =>
       unwrap(authClient.deleteUser({ password })),
     onSuccess: () => {
-      toast.success("Your account has been deleted")
+      toast.success(t("deleted"))
       router.replace(routes.home)
       router.refresh()
     },

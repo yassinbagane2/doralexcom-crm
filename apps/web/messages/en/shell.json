@@ -1,0 +1,34 @@
+{
+  "AppShell": {
+    "home": "Home"
+  },
+  "AccountNav": {
+    "label": "Account",
+    "profile": "Profile",
+    "security": "Security",
+    "organization": "Organization",
+    "preferences": "Preferences"
+  },
+  "UserMenu": {
+    "open": "Open account menu",
+    "account": "Account",
+    "security": "Security",
+    "organization": "Organization",
+    "preferences": "Preferences",
+    "signOut": "Sign out"
+  },
+  "Preferences": {
+    "metaTitle": "Preferences",
+    "appearanceTitle": "Appearance",
+    "appearanceDescription": "How the app looks on this device.",
+    "languageTitle": "Language",
+    "languageDescription": "Saved on this device."
+  },
+  "Home": {
+    "title": "Project ready!",
+    "body": "Authentication, organizations, an account page and route protection are wired up. Start building in <code>app/(app)</code>.",
+    "goToAccount": "Go to your account",
+    "signIn": "Sign in",
+    "createAccount": "Create an account"
+  }
+}

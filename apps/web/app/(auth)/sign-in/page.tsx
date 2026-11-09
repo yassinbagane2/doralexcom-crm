@@ -1,10 +1,14 @@
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
 import { AuthHeader } from "@/components/auth/auth-header"
 import { SignInForm } from "@/components/auth/sign-in-form"
 import { REDIRECT_PARAM, safeRedirectPath } from "@/config/routes"
 
-export const metadata: Metadata = { title: "Sign in" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("SignIn")
+  return { title: t("metaTitle") }
+}
 
 export default async function SignInPage({
   searchParams,
@@ -12,10 +16,11 @@ export default async function SignInPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const redirectTo = safeRedirectPath((await searchParams)[REDIRECT_PARAM])
+  const t = await getTranslations("SignIn")
 
   return (
     <div className="flex flex-col gap-8">
-      <AuthHeader title="Sign in" description="Welcome back." />
+      <AuthHeader title={t("title")} description={t("description")} />
       <SignInForm redirectTo={redirectTo} />
     </div>
   )

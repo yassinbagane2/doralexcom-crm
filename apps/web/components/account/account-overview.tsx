@@ -1,20 +1,37 @@
 "use client"
 
+import { useLocale, useTranslations } from "next-intl"
+
 import { useAccountOverview } from "@/hooks/queries/user"
 import { formatDate } from "@/lib/format"
 
 /** Read from the API server's own oRPC router, not from Better Auth. */
 export function AccountOverview() {
+  const t = useTranslations("AccountOverview")
+  const locale = useLocale()
   const { data, isPending } = useAccountOverview()
 
+  function describeSignInMethods(hasPassword: boolean, passkeyCount: number) {
+    const methods = hasPassword ? [t("password")] : []
+
+    if (passkeyCount > 0) {
+      methods.push(t("passkeyCount", { count: passkeyCount }))
+    }
+
+    return methods.join(", ") || t("none")
+  }
+
   const items = [
-    { label: "Member since", value: data && formatDate(data.memberSince) },
     {
-      label: "Sign-in methods",
+      label: t("memberSince"),
+      value: data && formatDate(data.memberSince, locale),
+    },
+    {
+      label: t("signInMethods"),
       value: data && describeSignInMethods(data.hasPassword, data.passkeyCount),
     },
     {
-      label: "Active sessions",
+      label: t("activeSessions"),
       value: data && String(data.activeSessionCount),
     },
   ]
@@ -35,14 +52,4 @@ export function AccountOverview() {
       ))}
     </dl>
   )
-}
-
-function describeSignInMethods(hasPassword: boolean, passkeyCount: number) {
-  const methods = hasPassword ? ["Password"] : []
-
-  if (passkeyCount > 0) {
-    methods.push(`${passkeyCount} passkey${passkeyCount === 1 ? "" : "s"}`)
-  }
-
-  return methods.join(", ") || "None"
 }

@@ -1,11 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  newPasswordSchema,
-  PASSWORD_MIN_LENGTH,
-} from "@workspace/auth/password"
-import { Alert } from "@workspace/ui/components/ui/alert"
+import { PASSWORD_MIN_LENGTH } from "@workspace/auth/password"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Field, FieldError } from "@workspace/ui/components/ui/field"
 import { Input } from "@workspace/ui/components/ui/input"
@@ -15,21 +11,41 @@ import { PasswordStrength } from "@workspace/ui/components/ui/password-strength"
 import { Loader2 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { DEFAULT_SIGNED_IN_ROUTE, routes } from "@/config/routes"
 import { useSignUp } from "@/hooks/queries/auth"
+import { useNewPasswordSchema } from "@/hooks/use-new-password-schema"
 
-const signUpSchema = z.object({
-  name: z.string().trim().min(1, "Enter your name").max(64, "Name is too long"),
-  email: z.email("Enter a valid email address"),
-  password: newPasswordSchema,
-})
+function useSignUpSchema() {
+  const t = useTranslations("Validation")
+  const passwordSchema = useNewPasswordSchema()
 
-type SignUpValues = z.infer<typeof signUpSchema>
+  return useMemo(
+    () =>
+      z.object({
+        name: z
+          .string()
+          .trim()
+          .min(1, t("nameRequired"))
+          .max(64, t("nameTooLong")),
+        email: z.email(t("emailInvalid")),
+        password: passwordSchema,
+      }),
+    [t, passwordSchema]
+  )
+}
+
+type SignUpValues = z.infer<ReturnType<typeof useSignUpSchema>>
 
 export function SignUpForm() {
+  const t = useTranslations("SignUp")
+  const tShared = useTranslations("AuthShared")
+  const tValidation = useTranslations("Validation")
+  const signUpSchema = useSignUpSchema()
   const router = useRouter()
   const signUp = useSignUp()
 
@@ -59,12 +75,8 @@ export function SignUpForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col gap-5"
       >
-        {signUp.error ? (
-          <Alert variant="destructive">{signUp.error.message}</Alert>
-        ) : null}
-
         <Field>
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">{t("nameLabel")}</Label>
           <Input
             id="name"
             autoComplete="name"
@@ -76,12 +88,12 @@ export function SignUpForm() {
         </Field>
 
         <Field>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{tShared("emailLabel")}</Label>
           <Input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="name@example.com"
+            placeholder={tShared("emailPlaceholder")}
             aria-invalid={Boolean(errors.email)}
             aria-describedby="email-error"
             {...form.register("email")}
@@ -90,7 +102,7 @@ export function SignUpForm() {
         </Field>
 
         <Field>
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{tShared("passwordLabel")}</Label>
           <PasswordInput
             id="password"
             autoComplete="new-password"
@@ -106,25 +118,27 @@ export function SignUpForm() {
             {errors.password?.message}
           </FieldError>
           <p id="password-hint" className="text-xs text-muted-foreground">
-            At least {PASSWORD_MIN_LENGTH} characters, with an uppercase letter
-            and a symbol.
+            {tValidation("passwordHint", { min: PASSWORD_MIN_LENGTH })}
           </p>
         </Field>
 
         <Button type="submit" size="lg" disabled={signUp.isPending}>
           {signUp.isPending ? <Loader2 className="animate-spin" /> : null}
-          Create account
+          {t("submit")}
         </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link
-          href={routes.signIn}
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Sign in
-        </Link>
+        {t.rich("haveAccount", {
+          link: (chunks) => (
+            <Link
+              href={routes.signIn}
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </div>
   )

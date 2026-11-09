@@ -10,19 +10,32 @@ import {
 import { Input } from "@workspace/ui/components/ui/input"
 import { Label } from "@workspace/ui/components/ui/label"
 import { Loader2 } from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { useUpdateProfile } from "@/hooks/queries/user"
 
-const profileSchema = z.object({
-  name: z.string().trim().min(1, "Enter your name").max(64, "Name is too long"),
-})
-
-type ProfileValues = z.infer<typeof profileSchema>
+type ProfileValues = { name: string }
 
 export function ProfileForm({ name, email }: { name: string; email: string }) {
+  const t = useTranslations("AccountProfile")
+  const tCommon = useTranslations("Common")
+  const tValidation = useTranslations("Validation")
   const updateProfile = useUpdateProfile()
+
+  const profileSchema = useMemo(
+    () =>
+      z.object({
+        name: z
+          .string()
+          .trim()
+          .min(1, tValidation("nameRequired"))
+          .max(64, tValidation("nameTooLong")),
+      }),
+    [tValidation]
+  )
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -38,7 +51,7 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
       className="flex flex-col gap-5"
     >
       <Field>
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t("name")}</Label>
         <Input
           id="name"
           autoComplete="name"
@@ -50,11 +63,9 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
       </Field>
 
       <Field>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("email")}</Label>
         <Input id="email" type="email" value={email} disabled readOnly />
-        <FieldDescription>
-          Your email is your sign-in name and can&apos;t be changed here.
-        </FieldDescription>
+        <FieldDescription>{t("emailDescription")}</FieldDescription>
       </Field>
 
       <Button
@@ -63,7 +74,7 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
         disabled={!isDirty || updateProfile.isPending}
       >
         {updateProfile.isPending ? <Loader2 className="animate-spin" /> : null}
-        Save changes
+        {tCommon("saveChanges")}
       </Button>
     </form>
   )

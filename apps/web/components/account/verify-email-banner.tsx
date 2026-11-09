@@ -11,6 +11,7 @@ import {
 } from "@workspace/ui/components/ui/dialog"
 import { OTPInput } from "@workspace/ui/components/ui/otp-input"
 import { Loader2, Mail } from "@workspace/ui/icons"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { useSendVerificationEmail, useVerifyEmail } from "@/hooks/queries/user"
@@ -18,6 +19,7 @@ import { useSendVerificationEmail, useVerifyEmail } from "@/hooks/queries/user"
 const OTP_LENGTH = 6
 
 export function VerifyEmailBanner({ email }: { email: string }) {
+  const t = useTranslations("AccountVerifyEmail")
   const [open, setOpen] = useState(false)
   const [code, setCode] = useState("")
   const sendCode = useSendVerificationEmail()
@@ -50,8 +52,10 @@ export function VerifyEmailBanner({ email }: { email: string }) {
       <Alert role="status" className="items-center">
         <Mail size={16} />
         <p className="flex-1">
-          Verify <span className="font-medium">{email}</span> to secure your
-          account.
+          {t.rich("banner", {
+            email,
+            b: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
         </p>
         <Button
           size="sm"
@@ -60,16 +64,16 @@ export function VerifyEmailBanner({ email }: { email: string }) {
           onClick={requestCode}
         >
           {sendCode.isPending ? <Loader2 className="animate-spin" /> : null}
-          Send code
+          {t("sendCode")}
         </Button>
       </Alert>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader className="mb-5">
-            <DialogTitle>Check your email</DialogTitle>
+            <DialogTitle>{t("dialogTitle")}</DialogTitle>
             <DialogDescription>
-              Enter the {OTP_LENGTH}-digit code we sent to {email}.
+              {t("dialogDescription", { length: OTP_LENGTH, email })}
             </DialogDescription>
           </DialogHeader>
 
@@ -82,13 +86,12 @@ export function VerifyEmailBanner({ email }: { email: string }) {
             }}
           >
             <OTPInput
-              aria-label="Verification code"
+              aria-label={t("codeLabel")}
               length={OTP_LENGTH}
               value={code}
               onChange={setCode}
               onComplete={verify}
               status={verifyEmail.error ? "error" : "idle"}
-              errorMessage={verifyEmail.error?.message}
               disabled={verifyEmail.isPending}
               autoFocus
             />
@@ -100,7 +103,7 @@ export function VerifyEmailBanner({ email }: { email: string }) {
                 disabled={sendCode.isPending}
                 onClick={requestCode}
               >
-                Resend code
+                {t("resend")}
               </Button>
               <Button
                 type="submit"
@@ -109,7 +112,7 @@ export function VerifyEmailBanner({ email }: { email: string }) {
                 {verifyEmail.isPending ? (
                   <Loader2 className="animate-spin" />
                 ) : null}
-                Verify
+                {t("verify")}
               </Button>
             </div>
           </form>

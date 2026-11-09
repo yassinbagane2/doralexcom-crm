@@ -25,3 +25,33 @@ export async function requireSession() {
 
   return session
 }
+
+/**
+ * The organization the signed-in user is working in: the session's active one,
+ * or their first if the session predates it. Null until onboarding creates one.
+ */
+export const getActiveOrganization = cache(async () => {
+  const session = await requireSession()
+  const organizations = await auth.api.listOrganizations({
+    headers: await headers(),
+  })
+
+  return (
+    organizations.find(
+      (org) => org.id === session.session.activeOrganizationId
+    ) ??
+    organizations[0] ??
+    null
+  )
+})
+
+/** For pages inside the app shell: no organization yet means onboarding. */
+export async function requireOrganization() {
+  const organization = await getActiveOrganization()
+
+  if (!organization) {
+    redirect(routes.onboarding)
+  }
+
+  return organization
+}

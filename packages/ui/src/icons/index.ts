@@ -74,6 +74,7 @@ export { LanguageIcon } from "@workspace/ui/icons/language"
 // (Loader).
 export {
   ActivityIcon,
+  AlertCircle,
   AlertTriangle,
   ArrowUpRight,
   Ban,
@@ -100,9 +101,11 @@ export {
   Glasses,
   Hand,
   Heart,
+  Info,
   Landmark,
   LifeBuoy,
   Loader2,
+  LoaderCircle,
   MapPin,
   Menu,
   Moon,

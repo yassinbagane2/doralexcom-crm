@@ -9,13 +9,17 @@ import { z } from "zod"
 export const PASSWORD_MIN_LENGTH = 8
 export const PASSWORD_MAX_LENGTH = 128
 
+/** Exported so forms can rebuild the schema with translated messages. */
+export const UPPERCASE_PATTERN = /[A-Z]/
+export const SPECIAL_CHARACTER_PATTERN = /[^A-Za-z0-9\s]/
+
 const UPPERCASE_RULE = {
-  pattern: /[A-Z]/,
+  pattern: UPPERCASE_PATTERN,
   message: "Password must contain at least one uppercase letter",
 }
 
 const SPECIAL_CHARACTER_RULE = {
-  pattern: /[^A-Za-z0-9\s]/,
+  pattern: SPECIAL_CHARACTER_PATTERN,
   message: "Password must contain at least one special character",
 }
 
