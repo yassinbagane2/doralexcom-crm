@@ -1,6 +1,9 @@
 {
   "AppShell": {
-    "home": "Home"
+    "home": "Home",
+    "navLabel": "Main",
+    "users": "Users",
+    "admin": "Admin"
   },
   "AccountNav": {
     "label": "Account",
@@ -15,7 +18,9 @@
     "security": "Security",
     "organization": "Organization",
     "preferences": "Preferences",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "adminDashboard": "Admin dashboard",
+    "users": "Users"
   },
   "Preferences": {
     "metaTitle": "Preferences",
@@ -27,8 +32,6 @@
   "Home": {
     "title": "Project ready!",
     "body": "Authentication, organizations, an account page and route protection are wired up. Start building in <code>app/(app)</code>.",
-    "goToAccount": "Go to your account",
-    "signIn": "Sign in",
-    "createAccount": "Create an account"
+    "signIn": "Sign in"
   }
 }

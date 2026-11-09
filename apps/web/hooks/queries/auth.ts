@@ -21,13 +21,6 @@ export function useSignIn() {
   })
 }
 
-export function useSignUp() {
-  return useMutation({
-    mutationFn: (input: { name: string; email: string; password: string }) =>
-      unwrap(authClient.signUp.email(input)),
-  })
-}
-
 export function usePasskeySignIn() {
   return useMutation({
     mutationFn: () => unwrap(authClient.signIn.passkey()),

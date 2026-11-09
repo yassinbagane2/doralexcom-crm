@@ -1,5 +1,6 @@
 "use client"
 
+import type { UserRole } from "@workspace/auth/roles"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +11,11 @@ import {
 import {
   AdjustmentsHorizontalIcon,
   BuildingOffice,
+  LayoutDashboard,
   Logout,
   ShieldCheck,
   UserCircle,
+  Users,
 } from "@workspace/ui/icons"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
@@ -21,7 +24,15 @@ import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
 import { useSignOut } from "@/hooks/queries/auth"
 
-export function UserMenu({ name, email }: { name: string; email: string }) {
+export function UserMenu({
+  name,
+  email,
+  role,
+}: {
+  name: string
+  email: string
+  role: UserRole
+}) {
   const t = useTranslations("UserMenu")
   const signOut = useSignOut()
 
@@ -42,6 +53,18 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           </span>
         </div>
         <DropdownMenuSeparator />
+        {role === "admin" ? (
+          <DropdownMenuItem render={<Link href={routes.admin} />}>
+            <LayoutDashboard size={16} />
+            {t("adminDashboard")}
+          </DropdownMenuItem>
+        ) : null}
+        {role === "business" ? (
+          <DropdownMenuItem render={<Link href={routes.users} />}>
+            <Users size={16} />
+            {t("users")}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href={routes.account} />}>
           <UserCircle size={16} />
           {t("account")}
@@ -50,10 +73,12 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           <ShieldCheck size={16} />
           {t("security")}
         </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href={routes.accountOrganization} />}>
-          <BuildingOffice size={16} />
-          {t("organization")}
-        </DropdownMenuItem>
+        {role === "business" ? (
+          <DropdownMenuItem render={<Link href={routes.accountOrganization} />}>
+            <BuildingOffice size={16} />
+            {t("organization")}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href={routes.accountPreferences} />}>
           <AdjustmentsHorizontalIcon size={16} />
           {t("preferences")}

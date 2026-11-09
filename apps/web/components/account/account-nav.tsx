@@ -1,5 +1,6 @@
 "use client"
 
+import type { UserRole } from "@workspace/auth/roles"
 import { cn } from "@workspace/ui/lib/utils"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
@@ -14,16 +15,20 @@ const LINKS = [
   { href: routes.accountPreferences, label: "preferences" },
 ] as const
 
-export function AccountNav() {
+export function AccountNav({ role }: { role: UserRole }) {
   const t = useTranslations("AccountNav")
   const pathname = usePathname()
+  // Only a business owns (and so can edit) an organization.
+  const links = LINKS.filter(
+    ({ href }) => href !== routes.accountOrganization || role === "business"
+  )
 
   return (
     <nav
       aria-label={t("label")}
       className="flex gap-1 overflow-x-auto border-b"
     >
-      {LINKS.map(({ href, label }) => {
+      {links.map(({ href, label }) => {
         const active = pathname === href
 
         return (

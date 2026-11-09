@@ -1,6 +1,8 @@
 import { passkeyClient } from "@better-auth/passkey/client"
 import { organizationAdditionalFields } from "@workspace/auth/organization"
+import { ac, roles } from "@workspace/auth/roles"
 import {
+  adminClient,
   emailOTPClient,
   inferOrgAdditionalFields,
   organizationClient,
@@ -17,6 +19,7 @@ export const authClient = createAuthClient({
     emailOTPClient(),
     twoFactorClient(),
     passkeyClient(),
+    adminClient({ ac, roles }),
     organizationClient({
       schema: inferOrgAdditionalFields({
         organization: { additionalFields: organizationAdditionalFields },

@@ -15,8 +15,15 @@ export function useErrorMessage() {
 
   return useCallback(
     (error: unknown) => {
-      if (error instanceof AuthError && error.code) {
-        const key = error.code as Parameters<typeof t>[0]
+      // Better Auth errors carry `code` directly; the API server's oRPC
+      // errors carry it in `data` (see packages/api/src/lib/auth-error.ts).
+      const code =
+        error instanceof AuthError
+          ? error.code
+          : (error as { data?: { code?: unknown } } | null)?.data?.code
+
+      if (typeof code === "string" && code) {
+        const key = code as Parameters<typeof t>[0]
         if (t.has(key)) return t(key)
       }
 

@@ -1,6 +1,9 @@
 {
   "AppShell": {
-    "home": "Acasă"
+    "home": "Acasă",
+    "navLabel": "Principal",
+    "users": "Utilizatori",
+    "admin": "Admin"
   },
   "AccountNav": {
     "label": "Cont",
@@ -15,7 +18,9 @@
     "security": "Securitate",
     "organization": "Organizație",
     "preferences": "Preferințe",
-    "signOut": "Deconectare"
+    "signOut": "Deconectare",
+    "adminDashboard": "Panou de administrare",
+    "users": "Utilizatori"
   },
   "Preferences": {
     "metaTitle": "Preferințe",
@@ -27,8 +32,6 @@
   "Home": {
     "title": "Proiectul e gata!",
     "body": "Autentificarea, organizațiile, pagina de cont și protecția rutelor sunt configurate. Începe să construiești în <code>app/(app)</code>.",
-    "goToAccount": "Mergi la contul tău",
-    "signIn": "Autentificare",
-    "createAccount": "Creează un cont"
+    "signIn": "Autentificare"
   }
 }

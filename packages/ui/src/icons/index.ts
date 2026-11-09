@@ -76,6 +76,8 @@ export {
   ActivityIcon,
   AlertCircle,
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   ArrowUpRight,
   Ban,
   Bell,

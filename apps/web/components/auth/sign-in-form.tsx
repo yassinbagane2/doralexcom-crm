@@ -171,16 +171,7 @@ export function SignInForm({ redirectTo }: { redirectTo: string }) {
       ) : null}
 
       <p className="text-center text-sm text-muted-foreground">
-        {t.rich("noAccount", {
-          link: (chunks) => (
-            <Link
-              href={routes.signUp}
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              {chunks}
-            </Link>
-          ),
-        })}
+        {t("noAccount")}
       </p>
     </div>
   )

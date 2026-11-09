@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import { SettingsSection } from "@/components/account/settings-section"
 import { EditOrganizationForm } from "@/components/organization/edit-organization-form"
-import { requireOrganization } from "@/lib/auth"
+import { requireOrganization, requireRole } from "@/lib/auth"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("OrganizationSettings")
@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function OrganizationPage() {
+  await requireRole("business")
   const organization = await requireOrganization()
   const t = await getTranslations("OrganizationSettings")
 

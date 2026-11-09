@@ -62,6 +62,10 @@
     "INVALID_TWO_FACTOR_COOKIE": "Încercarea de autentificare a expirat. Începe din nou.",
     "ORGANIZATION_ALREADY_EXISTS": "Există deja o organizație cu acest nume",
     "YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS": "Ai deja o organizație",
-    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "Nu ai permisiunea să modifici această organizație"
+    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "Nu ai permisiunea să modifici această organizație",
+    "BANNED_USER": "Contul tău a fost suspendat.",
+    "NO_ORGANIZATION": "Configurează mai întâi organizația.",
+    "YOU_CANNOT_BAN_YOURSELF": "Nu îți poți suspenda propriul cont",
+    "YOU_CANNOT_REMOVE_YOURSELF": "Nu îți poți șterge propriul cont de aici"
   }
 }

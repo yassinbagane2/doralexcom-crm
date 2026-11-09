@@ -62,6 +62,10 @@
     "INVALID_TWO_FACTOR_COOKIE": "Your sign-in attempt expired. Start again.",
     "ORGANIZATION_ALREADY_EXISTS": "An organization with this name already exists",
     "YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS": "You already have an organization",
-    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "You're not allowed to change this organization"
+    "YOU_ARE_NOT_ALLOWED_TO_UPDATE_THIS_ORGANIZATION": "You're not allowed to change this organization",
+    "BANNED_USER": "Your account has been suspended.",
+    "NO_ORGANIZATION": "Set up your organization first.",
+    "YOU_CANNOT_BAN_YOURSELF": "You can't suspend your own account",
+    "YOU_CANNOT_REMOVE_YOURSELF": "You can't delete your own account here"
   }
 }

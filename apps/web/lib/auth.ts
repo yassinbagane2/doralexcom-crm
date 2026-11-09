@@ -1,11 +1,12 @@
 import "server-only"
 
 import { auth } from "@workspace/auth"
+import { getUserRole, type UserRole } from "@workspace/auth/roles"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 
-import { routes } from "@/config/routes"
+import { homeRouteFor, routes } from "@/config/routes"
 
 /** The current session, read once per request however many components ask. */
 export const getSession = cache(async () =>
@@ -54,4 +55,25 @@ export async function requireOrganization() {
   }
 
   return organization
+}
+
+/** The signed-in user's role, defaulting to the least privileged. */
+export async function getRole() {
+  const session = await requireSession()
+  return getUserRole(session.user.role)
+}
+
+/**
+ * For pages only some roles may see. Anyone else is sent to their own home
+ * instead of a dead end.
+ */
+export async function requireRole(...allowed: UserRole[]) {
+  const session = await requireSession()
+  const role = getUserRole(session.user.role)
+
+  if (!allowed.includes(role)) {
+    redirect(homeRouteFor(role))
+  }
+
+  return { ...session, role }
 }

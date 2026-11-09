@@ -1,8 +1,11 @@
 import { auth } from "@workspace/auth"
+import { getUserRole } from "@workspace/auth/roles"
 import { NextResponse, type NextRequest } from "next/server"
 
 import {
+  ADMIN_ROUTES,
   AUTH_ROUTES,
+  homeRouteFor,
   matchesRoute,
   PROTECTED_ROUTES,
   REDIRECT_PARAM,
@@ -13,8 +16,8 @@ import {
 /**
  * Route protection. Signed-out visitors to a protected page go to sign-in
  * (remembering where they were headed); signed-in visitors to an auth page
- * skip past it. Pages still check the session themselves; this only decides
- * where a request should land.
+ * skip past it; only admins get into the admin dashboard. Pages still check
+ * the session themselves; this only decides where a request should land.
  */
 export async function proxy(request: NextRequest) {
   const { pathname, search, searchParams } = request.nextUrl
@@ -39,9 +42,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signIn)
   }
 
+  const role = getUserRole(session?.user.role)
+
   if (isAuthRoute && session) {
-    const destination = safeRedirectPath(searchParams.get(REDIRECT_PARAM))
+    const destination = safeRedirectPath(
+      searchParams.get(REDIRECT_PARAM),
+      homeRouteFor(role)
+    )
     return NextResponse.redirect(new URL(destination, request.url))
+  }
+
+  const isAdminRoute = ADMIN_ROUTES.some((route) =>
+    matchesRoute(pathname, route)
+  )
+  if (isAdminRoute && role !== "admin") {
+    return NextResponse.redirect(new URL(homeRouteFor(role), request.url))
   }
 
   return NextResponse.next()

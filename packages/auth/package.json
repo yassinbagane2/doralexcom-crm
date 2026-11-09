@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./password": "./src/password.ts",
-    "./organization": "./src/organization.ts"
+    "./organization": "./src/organization.ts",
+    "./roles": "./src/roles.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -5,6 +5,7 @@ import { and, asc, eq, inArray } from "drizzle-orm"
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { APIError, createAuthMiddleware } from "better-auth/api"
+import { admin } from "better-auth/plugins/admin"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import { openAPI } from "better-auth/plugins/open-api"
 import { organization } from "better-auth/plugins/organization"
@@ -17,6 +18,7 @@ import {
   isOrganizationType,
   organizationAdditionalFields,
 } from "./organization"
+import { ac, DEFAULT_USER_ROLE, getUserRole, roles } from "./roles"
 import {
   findPasswordViolation,
   PASSWORD_MAX_LENGTH,
@@ -32,6 +34,8 @@ const PASSWORD_FIELD_BY_PATH: Record<string, string> = {
   "/change-password": "newPassword",
   "/reset-password": "newPassword",
   "/email-otp/reset-password": "password",
+  "/admin/create-user": "password",
+  "/admin/set-user-password": "newPassword",
 }
 
 const appUrl = new URL(env.NEXT_PUBLIC_APP_URL)
@@ -45,6 +49,8 @@ const authOptions = {
   trustedOrigins: [appUrl.origin],
   emailAndPassword: {
     enabled: true,
+    // No public sign-up: admins create businesses, businesses create users.
+    disableSignUp: true,
     autoSignIn: true,
     minPasswordLength: PASSWORD_MIN_LENGTH,
     maxPasswordLength: PASSWORD_MAX_LENGTH,
@@ -57,15 +63,7 @@ const authOptions = {
     sendOnSignUp: true,
   },
   user: {
-    deleteUser: {
-      enabled: true,
-      // Memberships go with the user (FK cascade), but an organization they
-      // own would be left behind with nobody able to manage it. Remove those,
-      // unless someone else also owns it.
-      beforeDelete: async (user) => {
-        await deleteSolelyOwnedOrganizations(user.id)
-      },
-    },
+    deleteUser: { enabled: true },
   },
   session: {
     // Lets proxy.ts and server components read the session without a DB hit.
@@ -97,9 +95,19 @@ const authOptions = {
       },
     }),
     twoFactor({ issuer: APP_NAME }),
+    admin({
+      ac,
+      roles,
+      defaultRole: DEFAULT_USER_ROLE,
+      adminRoles: ["admin"],
+      bannedUserMessage: "Your account has been suspended.",
+    }),
     organization({
-      // One organization per signup for now; the onboarding screen creates it.
+      // One organization per business; the onboarding screen creates it.
       organizationLimit: 1,
+      // Users join their business's organization, they never start their own.
+      allowUserToCreateOrganization: async (user) =>
+        getUserRole((user as { role?: string | null }).role) === "business",
       schema: {
         organization: { additionalFields: organizationAdditionalFields },
       },
@@ -126,6 +134,17 @@ const authOptions = {
     openAPI(),
   ],
   databaseHooks: {
+    user: {
+      delete: {
+        // Memberships go with the user (FK cascade), but an organization they
+        // own would be left behind with nobody able to manage it. Remove those,
+        // unless someone else also owns it. A hook rather than
+        // `deleteUser.beforeDelete`, so an admin removing a business counts too.
+        before: async (user) => {
+          await deleteSolelyOwnedOrganizations(user.id)
+        },
+      },
+    },
     session: {
       create: {
         // A new session starts in the user's first organization, so pages can

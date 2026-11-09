@@ -1,7 +1,8 @@
+import type { UserRole } from "@workspace/auth/roles"
+
 export const routes = {
   home: "/",
   signIn: "/sign-in",
-  signUp: "/sign-up",
   forgotPassword: "/forgot-password",
   twoFactor: "/two-factor",
   onboarding: "/onboarding",
@@ -9,21 +10,34 @@ export const routes = {
   accountSecurity: "/account/security",
   accountOrganization: "/account/organization",
   accountPreferences: "/account/preferences",
+  /** Business accounts: the users they've created. */
+  users: "/users",
+  admin: "/admin",
+  adminUsers: "/admin/users",
 } as const
 
-/** Where a visitor lands after signing in, when nothing else was requested. */
+/** Where each kind of account starts out after signing in. */
+export function homeRouteFor(role: UserRole) {
+  return role === "admin" ? routes.admin : DEFAULT_SIGNED_IN_ROUTE
+}
+
+/** Where businesses and users land after signing in, when nothing else was requested. */
 export const DEFAULT_SIGNED_IN_ROUTE = routes.account
 
 /** Need a session. Each entry also covers everything nested under it. */
 export const PROTECTED_ROUTES: readonly string[] = [
   routes.account,
   routes.onboarding,
+  routes.users,
+  routes.admin,
 ]
+
+/** Admins only. Everyone else is sent to their own home. */
+export const ADMIN_ROUTES: readonly string[] = [routes.admin]
 
 /** Only make sense signed out. Signed-in visitors are sent on instead. */
 export const AUTH_ROUTES: readonly string[] = [
   routes.signIn,
-  routes.signUp,
   routes.forgotPassword,
   routes.twoFactor,
 ]
@@ -39,11 +53,14 @@ export function matchesRoute(pathname: string, route: string) {
  * Accepts only same-origin paths. `redirectTo` arrives from the URL, so
  * without this check `//evil.com` would turn sign-in into an open redirect.
  */
-export function safeRedirectPath(param: string | string[] | null | undefined) {
+export function safeRedirectPath(
+  param: string | string[] | null | undefined,
+  fallback: string = DEFAULT_SIGNED_IN_ROUTE
+) {
   const value = Array.isArray(param) ? param[0] : param
 
   if (!value || !value.startsWith("/") || /^\/[/\\]/.test(value)) {
-    return DEFAULT_SIGNED_IN_ROUTE
+    return fallback
   }
 
   return value

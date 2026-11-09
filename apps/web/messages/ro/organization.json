@@ -49,7 +49,9 @@
     "title": "Configurează organizația",
     "description": "Spune-ne cine închiriază proprietățile. Poți schimba asta oricând din setările contului.",
     "submit": "Creează organizația",
-    "signOut": "Deconectare"
+    "signOut": "Deconectare",
+    "noBusinessTitle": "Nu faci parte dintr-o firmă",
+    "noBusinessDescription": "Contul tău nu este asociat niciunei firme. Cere firmei cu care lucrezi să te adauge din nou."
   },
   "OrganizationSettings": {
     "metaTitle": "Organizație",

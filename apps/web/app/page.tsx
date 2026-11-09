@@ -1,13 +1,21 @@
+import { getUserRole } from "@workspace/auth/roles"
 import { buttonVariants } from "@workspace/ui/components/ui/button"
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { HeaderControls } from "@/components/header-controls"
-import { DEFAULT_SIGNED_IN_ROUTE, routes } from "@/config/routes"
+import { homeRouteFor, routes } from "@/config/routes"
 import { getSession } from "@/lib/auth"
 
 export default async function Page() {
   const session = await getSession()
+
+  // Signed in: straight to where this kind of account works.
+  if (session) {
+    redirect(homeRouteFor(getUserRole(session.user.role)))
+  }
+
   const t = await getTranslations("Home")
 
   return (
@@ -17,23 +25,9 @@ export default async function Page() {
           <h1 className="font-medium">{t("title")}</h1>
           <p>{t.rich("body", { code: (chunks) => <code>{chunks}</code> })}</p>
           <div className="mt-2 flex gap-2">
-            {session ? (
-              <Link href={DEFAULT_SIGNED_IN_ROUTE} className={buttonVariants()}>
-                {t("goToAccount")}
-              </Link>
-            ) : (
-              <>
-                <Link href={routes.signIn} className={buttonVariants()}>
-                  {t("signIn")}
-                </Link>
-                <Link
-                  href={routes.signUp}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  {t("createAccount")}
-                </Link>
-              </>
-            )}
+            <Link href={routes.signIn} className={buttonVariants()}>
+              {t("signIn")}
+            </Link>
           </div>
         </div>
       </div>

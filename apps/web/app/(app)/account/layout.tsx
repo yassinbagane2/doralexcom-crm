@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server"
 
 import { AccountNav } from "@/components/account/account-nav"
 import { VerifyEmailBanner } from "@/components/account/verify-email-banner"
+import { getUserRole } from "@workspace/auth/roles"
+
 import { requireSession } from "@/lib/auth"
 
 export default async function AccountLayout({
@@ -23,7 +25,7 @@ export default async function AccountLayout({
 
       {user.emailVerified ? null : <VerifyEmailBanner email={user.email} />}
 
-      <AccountNav />
+      <AccountNav role={getUserRole(user.role)} />
       <div>{children}</div>
     </div>
   )

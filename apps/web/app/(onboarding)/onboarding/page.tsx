@@ -4,7 +4,9 @@ import { redirect } from "next/navigation"
 
 import { AuthHeader } from "@/components/auth/auth-header"
 import { CreateOrganizationForm } from "@/components/organization/create-organization-form"
-import { DEFAULT_SIGNED_IN_ROUTE } from "@/config/routes"
+import { getUserRole } from "@workspace/auth/roles"
+
+import { DEFAULT_SIGNED_IN_ROUTE, routes } from "@/config/routes"
 import { getActiveOrganization, requireSession } from "@/lib/auth"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,6 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function OnboardingPage() {
   const { user } = await requireSession()
+  const role = getUserRole(user.role)
+
+  // Admins have no organization to set up.
+  if (role === "admin") {
+    redirect(routes.admin)
+  }
 
   // One organization per account for now: nothing left to set up.
   if (await getActiveOrganization()) {
@@ -21,6 +29,17 @@ export default async function OnboardingPage() {
   }
 
   const t = await getTranslations("Onboarding")
+
+  // Users join their business's organization; they can't create one. Getting
+  // here means the business removed them, or deleted its organization.
+  if (role === "user") {
+    return (
+      <AuthHeader
+        title={t("noBusinessTitle")}
+        description={t("noBusinessDescription")}
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">

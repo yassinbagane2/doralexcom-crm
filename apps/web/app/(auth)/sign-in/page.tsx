@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import { AuthHeader } from "@/components/auth/auth-header"
 import { SignInForm } from "@/components/auth/sign-in-form"
-import { REDIRECT_PARAM, safeRedirectPath } from "@/config/routes"
+import { REDIRECT_PARAM, routes, safeRedirectPath } from "@/config/routes"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("SignIn")
@@ -15,7 +15,11 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const redirectTo = safeRedirectPath((await searchParams)[REDIRECT_PARAM])
+  const redirectTo = safeRedirectPath(
+    (await searchParams)[REDIRECT_PARAM],
+    // The home page sends each role on to its own start page.
+    routes.home
+  )
   const t = await getTranslations("SignIn")
 
   return (
