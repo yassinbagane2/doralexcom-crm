@@ -94,8 +94,8 @@ const authOptions = {
     deleteUser: { enabled: true },
     additionalFields: {
       /**
-       * What a business records about a tenant (a `user` account): phone,
-       * mailing address, other contacts. Written only by the API's tenant
+       * What a business records about a customer (a `user` account): phone,
+       * mailing address, other contacts. Written only by the API's customer
        * router: never accepted from sign-up or updateUser, and never sent to
        * the client with the session.
        */
@@ -150,7 +150,7 @@ const authOptions = {
       // Users join their business's organization, they never start their own.
       allowUserToCreateOrganization: async (user) =>
         getUserRole((user as { role?: string | null }).role) === "business",
-      // Owners run the organization; collaborators and tenants can't change
+      // Owners run the organization; collaborators and customers can't change
       // it or its members through Better Auth's endpoints.
       ac: organizationAc,
       roles: organizationRoles,
@@ -422,7 +422,7 @@ function normalizeOrganizationFields(
 
 /**
  * Whether an account may become a collaborator: a business account that
- * doesn't already belong to a business. Admins, tenants and anyone already
+ * doesn't already belong to a business. Admins, customers and anyone already
  * working somewhere can't; the app has one business per account.
  */
 async function canJoinAsCollaborator(user: {

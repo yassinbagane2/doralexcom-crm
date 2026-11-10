@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl"
 import { orpc } from "@/lib/orpc"
 
 /*
- * Contract templates, and the documents kept about each tenant (uploaded
+ * Contract templates, and the documents kept about each customer (uploaded
  * files and contracts generated from templates), through the API's contract
  * and document routers. Every call is scoped server-side to the business's
  * organization.
@@ -27,7 +27,7 @@ export type ContractTemplate = Awaited<
 export type ContractMergeData = Awaited<
   ReturnType<typeof orpc.contract.mergeData.call>
 >
-export type TenantDocument = Awaited<
+export type CustomerDocument = Awaited<
   ReturnType<typeof orpc.document.list.call>
 >[number]
 
@@ -133,8 +133,8 @@ export function useDeleteContractTemplate() {
   )
 }
 
-export function useTenantDocuments(tenantId: string) {
-  return useQuery(orpc.document.list.queryOptions({ input: { tenantId } }))
+export function useCustomerDocuments(customerId: string) {
+  return useQuery(orpc.document.list.queryOptions({ input: { customerId } }))
 }
 
 function useInvalidateDocuments() {

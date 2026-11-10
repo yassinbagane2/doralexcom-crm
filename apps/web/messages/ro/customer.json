@@ -1,10 +1,10 @@
 {
-  "Tenants": {
-    "metaTitle": "Chiriași",
-    "title": "Chiriași",
+  "Customers": {
+    "metaTitle": "Clienți",
+    "title": "Clienți",
     "description": "Persoanele și firmele cărora le închiriezi. Fiecare se conectează cu propriul cont pentru a-și vedea contractele și notițele pe care le partajezi.",
-    "add": "Adaugă chiriaș",
-    "filterLabel": "Arată chiriașii",
+    "add": "Adaugă client",
+    "filterLabel": "Arată clienții",
     "groups": {
       "all": "Toți",
       "current": "Actuali",
@@ -16,12 +16,12 @@
       "current": "Nimeni nu ocupă acum vreuna dintre proprietățile tale.",
       "incoming": "Nu urmează să se mute nimeni.",
       "outgoing": "Nu urmează să plece nimeni.",
-      "previous": "Niciun chiriaș nu a plecat încă."
+      "previous": "Niciun client nu a plecat încă."
     },
-    "search": "Caută chiriași sau proprietăți",
-    "noResults": "Niciun chiriaș nu corespunde căutării.",
-    "emptyTitle": "Niciun chiriaș încă",
-    "emptyDescription": "Adaugă un chiriaș, apoi atribuie-i o proprietate.",
+    "search": "Caută clienți sau proprietăți",
+    "noResults": "Niciun client nu corespunde căutării.",
+    "emptyTitle": "Niciun client încă",
+    "emptyDescription": "Adaugă un client, apoi atribuie-i o proprietate.",
     "noContactDetails": "Fără date de contact",
     "andMore": "+{count}",
     "noLease": "Fără contract",
@@ -31,7 +31,7 @@
     "copyName": "{name} (copie)",
     "created": "{name} a fost adăugat",
     "updated": "{name} a fost salvat",
-    "deleted": "Chiriaș șters",
+    "deleted": "Client șters",
     "fields": {
       "name": "Nume",
       "email": "Email",
@@ -48,24 +48,24 @@
       "relation": "Soț/soție, contabil, garant…"
     },
     "contactsTitle": "Alte contacte",
-    "contactsEmpty": "Persoane de contactat în legătură cu chiriașul: familie, garant, contabil.",
+    "contactsEmpty": "Persoane de contactat în legătură cu clientul: familie, garant, contabil.",
     "addContact": "Adaugă contact",
     "removeContact": "Elimină contactul",
     "sheet": {
       "create": {
-        "title": "Adaugă un chiriaș",
-        "description": "Creează contul de conectare al chiriașului. Proprietățile le atribui din pagina sa.",
-        "submit": "Adaugă chiriaș"
+        "title": "Adaugă un client",
+        "description": "Creează contul de conectare al clientului. Proprietățile le atribui din pagina sa.",
+        "submit": "Adaugă client"
       },
       "edit": {
-        "title": "Editează chiriașul",
+        "title": "Editează clientul",
         "description": "Modificările aduse la {name} se aplică imediat.",
         "submit": "Salvează modificările"
       },
       "copy": {
-        "title": "Copiază chiriașul",
+        "title": "Copiază clientul",
         "description": "Pornește de la datele și contactele lui {name}. Copia este un cont nou, așa că are nevoie de propriul email și propria parolă.",
-        "submit": "Adaugă chiriaș"
+        "submit": "Adaugă client"
       }
     },
     "validation": {
@@ -80,10 +80,10 @@
     "generatePassword": "Generează",
     "passwordHint": "Transmite-i-o în siguranță. O poate schimba din contul său."
   },
-  "Tenant": {
-    "metaTitle": "Chiriaș",
-    "notFound": "Acest chiriaș nu există sau a fost șters.",
-    "back": "Chiriași",
+  "Customer": {
+    "metaTitle": "Client",
+    "notFound": "Acest client nu există sau a fost șters.",
+    "back": "Clienți",
     "noLease": "Fără contract",
     "groups": {
       "current": "Actual",
@@ -91,7 +91,7 @@
       "outgoing": "Pleacă",
       "previous": "Fost"
     },
-    "actions": "Acțiuni pentru chiriaș",
+    "actions": "Acțiuni pentru client",
     "edit": "Editează",
     "copy": "Copiază",
     "delete": "Șterge",
@@ -108,11 +108,11 @@
     "visibilityLabel": "Cine poate vedea notița",
     "visibility": {
       "private": "Doar tu",
-      "shared": "Vizibilă chiriașului"
+      "shared": "Vizibilă clientului"
     },
     "visibilityBadge": {
       "private": "Privată",
-      "shared": "Partajată cu chiriașul"
+      "shared": "Partajată cu clientul"
     },
     "addNote": "Adaugă notiță",
     "notesEmpty": "Nicio notiță încă.",
@@ -120,9 +120,9 @@
     "deleteTitle": "Ștergi {name}?",
     "deleteDescription": "Contul, contactele și notițele sale sunt eliminate și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
     "deleteWithLeasesDescription": "Contul, contactele, notițele și {count, plural, one {contractul} other {cele # contracte}} sunt eliminate și este deconectat de peste tot. Acțiunea nu poate fi anulată.",
-    "deleteSubmit": "Șterge chiriașul",
+    "deleteSubmit": "Șterge clientul",
     "cantDeleteTitle": "{name} nu poate fi șters",
-    "cantDeleteDescription": "Pentru acest chiriaș sunt înregistrate plăți de chirie, așa că rămâne în evidență. Reziliază-i contractele în schimb.",
+    "cantDeleteDescription": "Pentru acest client sunt înregistrate plăți de chirie, așa că rămâne în evidență. Reziliază-i contractele în schimb.",
     "close": "Închide",
     "suspended": "Suspendat"
   },
@@ -149,7 +149,7 @@
     "paymentsTitle": "Plăți",
     "removePayment": "Șterge plata",
     "assignTitle": "Atribuie o proprietate",
-    "assignDescription": "Chiriașul o ocupă de la data intrării și până la data ieșirii, dacă există.",
+    "assignDescription": "Clientul o ocupă de la data intrării și până la data ieșirii, dacă există.",
     "assignSubmit": "Atribuie proprietatea",
     "editTitle": "Editează contractul",
     "editDescription": "Datele, chiria și condițiile pentru {property}.",
@@ -166,14 +166,15 @@
       "amount": "Sumă ({currency})",
       "paidOn": "Plătită pe",
       "note": "Notă",
-      "tenant": "Chiriaș",
+      "customer": "Client",
       "length": "Durată",
       "termMonths": "Număr de luni",
       "autoRenew": "Prelungire automată",
       "charges": "Cheltuieli",
       "additionalCosts": "Costuri suplimentare",
       "discount": "Reducere",
-      "deposit": "Garanție"
+      "deposit": "Garanție",
+      "document": "Contract de închiriere"
     },
     "paymentTitle": "Înregistrează o plată",
     "paymentDescription": "Chirie primită pentru {property}, în {currency}.",
@@ -203,14 +204,15 @@
       "endBeforeStart": "Data ieșirii nu poate fi înaintea datei intrării",
       "amountRequired": "Introdu o sumă",
       "amountInvalid": "Introdu un număr pozitiv",
-      "tenantRequired": "Alege un chiriaș",
+      "customerRequired": "Alege un client",
       "monthsInvalid": "Introdu un număr de luni între 1 și 1188",
-      "discountTooLarge": "Reducerea nu poate depăși chiria, cheltuielile și costurile la un loc"
+      "discountTooLarge": "Reducerea nu poate depăși chiria, cheltuielile și costurile la un loc",
+      "templateRequired": "Alege un șablon pentru contractul de închiriere"
     },
-    "assignTenantTitle": "Atribuie un chiriaș pentru {property}",
-    "assignTenantSubmit": "Atribuie chiriașul",
-    "tenantPlaceholder": "Alege un chiriaș",
-    "noTenants": "Adaugă mai întâi un chiriaș din pagina Chiriași.",
+    "assignCustomerTitle": "Atribuie un client pentru {property}",
+    "assignCustomerSubmit": "Atribuie clientul",
+    "customerPlaceholder": "Alege un client",
+    "noCustomers": "Adaugă mai întâi un client din pagina Clienți.",
     "rentFromProperty": "Preluată de la proprietate. O poți schimba ulterior din contract.",
     "noPropertyRent": "Proprietatea nu are chiria setată, așa că contractul pornește de la 0. Setează mai întâi chiria proprietății sau editează contractul după aceea.",
     "generateContract": "Generează contractul",
@@ -230,9 +232,12 @@
     "depositLine": "Garanție {amount}",
     "chargesLine": "{rent} chirie + {extras} cheltuieli și costuri",
     "discountLine": "− {amount} reducere",
-    "receipt": "Chitanță"
+    "receipt": "Chitanță",
+    "documentCreated": "Contractul de închiriere a fost generat și salvat la client.",
+    "openDocument": "Deschide documentul",
+    "documentHint": "Completat din șablon cu aceste condiții și salvat la client. Îl poți edita și după aceea."
   },
-  "Tenancy": {
+  "MyHome": {
     "metaTitle": "Locuința mea",
     "title": "Locuința mea",
     "description": "Spațiile pe care le închiriezi și notițele de la proprietar.",

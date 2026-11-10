@@ -5,7 +5,7 @@
     "description": "Apartamente, birouri, garaje și tot ce închiriezi.",
     "summary": "{total, plural, one {# proprietate} few {# proprietăți} other {# de proprietăți}} · {occupied} ocupate · {vacant} libere",
     "add": "Adaugă proprietate",
-    "search": "Caută după nume, adresă sau chiriaș",
+    "search": "Caută după nume, adresă sau client",
     "filterLabel": "Filtrează după tip",
     "filterAll": "Toate",
     "noResults": "Nicio proprietate nu corespunde căutării.",
@@ -26,7 +26,7 @@
     "deleteDescription": "Proprietatea și tot ce este înregistrat despre ea sunt eliminate. Acțiunea nu poate fi anulată.",
     "deleteSubmit": "Șterge proprietatea",
     "inUseTitle": "{name} este în folosință",
-    "inUseDescription": "{tenant} are un contract în curs sau viitor aici, așa că nu poate fi ștearsă. Încheie sau elimină mai întâi contractul din pagina chiriașului.",
+    "inUseDescription": "{customer} are un contract în curs sau viitor aici, așa că nu poate fi ștearsă. Încheie sau elimină mai întâi contractul din pagina clientului.",
     "rentHint": "Pe lună.",
     "types": {
       "apartment": "Apartament",
@@ -87,8 +87,8 @@
     "occupied": "Ocupată",
     "incoming": "{name} din {date}",
     "leaving": "Pleacă pe {date}",
-    "viewTenant": "Vezi chiriașul {name}",
-    "viewTenantShort": "Vezi chiriașul",
-    "assignTenant": "Atribuie chiriaș"
+    "viewCustomer": "Vezi clientul {name}",
+    "viewCustomerShort": "Vezi clientul",
+    "assignCustomer": "Atribuie client"
   }
 }

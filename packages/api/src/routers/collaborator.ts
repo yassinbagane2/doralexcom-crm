@@ -77,7 +77,7 @@ async function sendInvitation(
     subject: `${inviter.name} invited you to join ${businessName}`,
     text: [
       `Hi,`,
-      `${inviter.name} (${inviter.email}) invited you to work with them on ${businessName}: its properties, tenants, contracts and payments.`,
+      `${inviter.name} (${inviter.email}) invited you to work with them on ${businessName}: its properties, customers, contracts and payments.`,
       `Accept the invitation:\n${link.toString()}`,
       `It expires in ${INVITATION_EXPIRES_IN_DAYS} days. If you weren't expecting this, you can ignore this email.`,
     ].join("\n\n"),

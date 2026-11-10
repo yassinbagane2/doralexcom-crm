@@ -5,7 +5,7 @@ import { and, desc, eq, max, ne } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
-import { createTenantAccount, deleteTenantAccount } from "../lib/tenant"
+import { createCustomerAccount, deleteCustomerAccount } from "../lib/customer"
 
 const businessUserSchema = z.object({
   id: z.string(),
@@ -72,7 +72,7 @@ export const businessRouter = o.prefix("/business").router({
     )
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => ({
-      id: await createTenantAccount(context.organizationId, input),
+      id: await createCustomerAccount(context.organizationId, input),
     })),
 
   removeUser: businessProcedure
@@ -82,8 +82,8 @@ export const businessRouter = o.prefix("/business").router({
     .handler(async ({ input, context }) => {
       // Only accounts this business created: never itself, never another
       // business or an admin that happens to share the organization. A
-      // tenant with recorded rent payments stays.
-      await deleteTenantAccount(context.organizationId, input.userId)
+      // customer with recorded rent payments stays.
+      await deleteCustomerAccount(context.organizationId, input.userId)
       return { success: true }
     }),
 })

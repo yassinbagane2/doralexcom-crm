@@ -1,13 +1,14 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { CONTRACT_LIMITS } from "@workspace/api/contract"
 import {
   leaseBalance,
   localToday,
   MAX_TERM_MONTHS,
   monthlyDue,
-  TENANT_LIMITS,
+  CUSTOMER_LIMITS,
   termEndDate,
 } from "@workspace/api/lease"
 import {
@@ -35,15 +36,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/ui/select"
-import { Loader2 } from "@workspace/ui/icons"
+import { FileText, Loader2 } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
-import { useMemo, useState } from "react"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 import { Controller, useForm, type Control } from "react-hook-form"
 import { z } from "zod"
 
+import {
+  fillContract,
+  useMergeValues,
+} from "@/components/contracts/contract-content"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
 import { UserAvatar } from "@/components/user-avatar"
+import { routes } from "@/config/routes"
 import { useProperties, type Property } from "@/hooks/queries/property"
 import {
   useAddPayment,
@@ -51,8 +58,8 @@ import {
   useTerminateLease,
   useUpdateLease,
   type LeaseBalance,
-  type TenantLease,
-} from "@/hooks/queries/tenant"
+  type CustomerLease,
+} from "@/hooks/queries/customer"
 import { formatDate, formatMoney } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
 
@@ -113,7 +120,9 @@ type LengthMode = (typeof LENGTH_MODES)[number]
 
 interface LeaseFormValues {
   propertyId: string
-  tenantId: string
+  customerId: string
+  /** New leases only: the template their lease document is generated from. */
+  templateId: string
   startDate: string
   /** How the lease's end is set: not at all, by a length, or by a date. */
   lengthMode: LengthMode
@@ -148,7 +157,7 @@ type LeaseFormOutput = Omit<
 }
 
 /** The length a lease's form opens with: how its end was set. */
-function lengthModeOf(lease: TenantLease | undefined): LengthMode {
+function lengthModeOf(lease: CustomerLease | undefined): LengthMode {
   if (lease?.termMonths) return "months"
   return lease?.endDate ? "date" : "open"
 }
@@ -165,43 +174,53 @@ type LeaseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 } & (
-  | /** From a tenant's page: pick the property. */
-    { tenantId: string; property?: never; lease?: never }
-  /** From the properties page: pick the tenant. */
-  | { property: Property; tenantId?: never; lease?: never }
+  | /** From a customer's page: pick the property. */
+    { customerId: string; property?: never; lease?: never }
+  /** From the properties page: pick the customer. */
+  | { property: Property; customerId?: never; lease?: never }
   /** Change an existing lease's dates, rent and terms. */
-  | { lease: TenantLease; tenantId?: never; property?: never }
+  | { lease: CustomerLease; customerId?: never; property?: never }
 )
 
 /**
- * Creates a lease: a tenant occupying a property from an entry date, for a
+ * Creates a lease: a customer occupying a property from an entry date, for a
  * number of months, until an exit date, or open-ended, with what's billed
  * each month besides the rent and the deposit held. Opened from either side,
- * so it asks for whichever of tenant and property isn't given. Editing
- * changes all the terms of an existing lease.
+ * so it asks for whichever of customer and property isn't given. A new lease
+ * comes with its lease document, filled in from a template with these terms
+ * and saved with the lease. Editing changes all the terms of an existing
+ * lease.
  */
 export function LeaseDialog(props: LeaseDialogProps) {
   return <LeaseDialogBody key={useOpenSession(props.open)} {...props} />
 }
 
 function LeaseDialogBody({
-  tenantId,
+  customerId,
   property,
   lease,
   open,
   onOpenChange,
 }: LeaseDialogProps) {
   const pickProperty = !lease && !property
-  const pickTenant = !lease && !tenantId
+  const pickCustomer = !lease && !customerId
   const t = useTranslations("Leases")
   const tc = useTranslations("Common")
   const locale = useLocale()
+  const td = useTranslations("Documents")
   const create = useCreateLease()
   const update = useUpdateLease()
+  const queryClient = useQueryClient()
+  const mergeValues = useMergeValues()
+  const [generating, setGenerating] = useState(false)
   const { data: properties } = useProperties()
-  const { data: tenants } = useQuery({
-    ...orpc.tenant.list.queryOptions(),
-    enabled: pickTenant,
+  const { data: templates } = useQuery({
+    ...orpc.contract.listTemplates.queryOptions(),
+    enabled: !lease,
+  })
+  const { data: customers } = useQuery({
+    ...orpc.customer.list.queryOptions(),
+    enabled: pickCustomer,
   })
   const amount = useAmount()
   const tv = useTranslations("Leases.validation")
@@ -211,7 +230,8 @@ function LeaseDialogBody({
       z
         .object({
           propertyId: z.string().min(1, tv("propertyRequired")),
-          tenantId: z.string().min(1, tv("tenantRequired")),
+          customerId: z.string().min(1, tv("customerRequired")),
+          templateId: z.string().min(1, tv("templateRequired")),
           startDate: z.iso.date(tv("dateRequired")),
           lengthMode: z.enum(LENGTH_MODES),
           termMonths: z.string(),
@@ -278,8 +298,9 @@ function LeaseDialogBody({
     defaultValues: lease
       ? {
           propertyId: lease.property.id,
-          // Not edited: the lease keeps its tenant.
-          tenantId: "unchanged",
+          // Not edited: the lease keeps its customer and its documents.
+          customerId: "unchanged",
+          templateId: "unchanged",
           startDate: lease.startDate,
           lengthMode: lengthModeOf(lease),
           termMonths: lease.termMonths ? String(lease.termMonths) : "12",
@@ -296,7 +317,8 @@ function LeaseDialogBody({
         }
       : {
           propertyId: property?.id ?? "",
-          tenantId: tenantId ?? "",
+          customerId: customerId ?? "",
+          templateId: "",
           startDate: localToday(),
           lengthMode: "open",
           termMonths: "12",
@@ -312,7 +334,15 @@ function LeaseDialogBody({
         },
   })
   const { errors } = form.formState
-  const isPending = create.isPending || update.isPending
+  const isPending = generating || create.isPending || update.isPending
+
+  // With a single template there's nothing to choose: preselect it.
+  const onlyTemplate = templates?.length === 1 ? templates[0]!.id : null
+  useEffect(() => {
+    if (onlyTemplate && !form.getValues("templateId")) {
+      form.setValue("templateId", onlyTemplate)
+    }
+  }, [form, onlyTemplate])
 
   const chosenProperty =
     property ?? properties?.find((p) => p.id === form.watch("propertyId"))
@@ -339,10 +369,14 @@ function LeaseDialogBody({
     label: item.name,
     property: item,
   }))
-  const tenantItems = (tenants ?? []).map((tenant) => ({
-    value: tenant.id,
-    label: tenant.name,
-    email: tenant.email,
+  const customerItems = (customers ?? []).map((customer) => ({
+    value: customer.id,
+    label: customer.name,
+    email: customer.email,
+  }))
+  const templateItems = (templates ?? []).map((template) => ({
+    value: template.id,
+    label: template.name,
   }))
   const lengthItems = LENGTH_MODES.map((value) => ({
     value,
@@ -395,8 +429,8 @@ function LeaseDialogBody({
           <DialogTitle>
             {lease
               ? t("editTitle")
-              : pickTenant
-                ? t("assignTenantTitle", { property: property!.name })
+              : pickCustomer
+                ? t("assignCustomerTitle", { property: property!.name })
                 : t("assignTitle")}
           </DialogTitle>
           <DialogDescription>
@@ -409,7 +443,7 @@ function LeaseDialogBody({
         <form
           noValidate
           className="mt-5 flex flex-col gap-5"
-          onSubmit={form.handleSubmit((values) => {
+          onSubmit={form.handleSubmit(async (values) => {
             const agreement = {
               startDate: values.startDate,
               endDate: values.endDate,
@@ -420,8 +454,7 @@ function LeaseDialogBody({
               discount: values.discount,
               deposit: values.deposit,
             }
-            const done = { onSuccess: () => onOpenChange(false) }
-            if (lease)
+            if (lease) {
               update.mutate(
                 {
                   ...agreement,
@@ -429,40 +462,72 @@ function LeaseDialogBody({
                   currency: values.currency,
                   id: lease.id,
                 },
-                done
+                { onSuccess: () => onOpenChange(false) }
               )
-            // A new lease takes the property's rent, set by the server.
-            else
-              create.mutate(
-                {
-                  ...agreement,
-                  tenantId: values.tenantId,
-                  propertyId: values.propertyId,
+              return
+            }
+            // A new lease takes the property's rent, set by the server, and
+            // its lease document: the template filled in with the terms as
+            // the server will save them, created along with the lease.
+            const parties = {
+              customerId: values.customerId,
+              propertyId: values.propertyId,
+            }
+            setGenerating(true)
+            try {
+              const [template, data] = await Promise.all([
+                queryClient.fetchQuery(
+                  orpc.contract.getTemplate.queryOptions({
+                    input: { id: values.templateId },
+                    staleTime: 0,
+                  })
+                ),
+                queryClient.fetchQuery(
+                  orpc.lease.draftMergeData.queryOptions({
+                    input: { ...agreement, ...parties },
+                    staleTime: 0,
+                  })
+                ),
+              ])
+              await create.mutateAsync({
+                ...agreement,
+                ...parties,
+                contract: {
+                  name: td("contractName", {
+                    template: template.name,
+                    customer: data.customer.name,
+                  }).slice(0, CONTRACT_LIMITS.name),
+                  content: fillContract(template.content, mergeValues(data)),
                 },
-                done
-              )
+              })
+              onOpenChange(false)
+            } catch {
+              // The request's own error toast says what went wrong.
+            } finally {
+              setGenerating(false)
+            }
           })}
         >
-          {pickTenant ? (
+          {pickCustomer ? (
             <Field>
-              <Label htmlFor="lease-tenant">{t("fields.tenant")}</Label>
+              <Label htmlFor="lease-customer">{t("fields.customer")}</Label>
               <Controller
                 control={form.control}
-                name="tenantId"
+                name="customerId"
                 render={({ field }) => (
                   <Select
-                    items={tenantItems}
+                    items={customerItems}
                     value={field.value || null}
                     onValueChange={(value) => value && field.onChange(value)}
                   >
                     <SelectTrigger
-                      id="lease-tenant"
-                      aria-invalid={Boolean(errors.tenantId)}
+                      id="lease-customer"
+                      aria-invalid={Boolean(errors.customerId)}
                     >
-                      <SelectValue placeholder={t("tenantPlaceholder")} />
+                      <SelectValue placeholder={t("customerPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {tenantItems.map(({ value, label, email }) => (
+                      {customerItems.map(({ value, label, email }) => (
                         <SelectItem key={value} value={value}>
                           <UserAvatar
                             name={label}
@@ -478,12 +543,12 @@ function LeaseDialogBody({
                   </Select>
                 )}
               />
-              {tenants && tenants.length === 0 ? (
+              {customers && customers.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {t("noTenants")}
+                  {t("noCustomers")}
                 </p>
               ) : null}
-              <FieldError>{errors.tenantId?.message}</FieldError>
+              <FieldError>{errors.customerId?.message}</FieldError>
             </Field>
           ) : null}
 
@@ -664,6 +729,53 @@ function LeaseDialogBody({
             </p>
           ) : null}
 
+          {lease ? null : (
+            <Field>
+              <Label htmlFor="lease-template">{t("fields.document")}</Label>
+              <Controller
+                control={form.control}
+                name="templateId"
+                render={({ field }) => (
+                  <Select
+                    items={templateItems}
+                    value={field.value || null}
+                    onValueChange={(value) => value && field.onChange(value)}
+                  >
+                    <SelectTrigger
+                      id="lease-template"
+                      aria-invalid={Boolean(errors.templateId)}
+                    >
+                      <SelectValue placeholder={td("templatePlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templateItems.map(({ value, label }) => (
+                        <SelectItem key={value} value={value}>
+                          <FileText className="text-muted-foreground" />
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                {templates && templates.length === 0
+                  ? td.rich("noTemplates", {
+                      link: (chunks) => (
+                        <Link
+                          href={`${routes.templates}/new`}
+                          className="font-medium text-foreground underline underline-offset-4"
+                        >
+                          {chunks}
+                        </Link>
+                      ),
+                    })
+                  : t("documentHint")}
+              </p>
+              <FieldError>{errors.templateId?.message}</FieldError>
+            </Field>
+          )}
+
           <DialogFooter className="flex-row justify-end">
             <Button
               type="button"
@@ -676,8 +788,8 @@ function LeaseDialogBody({
               {isPending ? <Loader2 className="animate-spin" /> : null}
               {lease
                 ? tc("saveChanges")
-                : pickTenant
-                  ? t("assignTenantSubmit")
+                : pickCustomer
+                  ? t("assignCustomerSubmit")
                   : t("assignSubmit")}
             </Button>
           </DialogFooter>
@@ -758,7 +870,7 @@ function CurrencySelect({
 
 /** A dialog about one existing lease. */
 type PaymentDialogProps = {
-  lease: TenantLease
+  lease: CustomerLease
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -779,7 +891,7 @@ function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
       z.object({
         amount: amount({ required: true, max: PROPERTY_LIMITS.rent }),
         paidOn: z.iso.date(tv("dateRequired")),
-        note: z.string().trim().max(TENANT_LIMITS.paymentNote),
+        note: z.string().trim().max(CUSTOMER_LIMITS.paymentNote),
       }),
     [amount, tv]
   )
@@ -889,7 +1001,7 @@ function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
 // --- Terminate a lease -------------------------------------------------------
 
 /**
- * Ends the lease on an exit date, previewing what the tenant will owe (or be
+ * Ends the lease on an exit date, previewing what the customer will owe (or be
  * owed) before confirming, then showing the final balance.
  */
 export function TerminateLeaseDialog(props: PaymentDialogProps) {

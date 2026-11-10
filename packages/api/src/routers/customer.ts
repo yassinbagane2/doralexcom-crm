@@ -12,18 +12,18 @@ import { asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o, protectedProcedure } from "../index"
-import { NOTE_VISIBILITIES, TENANT_LIMITS } from "../lease"
+import { NOTE_VISIBILITIES, CUSTOMER_LIMITS } from "../lease"
 import {
-  addTenantNote,
-  createTenantAccount,
-  deleteTenantAccount,
-  findTenant,
-  readTenantMetadata,
-  removeTenantNote,
-  setTenantDetails,
-  tenantMetadataInput,
-  tenantScope,
-} from "../lib/tenant"
+  addCustomerNote,
+  createCustomerAccount,
+  deleteCustomerAccount,
+  findCustomer,
+  readCustomerMetadata,
+  removeCustomerNote,
+  setCustomerDetails,
+  customerMetadataInput,
+  customerScope,
+} from "../lib/customer"
 import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
 
 const leaseSummarySchema = z.object({
@@ -55,7 +55,7 @@ const contactSchema = z.object({
   phone: z.string().nullable(),
 })
 
-const tenantSummarySchema = z.object({
+const customerSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string(),
@@ -65,7 +65,7 @@ const tenantSummarySchema = z.object({
   leases: z.array(leaseSummarySchema),
 })
 
-const tenantDetailSchema = tenantSummarySchema.extend({
+const customerDetailSchema = customerSummarySchema.extend({
   address: z.string().nullable(),
   contacts: z.array(contactSchema),
   notes: z.array(
@@ -95,11 +95,11 @@ function newestFirst<T extends { createdAt: string }>(notes: T[]) {
   return [...notes].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
-const tenantName = z.string().trim().min(1).max(TENANT_LIMITS.name)
+const customerName = z.string().trim().min(1).max(CUSTOMER_LIMITS.name)
 
-/** Leases of the given tenants, with their property and the rent received. */
-async function loadLeases(tenantIds: string[]) {
-  if (tenantIds.length === 0) return []
+/** Leases of the given customers, with their property and the rent received. */
+async function loadLeases(customerIds: string[]) {
+  if (customerIds.length === 0) return []
 
   const paid = db
     .select({
@@ -124,11 +124,11 @@ async function loadLeases(tenantIds: string[]) {
     .from(lease)
     .innerJoin(property, eq(property.id, lease.propertyId))
     .leftJoin(paid, eq(paid.leaseId, lease.id))
-    .where(inArray(lease.tenantId, tenantIds))
+    .where(inArray(lease.customerId, customerIds))
     .orderBy(desc(lease.startDate))
 
   return rows.map((row) => ({
-    tenantId: row.lease.tenantId,
+    customerId: row.lease.customerId,
     id: row.lease.id,
     property: row.property,
     startDate: row.lease.startDate,
@@ -149,15 +149,15 @@ async function loadLeases(tenantIds: string[]) {
 /**
  * The people a business rents to: the `user` accounts in its organization,
  * with the details kept in their metadata. Nothing here reaches outside
- * `context.organizationId`, except `mine`, which shows a signed-in tenant
+ * `context.organizationId`, except `mine`, which shows a signed-in customer
  * their own leases.
  */
-export const tenantRouter = o.prefix("/tenants").router({
+export const customerRouter = o.prefix("/customers").router({
   list: businessProcedure
-    .route({ method: "GET", path: "/", tags: ["tenants"] })
-    .output(z.array(tenantSummarySchema))
+    .route({ method: "GET", path: "/", tags: ["customers"] })
+    .output(z.array(customerSummarySchema))
     .handler(async ({ context }) => {
-      const tenants = await db
+      const customers = await db
         .select({
           id: user.id,
           name: user.name,
@@ -168,28 +168,28 @@ export const tenantRouter = o.prefix("/tenants").router({
         })
         .from(member)
         .innerJoin(user, eq(user.id, member.userId))
-        .where(tenantScope(context.organizationId))
+        .where(customerScope(context.organizationId))
         .orderBy(asc(user.name))
 
-      const leases = await loadLeases(tenants.map((t) => t.id))
+      const leases = await loadLeases(customers.map((t) => t.id))
 
-      return tenants.map((t) => ({
+      return customers.map((t) => ({
         id: t.id,
         name: t.name,
         email: t.email,
-        phone: readTenantMetadata(t.metadata).phone,
+        phone: readCustomerMetadata(t.metadata).phone,
         banned: Boolean(t.banned),
         createdAt: t.createdAt,
-        leases: leases.filter((l) => l.tenantId === t.id),
+        leases: leases.filter((l) => l.customerId === t.id),
       }))
     }),
 
   get: businessProcedure
-    .route({ method: "GET", path: "/{id}", tags: ["tenants"] })
+    .route({ method: "GET", path: "/{id}", tags: ["customers"] })
     .input(z.object({ id: z.uuid() }))
-    .output(tenantDetailSchema)
+    .output(customerDetailSchema)
     .handler(async ({ input, context }) => {
-      const found = await findTenant(context.organizationId, input.id)
+      const found = await findCustomer(context.organizationId, input.id)
 
       const [account] = await db
         .select({ banned: user.banned, createdAt: user.createdAt })
@@ -211,7 +211,7 @@ export const tenantRouter = o.prefix("/tenants").router({
             .orderBy(desc(payment.paidOn), desc(payment.createdAt))
         : []
 
-      const details = readTenantMetadata(found.metadata)
+      const details = readCustomerMetadata(found.metadata)
 
       return {
         id: found.id,
@@ -243,12 +243,12 @@ export const tenantRouter = o.prefix("/tenants").router({
       }
     }),
 
-  /** A new tenant is a new `user` account, signing in with these details. */
+  /** A new customer is a new `user` account, signing in with these details. */
   create: businessProcedure
-    .route({ method: "POST", path: "/", tags: ["tenants"] })
+    .route({ method: "POST", path: "/", tags: ["customers"] })
     .input(
-      tenantMetadataInput.extend({
-        name: tenantName,
+      customerMetadataInput.extend({
+        name: customerName,
         email: z.email().transform((email) => email.toLowerCase()),
         password: newPasswordSchema,
       })
@@ -256,7 +256,7 @@ export const tenantRouter = o.prefix("/tenants").router({
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const { name, email, password, ...details } = input
-      const id = await createTenantAccount(
+      const id = await createCustomerAccount(
         context.organizationId,
         { name, email, password },
         details
@@ -264,40 +264,40 @@ export const tenantRouter = o.prefix("/tenants").router({
       return { id }
     }),
 
-  /** Name and details. The email is the tenant's sign-in, so it stays. */
+  /** Name and details. The email is the customer's sign-in, so it stays. */
   update: businessProcedure
-    .route({ method: "PUT", path: "/{id}", tags: ["tenants"] })
-    .input(tenantMetadataInput.extend({ id: z.uuid(), name: tenantName }))
+    .route({ method: "PUT", path: "/{id}", tags: ["customers"] })
+    .input(customerMetadataInput.extend({ id: z.uuid(), name: customerName }))
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const { id, name, ...details } = input
-      await setTenantDetails(context.organizationId, id, name, details)
+      await setCustomerDetails(context.organizationId, id, name, details)
 
       return { id }
     }),
 
   remove: businessProcedure
-    .route({ method: "DELETE", path: "/{id}", tags: ["tenants"] })
+    .route({ method: "DELETE", path: "/{id}", tags: ["customers"] })
     .input(z.object({ id: z.uuid() }))
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
-      await deleteTenantAccount(context.organizationId, input.id)
+      await deleteCustomerAccount(context.organizationId, input.id)
       return { success: true }
     }),
 
   addNote: businessProcedure
-    .route({ method: "POST", path: "/{tenantId}/notes", tags: ["tenants"] })
+    .route({ method: "POST", path: "/{customerId}/notes", tags: ["customers"] })
     .input(
       z.object({
-        tenantId: z.uuid(),
-        body: z.string().trim().min(1).max(TENANT_LIMITS.note),
+        customerId: z.uuid(),
+        body: z.string().trim().min(1).max(CUSTOMER_LIMITS.note),
         visibility: z.enum(NOTE_VISIBILITIES),
       })
     )
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const id = crypto.randomUUID()
-      await addTenantNote(context.organizationId, input.tenantId, {
+      await addCustomerNote(context.organizationId, input.customerId, {
         id,
         body: input.body,
         visibility: input.visibility,
@@ -312,22 +312,26 @@ export const tenantRouter = o.prefix("/tenants").router({
   removeNote: businessProcedure
     .route({
       method: "DELETE",
-      path: "/{tenantId}/notes/{id}",
-      tags: ["tenants"],
+      path: "/{customerId}/notes/{id}",
+      tags: ["customers"],
     })
-    .input(z.object({ tenantId: z.uuid(), id: z.uuid() }))
+    .input(z.object({ customerId: z.uuid(), id: z.uuid() }))
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
-      await removeTenantNote(context.organizationId, input.tenantId, input.id)
+      await removeCustomerNote(
+        context.organizationId,
+        input.customerId,
+        input.id
+      )
       return { success: true }
     }),
 
   /**
-   * For a signed-in tenant: the places they rent and the notes shared with
-   * them. Private notes, payments and other tenants never appear here.
+   * For a signed-in customer: the places they rent and the notes shared with
+   * them. Private notes, payments and other customers never appear here.
    */
   mine: protectedProcedure
-    .route({ method: "GET", path: "/mine", tags: ["tenants"] })
+    .route({ method: "GET", path: "/mine", tags: ["customers"] })
     .output(
       z.object({
         landlord: z.string().nullable(),
@@ -383,7 +387,7 @@ export const tenantRouter = o.prefix("/tenants").router({
           })
           .from(lease)
           .innerJoin(property, eq(property.id, lease.propertyId))
-          .where(eq(lease.tenantId, me))
+          .where(eq(lease.customerId, me))
           .orderBy(desc(lease.startDate)),
         db
           .select({ metadata: user.metadata })
@@ -392,7 +396,7 @@ export const tenantRouter = o.prefix("/tenants").router({
       ])
 
       // Only notes the business chose to share; private ones stay server-side.
-      const notes = newestFirst(readTenantMetadata(account?.metadata).notes)
+      const notes = newestFirst(readCustomerMetadata(account?.metadata).notes)
         .filter((note) => note.visibility === "shared")
         .map((note) => ({
           id: note.id,

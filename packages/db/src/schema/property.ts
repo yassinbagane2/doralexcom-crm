@@ -12,7 +12,7 @@ import { organization } from "./auth"
 
 /*
  * Something a business rents out. Who occupies it, and when, lives on its
- * leases (./tenant.ts). Keep the `type` and `currency` lists in step
+ * leases (./customer.ts). Keep the `type` and `currency` lists in step
  * with packages/api/src/property.ts, which the web forms read: the router's
  * inserts fail the typecheck if the two drift apart.
  */

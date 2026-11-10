@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { TENANT_LIMITS } from "@workspace/api/lease"
+import { CUSTOMER_LIMITS } from "@workspace/api/lease"
 import { PASSWORD_MIN_LENGTH } from "@workspace/auth/password"
 import { Button } from "@workspace/ui/components/ui/button"
 import {
@@ -19,13 +19,13 @@ import { useMemo } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
 
-import type { TenantDetail } from "@/hooks/queries/tenant"
+import type { CustomerDetail } from "@/hooks/queries/customer"
 import { useNewPasswordSchema } from "@/hooks/use-new-password-schema"
 import { generatePassword } from "@/lib/generate-password"
 
 const PHONE_PATTERN = /^[\d\s()+\-./]*$/
 
-export interface TenantFormValues {
+export interface CustomerFormValues {
   name: string
   email: string
   password: string
@@ -34,7 +34,7 @@ export interface TenantFormValues {
   contacts: { name: string; relation: string; email: string; phone: string }[]
 }
 
-export const EMPTY_TENANT: TenantFormValues = {
+export const EMPTY_CUSTOMER: CustomerFormValues = {
   name: "",
   email: "",
   password: "",
@@ -44,20 +44,20 @@ export const EMPTY_TENANT: TenantFormValues = {
 }
 
 /**
- * An existing tenant as form values. A copy keeps the details and contacts
+ * An existing customer as form values. A copy keeps the details and contacts
  * but starts a new account, so it gets its own email and password.
  */
-export function toTenantFormValues(
-  tenant: TenantDetail,
+export function toCustomerFormValues(
+  customer: CustomerDetail,
   { copy = false }: { copy?: boolean } = {}
-): TenantFormValues {
+): CustomerFormValues {
   return {
-    name: tenant.name,
-    email: copy ? "" : tenant.email,
+    name: customer.name,
+    email: copy ? "" : customer.email,
     password: "",
-    phone: tenant.phone ?? "",
-    address: tenant.address ?? "",
-    contacts: tenant.contacts.map((contact) => ({
+    phone: customer.phone ?? "",
+    address: customer.address ?? "",
+    contacts: customer.contacts.map((contact) => ({
       name: contact.name,
       relation: contact.relation ?? "",
       email: contact.email ?? "",
@@ -66,8 +66,8 @@ export function toTenantFormValues(
   }
 }
 
-function useTenantSchema(isNew: boolean) {
-  const t = useTranslations("Tenants.validation")
+function useCustomerSchema(isNew: boolean) {
+  const t = useTranslations("Customers.validation")
   const tValidation = useTranslations("Validation")
   const newPasswordSchema = useNewPasswordSchema()
 
@@ -80,12 +80,12 @@ function useTenantSchema(isNew: boolean) {
       .refine((value) => !value || z.email().safeParse(value).success, {
         message: t("emailInvalid"),
       })
-    const phone = text(TENANT_LIMITS.phone).regex(PHONE_PATTERN, {
+    const phone = text(CUSTOMER_LIMITS.phone).regex(PHONE_PATTERN, {
       message: t("phoneInvalid"),
     })
 
     return z.object({
-      name: text(TENANT_LIMITS.name).min(1, t("nameRequired")),
+      name: text(CUSTOMER_LIMITS.name).min(1, t("nameRequired")),
       // The sign-in email and password only matter for a new account.
       email: isNew
         ? z
@@ -94,29 +94,29 @@ function useTenantSchema(isNew: boolean) {
         : z.string(),
       password: isNew ? newPasswordSchema : z.string(),
       phone,
-      address: text(TENANT_LIMITS.address),
+      address: text(CUSTOMER_LIMITS.address),
       contacts: z
         .array(
           z.object({
-            name: text(TENANT_LIMITS.name).min(1, t("contactNameRequired")),
-            relation: text(TENANT_LIMITS.relation),
+            name: text(CUSTOMER_LIMITS.name).min(1, t("contactNameRequired")),
+            relation: text(CUSTOMER_LIMITS.relation),
             email: optionalEmail,
             phone,
           })
         )
-        .max(TENANT_LIMITS.contacts),
+        .max(CUSTOMER_LIMITS.contacts),
     })
   }, [t, tValidation, newPasswordSchema, isNew])
 }
 
-export type TenantFormOutput = z.output<ReturnType<typeof useTenantSchema>>
+export type CustomerFormOutput = z.output<ReturnType<typeof useCustomerSchema>>
 
 /**
- * A tenant's sign-in account and what the business records about them. Used
- * to add a tenant (which creates their account), to edit one, and to start a
+ * A customer's sign-in account and what the business records about them. Used
+ * to add a customer (which creates their account), to edit one, and to start a
  * new one from a copy.
  */
-export function TenantForm({
+export function CustomerForm({
   isNew,
   defaultValues,
   submitLabel,
@@ -125,14 +125,14 @@ export function TenantForm({
 }: {
   /** Creates an account, so asks for its email and starting password. */
   isNew: boolean
-  defaultValues: TenantFormValues
+  defaultValues: CustomerFormValues
   submitLabel: string
   isPending: boolean
-  onSubmit: (values: TenantFormOutput) => void
+  onSubmit: (values: CustomerFormOutput) => void
 }) {
-  const t = useTranslations("Tenants")
+  const t = useTranslations("Customers")
   const tc = useTranslations("Common")
-  const schema = useTenantSchema(isNew)
+  const schema = useCustomerSchema(isNew)
 
   const form = useForm<
     z.input<typeof schema>,
@@ -158,40 +158,42 @@ export function TenantForm({
       className="flex flex-col gap-5"
     >
       <Field>
-        <Label htmlFor="tenant-name">{t("fields.name")}</Label>
+        <Label htmlFor="customer-name">{t("fields.name")}</Label>
         <Input
-          id="tenant-name"
+          id="customer-name"
           autoComplete="off"
           placeholder={t("placeholders.name")}
           aria-invalid={Boolean(errors.name)}
-          aria-describedby="tenant-name-error"
+          aria-describedby="customer-name-error"
           {...form.register("name")}
         />
-        <FieldError id="tenant-name-error">{errors.name?.message}</FieldError>
+        <FieldError id="customer-name-error">{errors.name?.message}</FieldError>
       </Field>
 
       <Field>
-        <Label htmlFor="tenant-email">{t("fields.email")}</Label>
+        <Label htmlFor="customer-email">{t("fields.email")}</Label>
         <Input
-          id="tenant-email"
+          id="customer-email"
           type="email"
           autoComplete="off"
           placeholder="name@example.com"
           disabled={!isNew}
           aria-invalid={Boolean(errors.email)}
-          aria-describedby="tenant-email-error tenant-email-hint"
+          aria-describedby="customer-email-error customer-email-hint"
           {...form.register("email")}
         />
-        <p id="tenant-email-hint" className="text-xs text-muted-foreground">
+        <p id="customer-email-hint" className="text-xs text-muted-foreground">
           {isNew ? t("emailHint") : t("emailLocked")}
         </p>
-        <FieldError id="tenant-email-error">{errors.email?.message}</FieldError>
+        <FieldError id="customer-email-error">
+          {errors.email?.message}
+        </FieldError>
       </Field>
 
       {isNew ? (
         <Field>
           <FieldHeader>
-            <Label htmlFor="tenant-password">{t("fields.password")}</Label>
+            <Label htmlFor="customer-password">{t("fields.password")}</Label>
             <Button
               type="button"
               variant="ghost"
@@ -208,10 +210,10 @@ export function TenantForm({
             </Button>
           </FieldHeader>
           <PasswordInput
-            id="tenant-password"
+            id="customer-password"
             autoComplete="new-password"
             aria-invalid={Boolean(errors.password)}
-            aria-describedby="tenant-password-error tenant-password-hint"
+            aria-describedby="customer-password-error customer-password-hint"
             {...form.register("password")}
           />
           <PasswordStrength
@@ -219,12 +221,12 @@ export function TenantForm({
             minLength={PASSWORD_MIN_LENGTH}
           />
           <p
-            id="tenant-password-hint"
+            id="customer-password-hint"
             className="text-xs text-muted-foreground"
           >
             {t("passwordHint")}
           </p>
-          <FieldError id="tenant-password-error">
+          <FieldError id="customer-password-error">
             {errors.password?.message}
           </FieldError>
         </Field>
@@ -232,35 +234,35 @@ export function TenantForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field>
-          <Label htmlFor="tenant-phone">
+          <Label htmlFor="customer-phone">
             {t("fields.phone")} {optional}
           </Label>
           <Input
-            id="tenant-phone"
+            id="customer-phone"
             type="tel"
             autoComplete="off"
             placeholder="+40 721 234 567"
             aria-invalid={Boolean(errors.phone)}
-            aria-describedby="tenant-phone-error"
+            aria-describedby="customer-phone-error"
             {...form.register("phone")}
           />
-          <FieldError id="tenant-phone-error">
+          <FieldError id="customer-phone-error">
             {errors.phone?.message}
           </FieldError>
         </Field>
         <Field>
-          <Label htmlFor="tenant-address">
+          <Label htmlFor="customer-address">
             {t("fields.address")} {optional}
           </Label>
           <Input
-            id="tenant-address"
+            id="customer-address"
             autoComplete="off"
             placeholder={t("placeholders.address")}
             aria-invalid={Boolean(errors.address)}
-            aria-describedby="tenant-address-error"
+            aria-describedby="customer-address-error"
             {...form.register("address")}
           />
-          <FieldError id="tenant-address-error">
+          <FieldError id="customer-address-error">
             {errors.address?.message}
           </FieldError>
         </Field>
@@ -348,7 +350,7 @@ export function TenantForm({
             </div>
           )
         })}
-        {contacts.fields.length < TENANT_LIMITS.contacts ? (
+        {contacts.fields.length < CUSTOMER_LIMITS.contacts ? (
           <Button
             type="button"
             variant="outline"

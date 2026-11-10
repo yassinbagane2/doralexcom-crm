@@ -65,7 +65,7 @@ export function useDeleteProperty() {
         await invalidate()
         toast.success(t("deleted"))
       },
-      // A refused delete usually means a tenant moved in since the list
+      // A refused delete usually means a customer moved in since the list
       // loaded: refresh so the row shows who.
       onError: () => void invalidate(),
     })

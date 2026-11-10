@@ -52,7 +52,7 @@ const propertySchema = z.object({
       id: z.string(),
       startDate: z.string(),
       endDate: z.string().nullable(),
-      tenant: z.object({
+      customer: z.object({
         id: z.string(),
         name: z.string(),
         email: z.string().nullable(),
@@ -112,10 +112,10 @@ export const propertyRouter = o.prefix("/properties").router({
               autoRenew: lease.autoRenew,
               termMonths: lease.termMonths,
               terminatedAt: lease.terminatedAt,
-              tenant: { id: user.id, name: user.name, email: user.email },
+              customer: { id: user.id, name: user.name, email: user.email },
             })
             .from(lease)
-            .innerJoin(user, eq(user.id, lease.tenantId))
+            .innerJoin(user, eq(user.id, lease.customerId))
             .where(
               and(
                 inArray(
@@ -144,9 +144,9 @@ export const propertyRouter = o.prefix("/properties").router({
           .map((l) => ({
             id: l.id,
             startDate: l.startDate,
-            // When the tenant leaves: never, while the lease keeps renewing.
+            // When the customer leaves: never, while the lease keeps renewing.
             endDate: effectiveEnd(l),
-            tenant: l.tenant,
+            customer: l.customer,
           })),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,

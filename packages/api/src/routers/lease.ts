@@ -1,6 +1,12 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { lease, payment, property, user } from "@workspace/db/schema"
+import {
+  lease,
+  payment,
+  property,
+  customerDocument,
+  user,
+} from "@workspace/db/schema"
 import {
   and,
   eq,
@@ -14,17 +20,20 @@ import {
 } from "drizzle-orm"
 import { z } from "zod"
 
+import { documentContentSchema } from "../contract"
 import { businessProcedure, o } from "../index"
 import {
   leaseBalance,
   MAX_TERM_MONTHS,
-  TENANT_LIMITS,
+  CUSTOMER_LIMITS,
   termEndDate,
 } from "../lease"
 import { findLandlord, landlordSchema } from "../lib/landlord"
 import { holdsPropertyOn } from "../lib/lease"
-import { findTenant, readTenantMetadata } from "../lib/tenant"
+import { buildMergeData, mergeDataSchema } from "../lib/merge-data"
+import { findCustomer, readCustomerMetadata } from "../lib/customer"
 import { PROPERTY_LIMITS, RENT_CURRENCIES } from "../property"
+import { assertContentSize, contractName } from "./contract"
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -68,6 +77,9 @@ const occupancy = (input: Agreement) => ({
   startDate: input.startDate,
   endDate: input.autoRenew ? null : input.endDate,
 })
+
+/** Who rents what: the two sides a new lease ties together. */
+const parties = z.object({ customerId: z.uuid(), propertyId: z.uuid() })
 
 const exitAfterEntry: [
   (dates: { startDate: string; endDate: string | null }) => boolean,
@@ -180,24 +192,77 @@ const paymentsOf = (leaseId: typeof lease.id) =>
     .where(eq(payment.leaseId, leaseId))
 
 /**
- * Which property a tenant occupies, when, for how much, and the rent paid on
+ * Which property a customer occupies, when, for how much, and the rent paid on
  * it. A new lease takes the property's rent; editing a lease can change it.
  * Scoped to `context.organizationId` like every business procedure.
  */
 export const leaseRouter = o.prefix("/leases").router({
+  /**
+   * What the lease document for a lease not yet created would say: the
+   * terms given, at the property's current rent, as `create` would save them.
+   * The web app fills the chosen template with it and sends the result back
+   * to `create`.
+   */
+  draftMergeData: businessProcedure
+    .route({ method: "POST", path: "/draft-merge-data", tags: ["leases"] })
+    .input(agreement.extend(parties.shape).refine(...exitAfterEntry))
+    .output(mergeDataSchema)
+    .handler(async ({ input: raw, context }) => {
+      const input = settleTerm(raw)
+      const customer = await findCustomer(
+        context.organizationId,
+        input.customerId
+      )
+      const [rented] = await db
+        .select()
+        .from(property)
+        .where(
+          and(
+            eq(property.id, input.propertyId),
+            eq(property.organizationId, context.organizationId)
+          )
+        )
+        .limit(1)
+
+      if (!rented) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Property not found.",
+          data: { code: "PROPERTY_NOT_FOUND" },
+        })
+      }
+
+      return buildMergeData(context.organizationId, {
+        customer,
+        property: rented,
+        lease: { ...input, rent: rented.rent ?? 0, currency: rented.currency },
+      })
+    }),
+
+  /**
+   * Assigns a property to a customer. A lease never starts without its lease
+   * document: the contract between the business and the customer, generated
+   * from a template, is saved on the customer in the same transaction.
+   */
   create: businessProcedure
     .route({ method: "POST", path: "/", tags: ["leases"] })
     .input(
       agreement
-        .extend({ tenantId: z.uuid(), propertyId: z.uuid() })
+        .extend({
+          ...parties.shape,
+          contract: z.object({
+            name: contractName,
+            content: documentContentSchema,
+          }),
+        })
         .refine(...exitAfterEntry)
     )
-    .output(z.object({ id: z.string() }))
+    .output(z.object({ id: z.string(), documentId: z.string() }))
     .handler(async ({ input: raw, context }) => {
-      const input = settleTerm(raw)
-      await findTenant(context.organizationId, input.tenantId)
+      const { contract, ...input } = settleTerm(raw)
+      assertContentSize(contract.content)
+      await findCustomer(context.organizationId, input.customerId)
 
-      const id = await db.transaction(async (tx) => {
+      return db.transaction(async (tx) => {
         const rented = await assertPropertyFree(
           tx,
           context.organizationId,
@@ -215,10 +280,21 @@ export const leaseRouter = o.prefix("/leases").router({
             organizationId: context.organizationId,
           })
           .returning({ id: lease.id })
-        return created!.id
-      })
 
-      return { id }
+        const [document] = await tx
+          .insert(customerDocument)
+          .values({
+            organizationId: context.organizationId,
+            customerId: input.customerId,
+            leaseId: created!.id,
+            kind: "contract",
+            name: contract.name,
+            content: contract.content,
+          })
+          .returning({ id: customerDocument.id })
+
+        return { id: created!.id, documentId: document!.id }
+      })
     }),
 
   update: businessProcedure
@@ -265,7 +341,7 @@ export const leaseRouter = o.prefix("/leases").router({
 
       const terminatedAt = new Date()
       await db.transaction(async (tx) => {
-        // Moving the exit later must not run into the next tenant.
+        // Moving the exit later must not run into the next customer.
         await assertPropertyFree(
           tx,
           context.organizationId,
@@ -321,7 +397,7 @@ export const leaseRouter = o.prefix("/leases").router({
         note: z
           .string()
           .trim()
-          .max(TENANT_LIMITS.paymentNote)
+          .max(CUSTOMER_LIMITS.paymentNote)
           .transform((value) => value || null),
       })
     )
@@ -352,7 +428,7 @@ export const leaseRouter = o.prefix("/leases").router({
         note: z.string().nullable(),
         currency: z.enum(RENT_CURRENCIES),
         landlord: landlordSchema,
-        tenant: z.object({
+        customer: z.object({
           id: z.string(),
           name: z.string(),
           email: z.string(),
@@ -363,11 +439,11 @@ export const leaseRouter = o.prefix("/leases").router({
     )
     .handler(async ({ input, context }) => {
       const [row] = await db
-        .select({ payment, lease, property, tenant: user })
+        .select({ payment, lease, property, customer: user })
         .from(payment)
         .innerJoin(lease, eq(lease.id, payment.leaseId))
         .innerJoin(property, eq(property.id, lease.propertyId))
-        .innerJoin(user, eq(user.id, lease.tenantId))
+        .innerJoin(user, eq(user.id, lease.customerId))
         .where(
           and(
             eq(payment.id, input.id),
@@ -391,11 +467,11 @@ export const leaseRouter = o.prefix("/leases").router({
         note: row.payment.note,
         currency: row.lease.currency,
         landlord: await findLandlord(context.organizationId),
-        tenant: {
-          id: row.tenant.id,
-          name: row.tenant.name,
-          email: row.tenant.email,
-          address: readTenantMetadata(row.tenant.metadata).address,
+        customer: {
+          id: row.customer.id,
+          name: row.customer.name,
+          email: row.customer.email,
+          address: readCustomerMetadata(row.customer.metadata).address,
         },
         property: { name: row.property.name, address: row.property.address },
       }

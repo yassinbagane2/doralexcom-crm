@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { DashboardBody } from "@/components/admin/dashboard"
-import { PaymentReceipt } from "@/components/tenants/payment-receipt"
+import { PaymentReceipt } from "@/components/customers/payment-receipt"
 import { getMemberRole, requireRole } from "@/lib/auth"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -13,16 +13,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ReceiptPage({
   params,
 }: {
-  params: Promise<{ tenantId: string; paymentId: string }>
+  params: Promise<{ customerId: string; paymentId: string }>
 }) {
   await requireRole("business")
-  const { tenantId, paymentId } = await params
+  const { customerId, paymentId } = await params
   const isOwner = (await getMemberRole()) === "owner"
 
   return (
     <DashboardBody className="pt-6">
       <PaymentReceipt
-        tenantId={tenantId}
+        customerId={customerId}
         paymentId={paymentId}
         isOwner={isOwner}
       />

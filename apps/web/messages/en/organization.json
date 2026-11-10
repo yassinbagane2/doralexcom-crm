@@ -20,7 +20,7 @@
     "vatNumberLabel": "VAT number",
     "identifiersTitle": "Registration",
     "bankTitle": "Payments",
-    "bankHint": "Where tenants pay rent. Printed on contracts and receipts.",
+    "bankHint": "Where customers pay rent. Printed on contracts and receipts.",
     "bankNameLabel": "Bank",
     "bankNamePlaceholder": "Banca Transilvania",
     "ibanLabel": "IBAN",

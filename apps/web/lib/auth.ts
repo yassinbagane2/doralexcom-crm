@@ -81,7 +81,7 @@ export async function requireRole(...allowed: UserRole[]) {
 /**
  * The signed-in user's role inside their organization: "owner" for the
  * business account that set it up, "collaborator" for the people it invited,
- * "member" for tenants. Null outside any organization (admins).
+ * "member" for customers. Null outside any organization (admins).
  */
 export const getMemberRole = cache(async () => {
   // The organization the app shell works in, even for a session that

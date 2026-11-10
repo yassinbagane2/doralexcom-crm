@@ -10,9 +10,7 @@ import {
   documentContentSchema,
   type DocumentContent,
 } from "../contract"
-import { findLandlord, landlordSchema } from "../lib/landlord"
-import { readTenantMetadata } from "../lib/tenant"
-import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
+import { buildMergeData, mergeDataSchema } from "../lib/merge-data"
 
 export const contractName = z.string().trim().min(1).max(CONTRACT_LIMITS.name)
 
@@ -137,49 +135,17 @@ export const contractRouter = o.prefix("/contracts").router({
       return { success: true }
     }),
 
-  /**
-   * Everything a lease's contract can mention, as stored. The web app formats
-   * it in the reader's language and fills the template with it.
-   */
+  /** What a saved lease's contract can mention (see `mergeDataSchema`). */
   mergeData: businessProcedure
     .route({ method: "GET", path: "/leases/{leaseId}", tags: ["contracts"] })
     .input(z.object({ leaseId: z.uuid() }))
-    .output(
-      z.object({
-        landlord: landlordSchema,
-        tenant: z.object({
-          name: z.string(),
-          email: z.string(),
-          phone: z.string().nullable(),
-          address: z.string().nullable(),
-        }),
-        property: z.object({
-          name: z.string(),
-          type: z.enum(PROPERTY_TYPES),
-          address: z.string(),
-          surfaceArea: z.number().nullable(),
-          description: z.string().nullable(),
-        }),
-        lease: z.object({
-          startDate: z.string(),
-          endDate: z.string().nullable(),
-          termMonths: z.number().nullable(),
-          autoRenew: z.boolean(),
-          rent: z.number(),
-          charges: z.number(),
-          additionalCosts: z.number(),
-          discount: z.number(),
-          deposit: z.number(),
-          currency: z.enum(RENT_CURRENCIES),
-        }),
-      })
-    )
+    .output(mergeDataSchema)
     .handler(async ({ input, context }) => {
       const [row] = await db
-        .select({ lease, property, tenant: user })
+        .select({ lease, property, customer: user })
         .from(lease)
         .innerJoin(property, eq(property.id, lease.propertyId))
-        .innerJoin(user, eq(user.id, lease.tenantId))
+        .innerJoin(user, eq(user.id, lease.customerId))
         .where(
           and(
             eq(lease.id, input.leaseId),
@@ -195,37 +161,6 @@ export const contractRouter = o.prefix("/contracts").router({
         })
       }
 
-      const landlord = await findLandlord(context.organizationId)
-
-      const details = readTenantMetadata(row.tenant.metadata)
-
-      return {
-        landlord,
-        tenant: {
-          name: row.tenant.name,
-          email: row.tenant.email,
-          phone: details.phone,
-          address: details.address,
-        },
-        property: {
-          name: row.property.name,
-          type: row.property.type,
-          address: row.property.address,
-          surfaceArea: row.property.surfaceArea,
-          description: row.property.description,
-        },
-        lease: {
-          startDate: row.lease.startDate,
-          endDate: row.lease.endDate,
-          termMonths: row.lease.termMonths,
-          autoRenew: row.lease.autoRenew,
-          rent: row.lease.rent,
-          charges: row.lease.charges,
-          additionalCosts: row.lease.additionalCosts,
-          discount: row.lease.discount,
-          deposit: row.lease.deposit,
-          currency: row.lease.currency,
-        },
-      }
+      return buildMergeData(context.organizationId, row)
     }),
 })

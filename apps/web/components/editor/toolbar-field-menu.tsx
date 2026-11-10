@@ -22,7 +22,7 @@ import { keepEditorFocus, ToolbarMenuButton } from "./toolbar-primitives"
 
 /**
  * Inserts a merge field at the caret: one submenu per thing a contract
- * talks about (landlord, tenant, property, lease, the document itself).
+ * talks about (landlord, customer, property, lease, the document itself).
  */
 export function FieldMenu({
   editor,

@@ -176,7 +176,7 @@
     "insert": "Insert field",
     "groups": {
       "landlord": "Landlord",
-      "tenant": "Tenant",
+      "customer": "Customer",
       "property": "Property",
       "lease": "Lease",
       "document": "Document"
@@ -194,11 +194,11 @@
         "bankName": "Landlord bank",
         "iban": "Landlord IBAN"
       },
-      "tenant": {
-        "name": "Tenant name",
-        "email": "Tenant email",
-        "phone": "Tenant phone",
-        "address": "Tenant address"
+      "customer": {
+        "name": "Customer name",
+        "email": "Customer email",
+        "phone": "Customer phone",
+        "address": "Customer address"
       },
       "property": {
         "name": "Property name",
@@ -236,10 +236,10 @@
   "Contracts": {
     "metaTitle": "Templates",
     "title": "Templates",
-    "description": "Contract templates for your leases. Fields fill in from the landlord, tenant, property and lease when you generate a contract.",
+    "description": "Contract templates for your leases. Fields fill in from the landlord, customer, property and lease when you generate a contract.",
     "add": "New template",
     "createTitle": "Create new template",
-    "createDescription": "Start from a blank page, then add fields for the tenant, property and lease.",
+    "createDescription": "Start from a blank page, then add fields for the customer, property and lease.",
     "fields": "Fields",
     "editedAgo": "Edited {time}",
     "editedJustNow": "Edited just now",
@@ -260,15 +260,15 @@
       "eyebrow": "Template",
       "back": "Back to templates",
       "newTitle": "Untitled template",
-      "placeholder": "Write your template. Insert fields from the toolbar to fill in the tenant and lease details.",
+      "placeholder": "Write your template. Insert fields from the toolbar to fill in the customer and lease details.",
       "banner": "Highlighted fields fill in automatically when you use this template. Add them with <strong>Insert field</strong>.",
       "notFound": "This template doesn't exist or was deleted."
     }
   },
   "ContractDocument": {
     "metaTitle": "Contract",
-    "eyebrow": "Contract · {tenant}",
-    "back": "Back to {tenant}",
+    "eyebrow": "Contract · {customer}",
+    "back": "Back to {customer}",
     "placeholder": "Write the contract…",
     "saved": "Contract saved",
     "notFound": "This contract doesn't exist or was deleted.",
@@ -285,7 +285,7 @@
     "delete": "Delete",
     "actionsLabel": "Actions for {name}",
     "uploadTitle": "Upload a document",
-    "uploadDescription": "PDF, Word, text or photo, up to 10 MB. Tenants don't see these.",
+    "uploadDescription": "PDF, Word, text or photo, up to 10 MB. Customers don't see these.",
     "file": "File",
     "chooseFile": "Choose a file",
     "changeFile": "Change",
@@ -307,13 +307,13 @@
     "name": "Name",
     "generateSubmit": "Generate contract",
     "generated": "Contract generated",
-    "contractName": "{template} – {tenant}"
+    "contractName": "{template} – {customer}"
   },
   "StarterContract": {
     "title": "Residential lease agreement",
     "intro": "This agreement is made on [document.date] between:",
     "landlord": "**Landlord:** [landlord.name], tax ID [landlord.taxId], represented by [landlord.representative];",
-    "tenant": "**Tenant:** [tenant.name], residing at [tenant.address], phone [tenant.phone], email [tenant.email].",
+    "customer": "**Tenant:** [customer.name], residing at [customer.address], phone [customer.phone], email [customer.email].",
     "propertyHeading": "1. The property",
     "property": "The landlord lets to the tenant the [property.type] known as [property.name], at [property.address], with a surface area of [property.surfaceArea].",
     "termHeading": "2. Term",
@@ -330,6 +330,6 @@
     "deposit": "On signing, the tenant pays a security deposit of [lease.deposit]. It is returned when the tenant leaves, less any amounts still owed.",
     "signaturesHeading": "5. Signatures",
     "landlordSignature": "**Landlord**",
-    "tenantSignature": "**Tenant**"
+    "customerSignature": "**Tenant**"
   }
 }

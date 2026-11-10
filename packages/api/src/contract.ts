@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 /*
- * Contracts and tenant documents, shared by the API and the web app. Keep this
+ * Contracts and customer documents, shared by the API and the web app. Keep this
  * file free of server imports: it ends up in client bundles.
  */
 
@@ -17,7 +17,7 @@ export const DOCUMENT_LIMITS = {
 } as const
 
 /**
- * What can be uploaded to a tenant, with the extension it saves under. Kept
+ * What can be uploaded to a customer, with the extension it saves under. Kept
  * to documents and photos: nothing a browser would run as a page.
  */
 export const DOCUMENT_FILE_TYPES = {
@@ -57,7 +57,7 @@ export const MERGE_FIELD_NODE = "mergeField"
 
 export const MERGE_FIELD_GROUPS = [
   "landlord",
-  "tenant",
+  "customer",
   "property",
   "lease",
   "document",
@@ -80,10 +80,10 @@ export const MERGE_FIELDS = [
   "landlord.vatNumber",
   "landlord.bankName",
   "landlord.iban",
-  "tenant.name",
-  "tenant.email",
-  "tenant.phone",
-  "tenant.address",
+  "customer.name",
+  "customer.email",
+  "customer.phone",
+  "customer.address",
   "property.name",
   "property.type",
   "property.address",

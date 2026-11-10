@@ -16,7 +16,7 @@ export interface MergeFieldOptions {
 }
 
 /**
- * A placeholder in a contract template, such as the tenant's name, that
+ * A placeholder in a contract template, such as the customer's name, that
  * fills in from the lease when a contract is generated (see
  * `fillMergeFields`). One unbreakable chip in the text: it takes marks like
  * bold, and the value it becomes keeps them.

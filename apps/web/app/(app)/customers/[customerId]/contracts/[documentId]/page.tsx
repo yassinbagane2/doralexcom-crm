@@ -9,19 +9,19 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitle") }
 }
 
-export default async function TenantContractPage({
+export default async function CustomerContractPage({
   params,
 }: {
-  params: Promise<{ tenantId: string; documentId: string }>
+  params: Promise<{ customerId: string; documentId: string }>
 }) {
   await requireRole("business")
-  const { tenantId, documentId } = await params
+  const { customerId, documentId } = await params
 
   return (
     <div className="flex min-h-0 flex-1">
       <ContractDocumentEditor
         key={documentId}
-        tenantId={tenantId}
+        customerId={customerId}
         documentId={documentId}
       />
     </div>

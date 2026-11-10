@@ -176,7 +176,7 @@
     "insert": "Inserează un câmp",
     "groups": {
       "landlord": "Proprietar",
-      "tenant": "Chiriaș",
+      "customer": "Client",
       "property": "Proprietate",
       "lease": "Contract",
       "document": "Document"
@@ -194,11 +194,11 @@
         "bankName": "Banca proprietarului",
         "iban": "IBAN-ul proprietarului"
       },
-      "tenant": {
-        "name": "Numele chiriașului",
-        "email": "Emailul chiriașului",
-        "phone": "Telefonul chiriașului",
-        "address": "Adresa chiriașului"
+      "customer": {
+        "name": "Numele clientului",
+        "email": "Emailul clientului",
+        "phone": "Telefonul clientului",
+        "address": "Adresa clientului"
       },
       "property": {
         "name": "Numele proprietății",
@@ -236,10 +236,10 @@
   "Contracts": {
     "metaTitle": "Șabloane",
     "title": "Șabloane",
-    "description": "Șabloane de contract pentru închirierile tale. Câmpurile se completează din datele proprietarului, chiriașului, proprietății și contractului atunci când generezi un contract.",
+    "description": "Șabloane de contract pentru închirierile tale. Câmpurile se completează din datele proprietarului, clientului, proprietății și contractului atunci când generezi un contract.",
     "add": "Șablon nou",
     "createTitle": "Creează un șablon nou",
-    "createDescription": "Pornește de la o pagină goală, apoi adaugă câmpuri pentru chiriaș, proprietate și contract.",
+    "createDescription": "Pornește de la o pagină goală, apoi adaugă câmpuri pentru client, proprietate și contract.",
     "fields": "Câmpuri",
     "editedAgo": "Modificat {time}",
     "editedJustNow": "Modificat chiar acum",
@@ -260,15 +260,15 @@
       "eyebrow": "Șablon",
       "back": "Înapoi la șabloane",
       "newTitle": "Șablon fără titlu",
-      "placeholder": "Scrie șablonul. Inserează câmpuri din bara de instrumente pentru datele chiriașului și ale contractului.",
+      "placeholder": "Scrie șablonul. Inserează câmpuri din bara de instrumente pentru datele clientului și ale contractului.",
       "banner": "Câmpurile evidențiate se completează automat atunci când folosești acest șablon. Adaugă-le cu <strong>Inserează un câmp</strong>.",
       "notFound": "Acest șablon nu există sau a fost șters."
     }
   },
   "ContractDocument": {
     "metaTitle": "Contract",
-    "eyebrow": "Contract · {tenant}",
-    "back": "Înapoi la {tenant}",
+    "eyebrow": "Contract · {customer}",
+    "back": "Înapoi la {customer}",
     "placeholder": "Scrie contractul…",
     "saved": "Contract salvat",
     "notFound": "Acest contract nu există sau a fost șters.",
@@ -285,7 +285,7 @@
     "delete": "Șterge",
     "actionsLabel": "Acțiuni pentru {name}",
     "uploadTitle": "Încarcă un document",
-    "uploadDescription": "PDF, Word, text sau fotografie, de cel mult 10 MB. Chiriașii nu le văd.",
+    "uploadDescription": "PDF, Word, text sau fotografie, de cel mult 10 MB. Clienții nu le văd.",
     "file": "Fișier",
     "chooseFile": "Alege un fișier",
     "changeFile": "Schimbă",
@@ -307,13 +307,13 @@
     "name": "Nume",
     "generateSubmit": "Generează contractul",
     "generated": "Contract generat",
-    "contractName": "{template} – {tenant}"
+    "contractName": "{template} – {customer}"
   },
   "StarterContract": {
     "title": "Contract de închiriere a locuinței",
     "intro": "Prezentul contract se încheie la data de [document.date] între:",
     "landlord": "**Proprietar:** [landlord.name], CUI [landlord.taxId], reprezentat de [landlord.representative];",
-    "tenant": "**Chiriaș:** [tenant.name], cu domiciliul în [tenant.address], telefon [tenant.phone], email [tenant.email].",
+    "customer": "**Chiriaș:** [customer.name], cu domiciliul în [customer.address], telefon [customer.phone], email [customer.email].",
     "propertyHeading": "1. Obiectul contractului",
     "property": "Proprietarul închiriază chiriașului [property.type] denumit „[property.name]”, situat la adresa [property.address], cu o suprafață de [property.surfaceArea].",
     "termHeading": "2. Durata",
@@ -330,6 +330,6 @@
     "deposit": "La semnare, chiriașul plătește o garanție de [lease.deposit]. Aceasta se restituie la eliberarea locuinței, mai puțin eventualele sume datorate.",
     "signaturesHeading": "5. Semnături",
     "landlordSignature": "**Proprietar**",
-    "tenantSignature": "**Chiriaș**"
+    "customerSignature": "**Chiriaș**"
   }
 }

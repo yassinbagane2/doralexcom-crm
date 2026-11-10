@@ -62,11 +62,11 @@ import {
   useCreateContractDocument,
   useDeleteDocument,
   useDownloadDocument,
-  useTenantDocuments,
+  useCustomerDocuments,
   useUploadDocument,
-  type TenantDocument,
+  type CustomerDocument,
 } from "@/hooks/queries/contract"
-import type { TenantDetail, TenantLease } from "@/hooks/queries/tenant"
+import type { CustomerDetail, CustomerLease } from "@/hooks/queries/customer"
 import { openFile, saveFile } from "@/lib/download"
 import { formatDate } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
@@ -79,7 +79,7 @@ function formatSize(bytes: number, locale: string) {
   return format(Math.max(1, bytes / 1024), "KB")
 }
 
-function DocumentIcon({ document }: { document: TenantDocument }) {
+function DocumentIcon({ document }: { document: CustomerDocument }) {
   if (document.kind === "contract") return <FilePen className="size-4" />
   if (document.mimeType === "application/pdf")
     return <PdfDocument className="size-4" />
@@ -90,14 +90,14 @@ function DocumentIcon({ document }: { document: TenantDocument }) {
 }
 
 /**
- * Everything kept about a tenant: files uploaded as they are (a signed lease,
+ * Everything kept about a customer: files uploaded as they are (a signed lease,
  * an ID) and contracts generated from a template, which open in the editor.
  */
-export function TenantDocuments({ tenant }: { tenant: TenantDetail }) {
+export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
   const t = useTranslations("Documents")
-  const { data: documents, isPending } = useTenantDocuments(tenant.id)
+  const { data: documents, isPending } = useCustomerDocuments(customer.id)
   const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting] = useState<TenantDocument | null>(null)
+  const [deleting, setDeleting] = useState<CustomerDocument | null>(null)
 
   return (
     <section className="flex flex-col gap-3">
@@ -120,7 +120,7 @@ export function TenantDocuments({ tenant }: { tenant: TenantDetail }) {
           {documents.map((document) => (
             <DocumentRow
               key={document.id}
-              tenant={tenant}
+              customer={customer}
               document={document}
               onDelete={() => setDeleting(document)}
             />
@@ -129,7 +129,7 @@ export function TenantDocuments({ tenant }: { tenant: TenantDetail }) {
       )}
 
       <UploadDocumentDialog
-        tenant={tenant}
+        customer={customer}
         open={uploading}
         onOpenChange={setUploading}
       />
@@ -142,19 +142,19 @@ export function TenantDocuments({ tenant }: { tenant: TenantDetail }) {
 }
 
 function DocumentRow({
-  tenant,
+  customer,
   document,
   onDelete,
 }: {
-  tenant: TenantDetail
-  document: TenantDocument
+  customer: CustomerDetail
+  document: CustomerDocument
   onDelete: () => void
 }) {
   const t = useTranslations("Documents")
   const locale = useLocale()
   const download = useDownloadDocument()
-  const lease = tenant.leases.find((l) => l.id === document.leaseId)
-  const contractHref = `${routes.tenants}/${tenant.id}/contracts/${document.id}`
+  const lease = customer.leases.find((l) => l.id === document.leaseId)
+  const contractHref = `${routes.customers}/${customer.id}/contracts/${document.id}`
   const previewable =
     document.mimeType !== null &&
     isDocumentFileType(document.mimeType) &&
@@ -266,14 +266,14 @@ const ACCEPTED_FILES = Object.keys(DOCUMENT_FILE_TYPES)
 
 const NO_LEASE = "none"
 
-/** Attaches a file to the tenant, optionally to one of their leases. */
+/** Attaches a file to the customer, optionally to one of their leases. */
 export function UploadDocumentDialog({
-  tenant,
+  customer,
   leaseId,
   open,
   onOpenChange,
 }: {
-  tenant: TenantDetail
+  customer: CustomerDetail
   /** The lease to attach it to, preselected. */
   leaseId?: string
   open: boolean
@@ -296,7 +296,7 @@ export function UploadDocumentDialog({
 
   const leaseItems = [
     { value: NO_LEASE, label: t("noLease") },
-    ...tenant.leases.map((l) => ({ value: l.id, label: l.property.name })),
+    ...customer.leases.map((l) => ({ value: l.id, label: l.property.name })),
   ]
 
   const choose = (picked: File | undefined) => {
@@ -337,7 +337,7 @@ export function UploadDocumentDialog({
             }
             upload.mutate(
               {
-                tenantId: tenant.id,
+                customerId: customer.id,
                 leaseId: lease === NO_LEASE ? null : lease,
                 file,
               },
@@ -386,7 +386,7 @@ export function UploadDocumentDialog({
             <FieldError>{error}</FieldError>
           </Field>
 
-          {tenant.leases.length > 0 ? (
+          {customer.leases.length > 0 ? (
             <Field>
               <Label htmlFor="document-lease">{t("leaseField")}</Label>
               <Select
@@ -431,7 +431,7 @@ function DeleteDocumentDialog({
   document,
   onClose,
 }: {
-  document: TenantDocument | null
+  document: CustomerDocument | null
   onClose: () => void
 }) {
   const t = useTranslations("Documents")
@@ -476,16 +476,16 @@ function DeleteDocumentDialog({
 
 /**
  * Fills a contract template in with one lease's details and saves the result
- * on the tenant, then opens it in the editor.
+ * on the customer, then opens it in the editor.
  */
 export function GenerateContractDialog({
-  tenant,
+  customer,
   lease,
   open,
   onOpenChange,
 }: {
-  tenant: TenantDetail
-  lease: TenantLease
+  customer: CustomerDetail
+  lease: CustomerLease
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -511,7 +511,7 @@ export function GenerateContractDialog({
     const template = templates?.find((candidate) => candidate.id === id)
     if (template) {
       setName(
-        t("contractName", { template: template.name, tenant: tenant.name })
+        t("contractName", { template: template.name, customer: customer.name })
       )
     }
   }
@@ -533,14 +533,14 @@ export function GenerateContractDialog({
         ),
       ])
       const { id } = await create.mutateAsync({
-        tenantId: tenant.id,
+        customerId: customer.id,
         leaseId: lease.id,
         name: (name.trim() || template.name).slice(0, 200),
         content: fillContract(template.content, mergeValues(data)),
       })
       toast.success(t("generated"))
       onOpenChange(false)
-      router.push(`${routes.tenants}/${tenant.id}/contracts/${id}`)
+      router.push(`${routes.customers}/${customer.id}/contracts/${id}`)
     } catch {
       // The request's own error toast says what went wrong.
     } finally {

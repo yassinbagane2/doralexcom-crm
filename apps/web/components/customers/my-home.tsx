@@ -11,18 +11,18 @@ import { KeyRound, LoaderCircle, MapPin, Phone } from "@workspace/ui/icons"
 import { useLocale, useTranslations } from "next-intl"
 
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
-import { LeaseBadge } from "@/components/tenants/tenant-list"
-import { useMyTenancy } from "@/hooks/queries/tenant"
+import { LeaseBadge } from "@/components/customers/customer-list"
+import { useMyHome } from "@/hooks/queries/customer"
 import { formatDate, formatMoney } from "@/lib/format"
 
 /**
- * What a tenant sees when they sign in: the places they rent and the notes
+ * What a customer sees when they sign in: the places they rent and the notes
  * their landlord chose to share. Nothing private reaches this page.
  */
-export function MyTenancy() {
-  const t = useTranslations("Tenancy")
+export function MyHome() {
+  const t = useTranslations("MyHome")
   const locale = useLocale()
-  const { data, isPending } = useMyTenancy()
+  const { data, isPending } = useMyHome()
   const today = localToday()
 
   if (isPending) {
@@ -33,7 +33,7 @@ export function MyTenancy() {
     )
   }
 
-  // One landlord per tenant account; nothing to show until a lease or a
+  // One landlord per customer account; nothing to show until a lease or a
   // shared note exists.
   const records =
     data && (data.leases.length > 0 || data.notes.length > 0)

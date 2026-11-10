@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { lease, tenantDocument } from "@workspace/db/schema"
+import { lease, customerDocument } from "@workspace/db/schema"
 import { and, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
@@ -12,7 +12,7 @@ import {
   documentContentSchema,
   isDocumentFileType,
 } from "../contract"
-import { findTenant } from "../lib/tenant"
+import { findCustomer } from "../lib/customer"
 import { assertContentSize, contractName } from "./contract"
 
 function documentNotFound() {
@@ -24,17 +24,17 @@ function documentNotFound() {
 
 const ownDocument = (organizationId: string, id: string) =>
   and(
-    eq(tenantDocument.id, id),
-    eq(tenantDocument.organizationId, organizationId)
+    eq(customerDocument.id, id),
+    eq(customerDocument.organizationId, organizationId)
   )
 
-/** The tenant must be the business's, and the lease (if any) theirs. */
+/** The customer must be the business's, and the lease (if any) theirs. */
 async function assertAttachable(
   organizationId: string,
-  tenantId: string,
+  customerId: string,
   leaseId: string | null
 ) {
-  await findTenant(organizationId, tenantId)
+  await findCustomer(organizationId, customerId)
   if (!leaseId) return
 
   const [found] = await db
@@ -43,7 +43,7 @@ async function assertAttachable(
     .where(
       and(
         eq(lease.id, leaseId),
-        eq(lease.tenantId, tenantId),
+        eq(lease.customerId, customerId),
         eq(lease.organizationId, organizationId)
       )
     )
@@ -65,14 +65,18 @@ function withExtension(name: string, extension: string) {
 }
 
 /**
- * Files kept about a tenant (a signed lease, an ID scan…) and the contracts
+ * Files kept about a customer (a signed lease, an ID scan…) and the contracts
  * generated for their leases. Scoped to `context.organizationId` like every
- * business procedure; tenants don't see these.
+ * business procedure; customers don't see these.
  */
 export const documentRouter = o.prefix("/documents").router({
   list: businessProcedure
-    .route({ method: "GET", path: "/tenants/{tenantId}", tags: ["documents"] })
-    .input(z.object({ tenantId: z.uuid() }))
+    .route({
+      method: "GET",
+      path: "/customers/{customerId}",
+      tags: ["documents"],
+    })
+    .input(z.object({ customerId: z.uuid() }))
     .output(
       z.array(
         z.object({
@@ -88,34 +92,34 @@ export const documentRouter = o.prefix("/documents").router({
       )
     )
     .handler(async ({ input, context }) => {
-      await findTenant(context.organizationId, input.tenantId)
+      await findCustomer(context.organizationId, input.customerId)
 
       return db
         .select({
-          id: tenantDocument.id,
-          kind: tenantDocument.kind,
-          name: tenantDocument.name,
-          leaseId: tenantDocument.leaseId,
-          mimeType: tenantDocument.mimeType,
-          size: tenantDocument.size,
-          createdAt: tenantDocument.createdAt,
-          updatedAt: tenantDocument.updatedAt,
+          id: customerDocument.id,
+          kind: customerDocument.kind,
+          name: customerDocument.name,
+          leaseId: customerDocument.leaseId,
+          mimeType: customerDocument.mimeType,
+          size: customerDocument.size,
+          createdAt: customerDocument.createdAt,
+          updatedAt: customerDocument.updatedAt,
         })
-        .from(tenantDocument)
+        .from(customerDocument)
         .where(
           and(
-            eq(tenantDocument.tenantId, input.tenantId),
-            eq(tenantDocument.organizationId, context.organizationId)
+            eq(customerDocument.customerId, input.customerId),
+            eq(customerDocument.organizationId, context.organizationId)
           )
         )
-        .orderBy(desc(tenantDocument.createdAt))
+        .orderBy(desc(customerDocument.createdAt))
     }),
 
   upload: businessProcedure
     .route({ method: "POST", path: "/files", tags: ["documents"] })
     .input(
       z.object({
-        tenantId: z.uuid(),
+        customerId: z.uuid(),
         leaseId: z.uuid().nullable(),
         file: z.file(),
       })
@@ -137,7 +141,7 @@ export const documentRouter = o.prefix("/documents").router({
       }
       await assertAttachable(
         context.organizationId,
-        input.tenantId,
+        input.customerId,
         input.leaseId
       )
 
@@ -146,10 +150,10 @@ export const documentRouter = o.prefix("/documents").router({
         withExtension("document", DOCUMENT_FILE_TYPES[file.type])
 
       const [created] = await db
-        .insert(tenantDocument)
+        .insert(customerDocument)
         .values({
           organizationId: context.organizationId,
-          tenantId: input.tenantId,
+          customerId: input.customerId,
           leaseId: input.leaseId,
           kind: "file",
           name,
@@ -157,7 +161,7 @@ export const documentRouter = o.prefix("/documents").router({
           size: file.size,
           data: Buffer.from(await file.arrayBuffer()),
         })
-        .returning({ id: tenantDocument.id })
+        .returning({ id: customerDocument.id })
 
       return { id: created!.id }
     }),
@@ -169,15 +173,15 @@ export const documentRouter = o.prefix("/documents").router({
     .handler(async ({ input, context }) => {
       const [found] = await db
         .select({
-          name: tenantDocument.name,
-          mimeType: tenantDocument.mimeType,
-          data: tenantDocument.data,
+          name: customerDocument.name,
+          mimeType: customerDocument.mimeType,
+          data: customerDocument.data,
         })
-        .from(tenantDocument)
+        .from(customerDocument)
         .where(
           and(
             ownDocument(context.organizationId, input.id),
-            eq(tenantDocument.kind, "file")
+            eq(customerDocument.kind, "file")
           )
         )
         .limit(1)
@@ -193,7 +197,7 @@ export const documentRouter = o.prefix("/documents").router({
     .route({ method: "POST", path: "/contracts", tags: ["documents"] })
     .input(
       z.object({
-        tenantId: z.uuid(),
+        customerId: z.uuid(),
         leaseId: z.uuid().nullable(),
         name: contractName,
         content: documentContentSchema,
@@ -204,18 +208,18 @@ export const documentRouter = o.prefix("/documents").router({
       assertContentSize(input.content)
       await assertAttachable(
         context.organizationId,
-        input.tenantId,
+        input.customerId,
         input.leaseId
       )
 
       const [created] = await db
-        .insert(tenantDocument)
+        .insert(customerDocument)
         .values({
           ...input,
           organizationId: context.organizationId,
           kind: "contract",
         })
-        .returning({ id: tenantDocument.id })
+        .returning({ id: customerDocument.id })
 
       return { id: created!.id }
     }),
@@ -227,7 +231,7 @@ export const documentRouter = o.prefix("/documents").router({
       z.object({
         id: z.string(),
         name: z.string(),
-        tenantId: z.string(),
+        customerId: z.string(),
         leaseId: z.string().nullable(),
         content: documentContentSchema,
         updatedAt: z.date(),
@@ -236,11 +240,11 @@ export const documentRouter = o.prefix("/documents").router({
     .handler(async ({ input, context }) => {
       const [found] = await db
         .select()
-        .from(tenantDocument)
+        .from(customerDocument)
         .where(
           and(
             ownDocument(context.organizationId, input.id),
-            eq(tenantDocument.kind, "contract")
+            eq(customerDocument.kind, "contract")
           )
         )
         .limit(1)
@@ -249,7 +253,7 @@ export const documentRouter = o.prefix("/documents").router({
       return {
         id: found.id,
         name: found.name,
-        tenantId: found.tenantId,
+        customerId: found.customerId,
         leaseId: found.leaseId,
         content: documentContentSchema.parse(found.content),
         updatedAt: found.updatedAt,
@@ -269,15 +273,15 @@ export const documentRouter = o.prefix("/documents").router({
     .handler(async ({ input, context }) => {
       assertContentSize(input.content)
       const updated = await db
-        .update(tenantDocument)
+        .update(customerDocument)
         .set({ name: input.name, content: input.content })
         .where(
           and(
             ownDocument(context.organizationId, input.id),
-            eq(tenantDocument.kind, "contract")
+            eq(customerDocument.kind, "contract")
           )
         )
-        .returning({ id: tenantDocument.id })
+        .returning({ id: customerDocument.id })
 
       if (updated.length === 0) throw documentNotFound()
       return { id: input.id }
@@ -289,9 +293,9 @@ export const documentRouter = o.prefix("/documents").router({
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
       const deleted = await db
-        .delete(tenantDocument)
+        .delete(customerDocument)
         .where(ownDocument(context.organizationId, input.id))
-        .returning({ id: tenantDocument.id })
+        .returning({ id: customerDocument.id })
 
       if (deleted.length === 0) throw documentNotFound()
       return { success: true }

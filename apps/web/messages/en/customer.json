@@ -1,10 +1,10 @@
 {
-  "Tenants": {
-    "metaTitle": "Tenants",
-    "title": "Tenants",
+  "Customers": {
+    "metaTitle": "Customers",
+    "title": "Customers",
     "description": "The people and companies you rent to. Each one signs in with their own account to see their leases and the notes you share.",
-    "add": "Add tenant",
-    "filterLabel": "Show tenants",
+    "add": "Add customer",
+    "filterLabel": "Show customers",
     "groups": {
       "all": "All",
       "current": "Current",
@@ -16,12 +16,12 @@
       "current": "Nobody occupies any of your properties right now.",
       "incoming": "Nobody is due to move in.",
       "outgoing": "Nobody is due to move out.",
-      "previous": "No tenant has moved out yet."
+      "previous": "No customer has moved out yet."
     },
-    "search": "Search tenants or properties",
-    "noResults": "No tenants match your search.",
-    "emptyTitle": "No tenants yet",
-    "emptyDescription": "Add a tenant, then assign them a property.",
+    "search": "Search customers or properties",
+    "noResults": "No customers match your search.",
+    "emptyTitle": "No customers yet",
+    "emptyDescription": "Add a customer, then assign them a property.",
     "noContactDetails": "No contact details",
     "andMore": "+{count}",
     "noLease": "No lease",
@@ -31,7 +31,7 @@
     "copyName": "{name} (copy)",
     "created": "{name} added",
     "updated": "{name} saved",
-    "deleted": "Tenant deleted",
+    "deleted": "Customer deleted",
     "fields": {
       "name": "Name",
       "email": "Email",
@@ -48,24 +48,24 @@
       "relation": "Spouse, accountant, guarantor…"
     },
     "contactsTitle": "Other contacts",
-    "contactsEmpty": "People to reach about this tenant: family, a guarantor, an accountant.",
+    "contactsEmpty": "People to reach about this customer: family, a guarantor, an accountant.",
     "addContact": "Add contact",
     "removeContact": "Remove contact",
     "sheet": {
       "create": {
-        "title": "Add a tenant",
+        "title": "Add a customer",
         "description": "Creates their sign-in account. You assign properties on their page.",
-        "submit": "Add tenant"
+        "submit": "Add customer"
       },
       "edit": {
-        "title": "Edit tenant",
+        "title": "Edit customer",
         "description": "Changes to {name} apply right away.",
         "submit": "Save changes"
       },
       "copy": {
-        "title": "Copy tenant",
+        "title": "Copy customer",
         "description": "Starts from {name}'s details and contacts. The copy is a new account, so it needs its own email and password.",
-        "submit": "Add tenant"
+        "submit": "Add customer"
       }
     },
     "validation": {
@@ -80,10 +80,10 @@
     "generatePassword": "Generate",
     "passwordHint": "Share it with them securely. They can change it from their account."
   },
-  "Tenant": {
-    "metaTitle": "Tenant",
-    "notFound": "This tenant doesn't exist or was deleted.",
-    "back": "Tenants",
+  "Customer": {
+    "metaTitle": "Customer",
+    "notFound": "This customer doesn't exist or was deleted.",
+    "back": "Customers",
     "noLease": "No lease",
     "groups": {
       "current": "Current",
@@ -91,7 +91,7 @@
       "outgoing": "Outgoing",
       "previous": "Previous"
     },
-    "actions": "Tenant actions",
+    "actions": "Customer actions",
     "edit": "Edit",
     "copy": "Copy",
     "delete": "Delete",
@@ -108,11 +108,11 @@
     "visibilityLabel": "Who can see this note",
     "visibility": {
       "private": "Only you",
-      "shared": "Visible to tenant"
+      "shared": "Visible to customer"
     },
     "visibilityBadge": {
       "private": "Private",
-      "shared": "Shared with tenant"
+      "shared": "Shared with customer"
     },
     "addNote": "Add note",
     "notesEmpty": "No notes yet.",
@@ -120,9 +120,9 @@
     "deleteTitle": "Delete {name}?",
     "deleteDescription": "Their account, contacts and notes are removed, and they're signed out everywhere. This can't be undone.",
     "deleteWithLeasesDescription": "Their account, contacts, notes and {count, plural, one {lease} other {# leases}} are removed, and they're signed out everywhere. This can't be undone.",
-    "deleteSubmit": "Delete tenant",
+    "deleteSubmit": "Delete customer",
     "cantDeleteTitle": "{name} can't be deleted",
-    "cantDeleteDescription": "Rent payments are recorded for this tenant, so they stay on record. Terminate their leases instead.",
+    "cantDeleteDescription": "Rent payments are recorded for this customer, so they stay on record. Terminate their leases instead.",
     "close": "Close",
     "suspended": "Suspended"
   },
@@ -149,7 +149,7 @@
     "paymentsTitle": "Payments",
     "removePayment": "Delete payment",
     "assignTitle": "Assign a property",
-    "assignDescription": "The tenant occupies it from the entry date, and until the exit date if there is one.",
+    "assignDescription": "The customer occupies it from the entry date, and until the exit date if there is one.",
     "assignSubmit": "Assign property",
     "editTitle": "Edit lease",
     "editDescription": "Dates, rent and terms for {property}.",
@@ -166,14 +166,15 @@
       "amount": "Amount ({currency})",
       "paidOn": "Paid on",
       "note": "Note",
-      "tenant": "Tenant",
+      "customer": "Customer",
       "length": "Length",
       "termMonths": "Number of months",
       "autoRenew": "Renew automatically",
       "charges": "Charges",
       "additionalCosts": "Additional costs",
       "discount": "Discount",
-      "deposit": "Deposit"
+      "deposit": "Deposit",
+      "document": "Lease document"
     },
     "paymentTitle": "Record a payment",
     "paymentDescription": "Rent received for {property}, in {currency}.",
@@ -203,14 +204,15 @@
       "endBeforeStart": "The exit date can't come before the entry date",
       "amountRequired": "Enter an amount",
       "amountInvalid": "Enter a positive number",
-      "tenantRequired": "Choose a tenant",
+      "customerRequired": "Choose a customer",
       "monthsInvalid": "Enter a number of months from 1 to 1188",
-      "discountTooLarge": "The discount can't be more than the rent, charges and costs together"
+      "discountTooLarge": "The discount can't be more than the rent, charges and costs together",
+      "templateRequired": "Choose a template for the lease document"
     },
-    "assignTenantTitle": "Assign a tenant to {property}",
-    "assignTenantSubmit": "Assign tenant",
-    "tenantPlaceholder": "Choose a tenant",
-    "noTenants": "Add a tenant on the Tenants page first.",
+    "assignCustomerTitle": "Assign a customer to {property}",
+    "assignCustomerSubmit": "Assign customer",
+    "customerPlaceholder": "Choose a customer",
+    "noCustomers": "Add a customer on the Customers page first.",
     "rentFromProperty": "Taken from the property. You can change it later from the lease.",
     "noPropertyRent": "This property has no rent set, so the lease starts at 0. Set the rent on the property first, or edit the lease afterwards.",
     "generateContract": "Generate contract",
@@ -230,9 +232,12 @@
     "depositLine": "Deposit {amount}",
     "chargesLine": "{rent} rent + {extras} charges and costs",
     "discountLine": "− {amount} discount",
-    "receipt": "Receipt"
+    "receipt": "Receipt",
+    "documentCreated": "Lease document generated and saved on the customer.",
+    "openDocument": "Open document",
+    "documentHint": "Filled in from the template with these terms and saved on the customer. You can still edit it afterwards."
   },
-  "Tenancy": {
+  "MyHome": {
     "metaTitle": "My home",
     "title": "My home",
     "description": "The places you rent, and notes from your landlord.",

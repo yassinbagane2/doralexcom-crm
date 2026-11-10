@@ -6,7 +6,7 @@ import enContract from "./en/contract.json"
 import enOrganization from "./en/organization.json"
 import enProperty from "./en/property.json"
 import enSettings from "./en/settings.json"
-import enTenant from "./en/tenant.json"
+import enCustomer from "./en/customer.json"
 import enShell from "./en/shell.json"
 import roAccount from "./ro/account.json"
 import roAdmin from "./ro/admin.json"
@@ -16,7 +16,7 @@ import roContract from "./ro/contract.json"
 import roOrganization from "./ro/organization.json"
 import roProperty from "./ro/property.json"
 import roSettings from "./ro/settings.json"
-import roTenant from "./ro/tenant.json"
+import roCustomer from "./ro/customer.json"
 import roShell from "./ro/shell.json"
 
 import type { Locale } from "@/i18n/locale"
@@ -34,7 +34,7 @@ const en = {
   ...enShell,
   ...enAdmin,
   ...enProperty,
-  ...enTenant,
+  ...enCustomer,
   ...enContract,
   ...enSettings,
 }
@@ -49,7 +49,7 @@ const ro = {
   ...roShell,
   ...roAdmin,
   ...roProperty,
-  ...roTenant,
+  ...roCustomer,
   ...roContract,
   ...roSettings,
 } satisfies Messages

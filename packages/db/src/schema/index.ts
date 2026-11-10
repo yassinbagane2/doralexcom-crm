@@ -1,5 +1,5 @@
 export * from "./auth"
 export * from "./property"
-export * from "./tenancy"
+export * from "./leasing"
 export * from "./contract"
 export * from "./settings"

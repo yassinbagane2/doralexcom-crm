@@ -15,17 +15,17 @@ import { organization, user } from "./auth"
 import { property } from "./property"
 
 /*
- * Who rents what, and the rent paid. A tenant is a `user`-role account in the
+ * Who rents what, and the rent paid. A customer is a `user`-role account in the
  * business's organization; what the business records about them (phone,
  * mailing address, other contacts, notes) lives in `user.metadata`. Every table here
  * also hangs off the organization, so deleting a business takes all of it
- * along. The guards that protect money (no deleting a tenant, lease or
+ * along. The guards that protect money (no deleting a customer, lease or
  * property once rent has been paid on it) live in the API, next to the error
  * messages that explain them.
  */
 
 /**
- * A tenant occupying a property from `startDate` (entry) until `endDate`
+ * A customer occupying a property from `startDate` (entry) until `endDate`
  * (exit, inclusive; open-ended while null). Leases of one property never
  * overlap. Terminating one fixes its `endDate` and stamps `terminatedAt`.
  *
@@ -43,7 +43,7 @@ export const lease = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    tenantId: uuid("tenant_id")
+    customerId: uuid("customer_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     propertyId: uuid("property_id")
@@ -90,7 +90,7 @@ export const lease = pgTable(
   },
   (table) => [
     index("lease_organizationId_idx").on(table.organizationId),
-    index("lease_tenantId_idx").on(table.tenantId),
+    index("lease_customerId_idx").on(table.customerId),
     index("lease_propertyId_idx").on(table.propertyId),
   ]
 )
@@ -126,7 +126,7 @@ export const propertyRelations = relations(property, ({ one, many }) => ({
 }))
 
 export const leaseRelations = relations(lease, ({ one, many }) => ({
-  tenant: one(user, { fields: [lease.tenantId], references: [user.id] }),
+  customer: one(user, { fields: [lease.customerId], references: [user.id] }),
   property: one(property, {
     fields: [lease.propertyId],
     references: [property.id],

@@ -20,7 +20,7 @@
     "vatNumberLabel": "Cod TVA",
     "identifiersTitle": "Înregistrare",
     "bankTitle": "Plăți",
-    "bankHint": "Unde plătesc chiriașii chiria. Apare pe contracte și chitanțe.",
+    "bankHint": "Unde plătesc clienții chiria. Apare pe contracte și chitanțe.",
     "bankNameLabel": "Banca",
     "bankNamePlaceholder": "Banca Transilvania",
     "ibanLabel": "IBAN",

@@ -9,8 +9,8 @@ import {
   monthlyDue,
   renewsAutomatically,
   NOTE_VISIBILITIES,
-  TENANT_LIMITS,
-  tenantGroups,
+  CUSTOMER_LIMITS,
+  customerGroups,
   type NoteVisibility,
 } from "@workspace/api/lease"
 import { Badge } from "@workspace/ui/components/ui/badge"
@@ -66,36 +66,36 @@ import {
   LeaseDialog,
   PaymentDialog,
   TerminateLeaseDialog,
-} from "@/components/tenants/lease-dialogs"
+} from "@/components/customers/lease-dialogs"
 import {
   GenerateContractDialog,
-  TenantDocuments,
+  CustomerDocuments,
   UploadDocumentDialog,
-} from "@/components/tenants/tenant-documents"
-import { LeaseBadge } from "@/components/tenants/tenant-list"
+} from "@/components/customers/customer-documents"
+import { LeaseBadge } from "@/components/customers/customer-list"
 import {
-  TenantSheet,
-  type TenantEditor,
-} from "@/components/tenants/tenant-sheet"
+  CustomerSheet,
+  type CustomerEditor,
+} from "@/components/customers/customer-sheet"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
 import {
-  useAddTenantNote,
+  useAddCustomerNote,
   useDeleteLease,
-  useDeleteTenant,
+  useDeleteCustomer,
   useRemovePayment,
-  useRemoveTenantNote,
-  useTenant,
-  type TenantDetail as Tenant,
-  type TenantLease,
-} from "@/hooks/queries/tenant"
+  useRemoveCustomerNote,
+  useCustomer,
+  type CustomerDetail as Customer,
+  type CustomerLease,
+} from "@/hooks/queries/customer"
 import { formatDate, formatMoney } from "@/lib/format"
 
-/** One tenant: who they are, what they rent, what they owe, and notes. */
-export function TenantDetail({ tenantId }: { tenantId: string }) {
-  const t = useTranslations("Tenant")
-  const { data: tenant, isPending, isError } = useTenant(tenantId)
-  const [editor, setEditor] = useState<TenantEditor | null>(null)
+/** One customer: who they are, what they rent, what they owe, and notes. */
+export function CustomerDetail({ customerId }: { customerId: string }) {
+  const t = useTranslations("Customer")
+  const { data: customer, isPending, isError } = useCustomer(customerId)
+  const [editor, setEditor] = useState<CustomerEditor | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [assigning, setAssigning] = useState(false)
   const today = localToday()
@@ -108,11 +108,11 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
     )
   }
 
-  if (isError || !tenant) {
+  if (isError || !customer) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
         <p className="text-sm text-muted-foreground">{t("notFound")}</p>
-        <Button variant="outline" render={<Link href={routes.tenants} />}>
+        <Button variant="outline" render={<Link href={routes.customers} />}>
           <ArrowLeftIcon isHovered className="size-4" />
           {t("back")}
         </Button>
@@ -120,12 +120,12 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
     )
   }
 
-  const groups = tenantGroups(tenant.leases, today)
+  const groups = customerGroups(customer.leases, today)
 
   return (
     <div className="flex flex-col gap-6">
       <Link
-        href={routes.tenants}
+        href={routes.customers}
         className="flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeftIcon isHovered className="size-4" />
@@ -133,10 +133,10 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
       </Link>
 
       <div className="flex items-start gap-4">
-        <UserAvatar name={tenant.name} className="size-12 text-sm" />
+        <UserAvatar name={customer.name} className="size-12 text-sm" />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <h1 className="truncate font-heading text-2xl font-medium tracking-[-0.02em]">
-            {tenant.name}
+            {customer.name}
           </h1>
           <div className="flex flex-wrap gap-1.5">
             {groups.size === 0 ? (
@@ -167,13 +167,17 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem
-              onClick={() => setEditor({ mode: "edit", tenantId: tenant.id })}
+              onClick={() =>
+                setEditor({ mode: "edit", customerId: customer.id })
+              }
             >
               <Pencil className="size-4" />
               {t("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => setEditor({ mode: "copy", tenantId: tenant.id })}
+              onClick={() =>
+                setEditor({ mode: "copy", customerId: customer.id })
+              }
             >
               <Copy className="size-4" />
               {t("copy")}
@@ -204,16 +208,16 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
                 {t("assign")}
               </Button>
             </div>
-            {tenant.leases.length === 0 ? (
+            {customer.leases.length === 0 ? (
               <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
                 {t("leasesEmpty")}
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {tenant.leases.map((lease) => (
+                {customer.leases.map((lease) => (
                   <LeaseCard
                     key={lease.id}
-                    tenant={tenant}
+                    customer={customer}
                     lease={lease}
                     today={today}
                   />
@@ -222,25 +226,25 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
             )}
           </section>
 
-          <TenantDocuments tenant={tenant} />
+          <CustomerDocuments customer={customer} />
 
-          <Notes tenant={tenant} />
+          <Notes customer={customer} />
         </div>
 
         <aside className="flex flex-col gap-6">
-          <ContactDetails tenant={tenant} />
-          <Contacts tenant={tenant} />
+          <ContactDetails customer={customer} />
+          <Contacts customer={customer} />
         </aside>
       </div>
 
       <LeaseDialog
-        tenantId={tenant.id}
+        customerId={customer.id}
         open={assigning}
         onOpenChange={setAssigning}
       />
-      <TenantSheet editor={editor} onClose={() => setEditor(null)} />
-      <DeleteTenantDialog
-        tenant={tenant}
+      <CustomerSheet editor={editor} onClose={() => setEditor(null)} />
+      <DeleteCustomerDialog
+        customer={customer}
         open={deleting}
         onOpenChange={setDeleting}
       />
@@ -259,21 +263,21 @@ const MapPinRow = ({ className }: { className?: string }) => (
   <MapPin className={className} />
 )
 
-function ContactDetails({ tenant }: { tenant: Tenant }) {
-  const t = useTranslations("Tenant")
+function ContactDetails({ customer }: { customer: Customer }) {
+  const t = useTranslations("Customer")
 
   const rows = [
     {
       icon: MailRow,
-      value: tenant.email,
-      href: tenant.email && `mailto:${tenant.email}`,
+      value: customer.email,
+      href: customer.email && `mailto:${customer.email}`,
     },
     {
       icon: PhoneRow,
-      value: tenant.phone,
-      href: tenant.phone && `tel:${tenant.phone}`,
+      value: customer.phone,
+      href: customer.phone && `tel:${customer.phone}`,
     },
-    { icon: MapPinRow, value: tenant.address, href: null },
+    { icon: MapPinRow, value: customer.address, href: null },
   ].filter((row) => row.value)
 
   return (
@@ -305,12 +309,12 @@ function ContactDetails({ tenant }: { tenant: Tenant }) {
         <span className="min-w-0">
           <span className="flex items-center gap-2">
             {t("account")}
-            {tenant.banned ? (
+            {customer.banned ? (
               <Badge variant="destructive">{t("suspended")}</Badge>
             ) : null}
           </span>
           <span className="block truncate text-xs text-muted-foreground">
-            {tenant.email}
+            {customer.email}
           </span>
         </span>
       </div>
@@ -318,8 +322,8 @@ function ContactDetails({ tenant }: { tenant: Tenant }) {
   )
 }
 
-function Contacts({ tenant }: { tenant: Tenant }) {
-  const t = useTranslations("Tenant")
+function Contacts({ customer }: { customer: Customer }) {
+  const t = useTranslations("Customer")
 
   return (
     <section className="flex flex-col gap-3 rounded-lg border p-4">
@@ -327,11 +331,11 @@ function Contacts({ tenant }: { tenant: Tenant }) {
         <Users size={16} className="text-muted-foreground" />
         {t("contactsTitle")}
       </h2>
-      {tenant.contacts.length === 0 ? (
+      {customer.contacts.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("contactsEmpty")}</p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {tenant.contacts.map((contact, index) => (
+          {customer.contacts.map((contact, index) => (
             <li key={index} className="flex flex-col text-sm">
               <span className="font-medium">
                 {contact.name}
@@ -375,12 +379,12 @@ type LeaseAction =
   | "attach"
 
 function LeaseCard({
-  tenant,
+  customer,
   lease,
   today,
 }: {
-  tenant: Tenant
-  lease: TenantLease
+  customer: Customer
+  lease: CustomerLease
   today: string
 }) {
   const t = useTranslations("Leases")
@@ -544,7 +548,7 @@ function LeaseCard({
                   title={t("receipt")}
                   render={
                     <Link
-                      href={`${routes.tenants}/${tenant.id}/receipts/${payment.id}`}
+                      href={`${routes.customers}/${customer.id}/receipts/${payment.id}`}
                     />
                   }
                 >
@@ -586,13 +590,13 @@ function LeaseCard({
         onOpenChange={close}
       />
       <GenerateContractDialog
-        tenant={tenant}
+        customer={customer}
         lease={lease}
         open={action === "contract"}
         onOpenChange={close}
       />
       <UploadDocumentDialog
-        tenant={tenant}
+        customer={customer}
         leaseId={lease.id}
         open={action === "attach"}
         onOpenChange={close}
@@ -606,7 +610,7 @@ function DeleteLeaseDialog({
   open,
   onOpenChange,
 }: {
-  lease: TenantLease
+  lease: CustomerLease
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -646,13 +650,13 @@ function DeleteLeaseDialog({
   )
 }
 
-function Notes({ tenant }: { tenant: Tenant }) {
-  const t = useTranslations("Tenant")
+function Notes({ customer }: { customer: Customer }) {
+  const t = useTranslations("Customer")
   const locale = useLocale()
   const [body, setBody] = useState("")
   const [visibility, setVisibility] = useState<NoteVisibility>("private")
-  const addNote = useAddTenantNote()
-  const removeNote = useRemoveTenantNote()
+  const addNote = useAddCustomerNote()
+  const removeNote = useRemoveCustomerNote()
   const trimmed = body.trim()
 
   return (
@@ -665,7 +669,7 @@ function Notes({ tenant }: { tenant: Tenant }) {
           event.preventDefault()
           if (!trimmed) return
           addNote.mutate(
-            { tenantId: tenant.id, body: trimmed, visibility },
+            { customerId: customer.id, body: trimmed, visibility },
             { onSuccess: () => setBody("") }
           )
         }}
@@ -673,7 +677,7 @@ function Notes({ tenant }: { tenant: Tenant }) {
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          maxLength={TENANT_LIMITS.note}
+          maxLength={CUSTOMER_LIMITS.note}
           rows={2}
           placeholder={t("notePlaceholder")}
           aria-label={t("notesTitle")}
@@ -719,11 +723,11 @@ function Notes({ tenant }: { tenant: Tenant }) {
         </div>
       </form>
 
-      {tenant.notes.length === 0 ? (
+      {customer.notes.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("notesEmpty")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {tenant.notes.map((note) => (
+          {customer.notes.map((note) => (
             <li
               key={note.id}
               className={cn(
@@ -753,7 +757,7 @@ function Notes({ tenant }: { tenant: Tenant }) {
                   aria-label={t("removeNote")}
                   disabled={removeNote.isPending}
                   onClick={() =>
-                    removeNote.mutate({ tenantId: tenant.id, id: note.id })
+                    removeNote.mutate({ customerId: customer.id, id: note.id })
                   }
                 >
                   <Trash size={12} />
@@ -768,23 +772,23 @@ function Notes({ tenant }: { tenant: Tenant }) {
 }
 
 /**
- * Once rent has been paid, the tenant stays on record: the dialog explains
+ * Once rent has been paid, the customer stays on record: the dialog explains
  * that instead of offering to delete. The server enforces the same rule.
  */
-function DeleteTenantDialog({
-  tenant,
+function DeleteCustomerDialog({
+  customer,
   open,
   onOpenChange,
 }: {
-  tenant: Tenant
+  customer: Customer
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const t = useTranslations("Tenant")
+  const t = useTranslations("Customer")
   const tc = useTranslations("Common")
   const router = useRouter()
-  const remove = useDeleteTenant()
-  const hasPayments = tenant.leases.some((lease) => lease.payments.length > 0)
+  const remove = useDeleteCustomer()
+  const hasPayments = customer.leases.some((lease) => lease.payments.length > 0)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -792,15 +796,15 @@ function DeleteTenantDialog({
         <DialogHeader>
           <DialogTitle>
             {hasPayments
-              ? t("cantDeleteTitle", { name: tenant.name })
-              : t("deleteTitle", { name: tenant.name })}
+              ? t("cantDeleteTitle", { name: customer.name })
+              : t("deleteTitle", { name: customer.name })}
           </DialogTitle>
           <DialogDescription>
             {hasPayments
               ? t("cantDeleteDescription")
-              : tenant.leases.length > 0
+              : customer.leases.length > 0
                 ? t("deleteWithLeasesDescription", {
-                    count: tenant.leases.length,
+                    count: customer.leases.length,
                   })
                 : t("deleteDescription")}
           </DialogDescription>
@@ -815,11 +819,11 @@ function DeleteTenantDialog({
               disabled={remove.isPending}
               onClick={() =>
                 remove.mutate(
-                  { id: tenant.id },
+                  { id: customer.id },
                   {
                     onSuccess: () => {
                       onOpenChange(false)
-                      router.push(routes.tenants)
+                      router.push(routes.customers)
                     },
                   }
                 )

@@ -21,14 +21,14 @@ function longDate(day: string, locale: string) {
 
 /**
  * A receipt for one rent payment, laid out for printing: the landlord with
- * the details from its settings, the tenant, what was paid and when.
+ * the details from its settings, the customer, what was paid and when.
  */
 export function PaymentReceipt({
-  tenantId,
+  customerId,
   paymentId,
   isOwner,
 }: {
-  tenantId: string
+  customerId: string
   paymentId: string
   isOwner: boolean
 }) {
@@ -36,7 +36,7 @@ export function PaymentReceipt({
   const to = useTranslations("Organization")
   const locale = useLocale()
   const { data: receipt, isPending, isError } = usePaymentReceipt(paymentId)
-  const back = `${routes.tenants}/${tenantId}`
+  const back = `${routes.customers}/${customerId}`
 
   if (isPending) {
     return (
@@ -133,12 +133,12 @@ export function PaymentReceipt({
               {t("receivedFrom")}
             </dt>
             <dd className="flex flex-col">
-              <span className="font-medium">{receipt.tenant.name}</span>
-              {receipt.tenant.address ? (
-                <span>{receipt.tenant.address}</span>
+              <span className="font-medium">{receipt.customer.name}</span>
+              {receipt.customer.address ? (
+                <span>{receipt.customer.address}</span>
               ) : null}
               <span className="text-muted-foreground">
-                {receipt.tenant.email}
+                {receipt.customer.email}
               </span>
             </dd>
           </div>

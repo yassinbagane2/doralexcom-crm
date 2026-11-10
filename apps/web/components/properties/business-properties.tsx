@@ -50,7 +50,7 @@ import {
   toFormValues,
 } from "@/components/properties/property-form"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
-import { LeaseDialog } from "@/components/tenants/lease-dialogs"
+import { LeaseDialog } from "@/components/customers/lease-dialogs"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
 import {
@@ -117,7 +117,7 @@ export function BusinessProperties() {
         [
           property.name,
           property.address,
-          ...property.leases.map((lease) => lease.tenant.name),
+          ...property.leases.map((lease) => lease.customer.name),
         ]
           .filter(Boolean)
           .some((value) => value!.toLocaleLowerCase().includes(deferredSearch)))
@@ -350,7 +350,7 @@ function PropertyRow({
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onAssign}>
             <Contact className="size-4" />
-            {t("assignTenant")}
+            {t("assignCustomer")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
@@ -385,16 +385,16 @@ function OccupantCell({
             onClick={onAssign}
             className="hidden text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
           >
-            {t("assignTenant")}
+            {t("assignCustomer")}
           </button>
         )}
         {next ? (
           <Link
-            href={`${routes.tenants}/${next.tenant.id}`}
+            href={`${routes.customers}/${next.customer.id}`}
             className="hidden max-w-44 truncate text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
           >
             {t("incoming", {
-              name: next.tenant.name,
+              name: next.customer.name,
               date: formatDate(next.startDate, locale),
             })}
           </Link>
@@ -405,17 +405,17 @@ function OccupantCell({
 
   return (
     <Link
-      href={`${routes.tenants}/${current.tenant.id}`}
-      aria-label={t("viewTenant", { name: current.tenant.name })}
+      href={`${routes.customers}/${current.customer.id}`}
+      aria-label={t("viewCustomer", { name: current.customer.name })}
       className="flex min-w-0 shrink-0 items-center gap-2 rounded-md outline-none hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50 md:w-44"
     >
-      <UserAvatar name={current.tenant.name} className="size-7" />
+      <UserAvatar name={current.customer.name} className="size-7" />
       <span className="hidden min-w-0 flex-col md:flex">
-        <span className="truncate text-sm">{current.tenant.name}</span>
+        <span className="truncate text-sm">{current.customer.name}</span>
         <span className="truncate text-xs text-muted-foreground">
           {current.endDate
             ? t("leaving", { date: formatDate(current.endDate, locale) })
-            : (current.tenant.email ?? t("occupied"))}
+            : (current.customer.email ?? t("occupied"))}
         </span>
       </span>
     </Link>
@@ -493,7 +493,7 @@ function PropertySheet({
 /**
  * Deleting is refused while a lease holds the property, now or later. The
  * server makes the same check (and refuses once rent has been paid on it);
- * this just says so up front and points to the tenant.
+ * this just says so up front and points to the customer.
  */
 function DeletePropertyDialog({
   property,
@@ -516,7 +516,7 @@ function DeletePropertyDialog({
         return current ?? next
       })()
     : null
-  const tenant = holder?.tenant
+  const customer = holder?.customer
 
   return (
     <Dialog
@@ -530,13 +530,13 @@ function DeletePropertyDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {tenant
+            {customer
               ? t("inUseTitle", { name: shown?.name ?? "" })
               : t("deleteTitle", { name: shown?.name ?? "" })}
           </DialogTitle>
           <DialogDescription>
-            {tenant
-              ? t("inUseDescription", { tenant: tenant.name })
+            {customer
+              ? t("inUseDescription", { customer: customer.name })
               : t("deleteDescription")}
           </DialogDescription>
         </DialogHeader>
@@ -544,9 +544,11 @@ function DeletePropertyDialog({
           <Button variant="outline" onClick={onClose}>
             {tCommon("cancel")}
           </Button>
-          {tenant ? (
-            <Button render={<Link href={`${routes.tenants}/${tenant.id}`} />}>
-              {t("viewTenantShort")}
+          {customer ? (
+            <Button
+              render={<Link href={`${routes.customers}/${customer.id}`} />}
+            >
+              {t("viewCustomerShort")}
             </Button>
           ) : (
             <Button

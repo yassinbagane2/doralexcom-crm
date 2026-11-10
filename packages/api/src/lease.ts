@@ -10,7 +10,7 @@ export const NOTE_VISIBILITIES = ["private", "shared"] as const
 
 export type NoteVisibility = (typeof NOTE_VISIBILITIES)[number]
 
-export const TENANT_LIMITS = {
+export const CUSTOMER_LIMITS = {
   name: 100,
   email: 254,
   phone: 30,
@@ -33,7 +33,7 @@ export interface LeaseDates {
   terminatedAt?: Date | string | null
 }
 
-/** What the tenant is billed each month, besides the one-off deposit. */
+/** What the customer is billed each month, besides the one-off deposit. */
 export interface LeaseCharges {
   rent: number
   charges?: number
@@ -50,7 +50,7 @@ export function renewsAutomatically(lease: LeaseDates) {
 }
 
 /**
- * The day the tenant moves out, as far as anyone knows: null while the lease
+ * The day the customer moves out, as far as anyone knows: null while the lease
  * is open-ended or keeps renewing.
  */
 export function effectiveEnd(lease: LeaseDates) {
@@ -68,7 +68,7 @@ export function monthlyDue(lease: LeaseCharges) {
 }
 
 /**
- * upcoming — the tenant hasn't moved in yet (incoming)
+ * upcoming — the customer hasn't moved in yet (incoming)
  * active   — living there, with no exit date
  * ending   — living there, leaving on `endDate` (outgoing)
  * ended    — moved out (previous)
@@ -87,24 +87,24 @@ export function isLeaseOpen(lease: LeaseDates, today: string) {
   return leaseStatus(lease, today) !== "ended"
 }
 
-export const TENANT_GROUPS = [
+export const CUSTOMER_GROUPS = [
   "current",
   "incoming",
   "outgoing",
   "previous",
 ] as const
 
-export type TenantGroup = (typeof TENANT_GROUPS)[number]
+export type CustomerGroup = (typeof CUSTOMER_GROUPS)[number]
 
 /**
- * Which lists a tenant appears in. One tenant can be in several: someone
+ * Which lists a customer appears in. One customer can be in several: someone
  * moving from one flat to another is both outgoing and incoming.
  */
-export function tenantGroups(
+export function customerGroups(
   leases: LeaseDates[],
   today: string
-): Set<TenantGroup> {
-  const groups = new Set<TenantGroup>()
+): Set<CustomerGroup> {
+  const groups = new Set<CustomerGroup>()
   const statuses = leases.map((lease) => leaseStatus(lease, today))
 
   if (statuses.some((s) => s === "active" || s === "ending")) {
@@ -230,7 +230,7 @@ export function rentDue(
 }
 
 /**
- * What the tenant still owes on a lease (negative: what they overpaid). A
+ * What the customer still owes on a lease (negative: what they overpaid). A
  * terminated lease is settled against everything it ever charged; an open
  * one against what's been charged so far.
  */

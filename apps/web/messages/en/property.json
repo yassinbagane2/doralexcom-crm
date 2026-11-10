@@ -5,7 +5,7 @@
     "description": "Apartments, offices, garages and everything else you rent out.",
     "summary": "{total, plural, one {# property} other {# properties}} · {occupied} occupied · {vacant} vacant",
     "add": "Add property",
-    "search": "Search by name, address or tenant",
+    "search": "Search by name, address or customer",
     "filterLabel": "Filter by type",
     "filterAll": "All",
     "noResults": "No properties match your search.",
@@ -26,7 +26,7 @@
     "deleteDescription": "The property and everything recorded about it are removed. This can't be undone.",
     "deleteSubmit": "Delete property",
     "inUseTitle": "{name} is in use",
-    "inUseDescription": "{tenant} has a current or upcoming lease here, so it can't be deleted. End or remove the lease from the tenant's page first.",
+    "inUseDescription": "{customer} has a current or upcoming lease here, so it can't be deleted. End or remove the lease from the customer's page first.",
     "rentHint": "Per month.",
     "types": {
       "apartment": "Apartment",
@@ -87,8 +87,8 @@
     "occupied": "Occupied",
     "incoming": "{name} from {date}",
     "leaving": "Leaving {date}",
-    "viewTenant": "View tenant {name}",
-    "viewTenantShort": "View tenant",
-    "assignTenant": "Assign tenant"
+    "viewCustomer": "View customer {name}",
+    "viewCustomerShort": "View customer",
+    "assignCustomer": "Assign customer"
   }
 }

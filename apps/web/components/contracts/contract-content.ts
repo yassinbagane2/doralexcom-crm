@@ -90,7 +90,7 @@ export function useStarterContract() {
           heading(1, t("title")),
           paragraph(t("intro")),
           paragraph(t("landlord")),
-          paragraph(t("tenant")),
+          paragraph(t("customer")),
           heading(2, t("propertyHeading")),
           paragraph(t("property")),
           heading(2, t("termHeading")),
@@ -109,8 +109,8 @@ export function useStarterContract() {
           paragraph(t("deposit")),
           heading(2, t("signaturesHeading")),
           table([
-            [t("landlordSignature"), t("tenantSignature")],
-            ["[landlord.representative]", "[tenant.name]"],
+            [t("landlordSignature"), t("customerSignature")],
+            ["[landlord.representative]", "[customer.name]"],
             ["", ""],
           ]),
         ],
@@ -142,7 +142,7 @@ export function useMergeValues() {
   return useCallback(
     ({
       landlord,
-      tenant,
+      customer,
       property,
       lease,
     }: ContractMergeData): Record<MergeFieldKey, string> => {
@@ -169,10 +169,10 @@ export function useMergeValues() {
         "landlord.vatNumber": landlord.vatNumber ?? "",
         "landlord.bankName": landlord.bankName ?? "",
         "landlord.iban": landlord.iban ? formatIban(landlord.iban) : "",
-        "tenant.name": tenant.name,
-        "tenant.email": tenant.email,
-        "tenant.phone": tenant.phone ?? "",
-        "tenant.address": tenant.address ?? "",
+        "customer.name": customer.name,
+        "customer.email": customer.email,
+        "customer.phone": customer.phone ?? "",
+        "customer.address": customer.address ?? "",
         "property.name": property.name,
         "property.type": tp(`types.${property.type}`).toLocaleLowerCase(locale),
         "property.address": property.address,

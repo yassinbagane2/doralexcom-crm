@@ -9,7 +9,7 @@ import { documentRouter } from "./document"
 import { leaseRouter } from "./lease"
 import { propertyRouter } from "./property"
 import { settingsRouter } from "./settings"
-import { tenantRouter } from "./tenant"
+import { customerRouter } from "./customer"
 import { userRouter } from "./user"
 
 export const appRouter = {
@@ -20,7 +20,7 @@ export const appRouter = {
   admin: adminRouter,
   business: businessRouter,
   property: propertyRouter,
-  tenant: tenantRouter,
+  customer: customerRouter,
   lease: leaseRouter,
   contract: contractRouter,
   document: documentRouter,

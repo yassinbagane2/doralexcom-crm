@@ -15,24 +15,24 @@ import {
   useContractDocument,
   useUpdateContractDocument,
 } from "@/hooks/queries/contract"
-import { useTenant } from "@/hooks/queries/tenant"
+import { useCustomer } from "@/hooks/queries/customer"
 
 /**
- * A contract generated for one of a tenant's leases. Its fields are already
- * filled in: it edits like any document, and stays on the tenant's page.
+ * A contract generated for one of a customer's leases. Its fields are already
+ * filled in: it edits like any document, and stays on the customer's page.
  */
 export function ContractDocumentEditor({
-  tenantId,
+  customerId,
   documentId,
 }: {
-  tenantId: string
+  customerId: string
   documentId: string
 }) {
   const t = useTranslations("ContractDocument")
   const contract = useContractDocument(documentId)
-  const tenant = useTenant(tenantId)
+  const customer = useCustomer(customerId)
   const update = useUpdateContractDocument()
-  const tenantHref = `${routes.tenants}/${tenantId}`
+  const customerHref = `${routes.customers}/${customerId}`
 
   const onSave = useCallback(
     async (name: string, content: DocumentContent) => {
@@ -42,26 +42,28 @@ export function ContractDocumentEditor({
     [update, documentId, t]
   )
 
-  if (contract.isPending || tenant.isPending) return <DocumentEditorLoading />
+  if (contract.isPending || customer.isPending) return <DocumentEditorLoading />
   if (
     contract.isError ||
     !contract.data ||
-    // The address must name the contract's own tenant.
-    contract.data.tenantId !== tenantId ||
-    !tenant.data
+    // The address must name the contract's own customer.
+    contract.data.customerId !== customerId ||
+    !customer.data
   ) {
     return (
       <NotFound
         message={t("notFound")}
-        backHref={tenantHref}
+        backHref={customerHref}
         backLabel={
-          tenant.data ? t("back", { tenant: tenant.data.name }) : undefined
+          customer.data
+            ? t("back", { customer: customer.data.name })
+            : undefined
         }
       />
     )
   }
 
-  const lease = tenant.data.leases.find(
+  const lease = customer.data.leases.find(
     (candidate) => candidate.id === contract.data.leaseId
   )
 
@@ -70,9 +72,9 @@ export function ContractDocumentEditor({
       title={contract.data.name}
       content={contract.data.content}
       onSave={onSave}
-      backHref={tenantHref}
-      backLabel={t("back", { tenant: tenant.data.name })}
-      eyebrow={t("eyebrow", { tenant: tenant.data.name })}
+      backHref={customerHref}
+      backLabel={t("back", { customer: customer.data.name })}
+      eyebrow={t("eyebrow", { customer: customer.data.name })}
       placeholder={t("placeholder")}
       aside={lease ? t("lease", { property: lease.property.name }) : null}
     />

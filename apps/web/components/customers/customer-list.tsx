@@ -4,10 +4,10 @@ import {
   leaseBalance,
   leaseStatus,
   localToday,
-  TENANT_GROUPS,
-  tenantGroups,
+  CUSTOMER_GROUPS,
+  customerGroups,
   type LeaseDates,
-  type TenantGroup,
+  type CustomerGroup,
 } from "@workspace/api/lease"
 import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
@@ -31,19 +31,19 @@ import { useLocale, useTranslations } from "next-intl"
 import { useDeferredValue, useMemo, useState } from "react"
 
 import {
-  TenantSheet,
-  type TenantEditor,
-} from "@/components/tenants/tenant-sheet"
+  CustomerSheet,
+  type CustomerEditor,
+} from "@/components/customers/customer-sheet"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
-import { useTenants, type TenantSummary } from "@/hooks/queries/tenant"
+import { useCustomers, type CustomerSummary } from "@/hooks/queries/customer"
 import { formatDate, formatMoney } from "@/lib/format"
 
-type Filter = "all" | TenantGroup
+type Filter = "all" | CustomerGroup
 
-/** What each tenant owes across its leases, one amount per currency. */
+/** What each customer owes across its leases, one amount per currency. */
 export function outstanding(
-  leases: TenantSummary["leases"],
+  leases: CustomerSummary["leases"],
   today: string
 ): { currency: string; amount: number }[] {
   const totals = new Map<string, number>()
@@ -63,10 +63,10 @@ export function outstanding(
  * Everyone a business rents to, sorted into who lives there now, who's moving
  * in, who's moving out, and who has left.
  */
-export function TenantList() {
-  const t = useTranslations("Tenants")
-  const { data: tenants, isPending } = useTenants()
-  const [editor, setEditor] = useState<TenantEditor | null>(null)
+export function CustomerList() {
+  const t = useTranslations("Customers")
+  const { data: customers, isPending } = useCustomers()
+  const [editor, setEditor] = useState<CustomerEditor | null>(null)
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
   const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase())
@@ -74,29 +74,29 @@ export function TenantList() {
 
   const grouped = useMemo(
     () =>
-      (tenants ?? []).map((tenant) => ({
-        tenant,
-        groups: tenantGroups(tenant.leases, today),
+      (customers ?? []).map((customer) => ({
+        customer,
+        groups: customerGroups(customer.leases, today),
       })),
-    [tenants, today]
+    [customers, today]
   )
 
   const counts = Object.fromEntries(
-    TENANT_GROUPS.map((group) => [
+    CUSTOMER_GROUPS.map((group) => [
       group,
       grouped.filter(({ groups }) => groups.has(group)).length,
     ])
-  ) as Record<TenantGroup, number>
+  ) as Record<CustomerGroup, number>
 
   const visible = grouped.filter(
-    ({ tenant, groups }) =>
+    ({ customer, groups }) =>
       (filter === "all" || groups.has(filter)) &&
       (!deferredSearch ||
         [
-          tenant.name,
-          tenant.email,
-          tenant.phone,
-          ...tenant.leases.map((lease) => lease.property.name),
+          customer.name,
+          customer.email,
+          customer.phone,
+          ...customer.leases.map((lease) => lease.property.name),
         ].some((value) => value?.toLocaleLowerCase().includes(deferredSearch)))
   )
 
@@ -125,7 +125,7 @@ export function TenantList() {
             aria-label={t("filterLabel")}
             className="flex flex-wrap gap-1"
           >
-            {(["all", ...TENANT_GROUPS] as const).map((value) => (
+            {(["all", ...CUSTOMER_GROUPS] as const).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -195,56 +195,58 @@ export function TenantList() {
         </p>
       ) : (
         <ul className="divide-y rounded-lg border">
-          {visible.map(({ tenant }) => (
-            <TenantRow
-              key={tenant.id}
-              tenant={tenant}
+          {visible.map(({ customer }) => (
+            <CustomerRow
+              key={customer.id}
+              customer={customer}
               today={today}
-              onCopy={() => setEditor({ mode: "copy", tenantId: tenant.id })}
+              onCopy={() =>
+                setEditor({ mode: "copy", customerId: customer.id })
+              }
             />
           ))}
         </ul>
       )}
 
-      <TenantSheet editor={editor} onClose={() => setEditor(null)} />
+      <CustomerSheet editor={editor} onClose={() => setEditor(null)} />
     </div>
   )
 }
 
-function TenantRow({
-  tenant,
+function CustomerRow({
+  customer,
   today,
   onCopy,
 }: {
-  tenant: TenantSummary
+  customer: CustomerSummary
   today: string
   onCopy: () => void
 }) {
-  const t = useTranslations("Tenants")
+  const t = useTranslations("Customers")
   const locale = useLocale()
-  const owed = outstanding(tenant.leases, today).filter((o) => o.amount > 0)
+  const owed = outstanding(customer.leases, today).filter((o) => o.amount > 0)
 
-  // The lease that best says where the tenant stands: the one they're in,
+  // The lease that best says where the customer stands: the one they're in,
   // else the next one, else the last one they left.
-  const ranked = [...tenant.leases].sort(
+  const ranked = [...customer.leases].sort(
     (a, b) =>
       rank(leaseStatus(a, today)) - rank(leaseStatus(b, today)) ||
       b.startDate.localeCompare(a.startDate)
   )
   const headline = ranked[0]
-  const others = tenant.leases.length - 1
+  const others = customer.leases.length - 1
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <Link
-        href={`${routes.tenants}/${tenant.id}`}
+        href={`${routes.customers}/${customer.id}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <UserAvatar name={tenant.name} className="size-9" />
+        <UserAvatar name={customer.name} className="size-9" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-sm font-medium">{tenant.name}</span>
+          <span className="truncate text-sm font-medium">{customer.name}</span>
           <span className="truncate text-xs text-muted-foreground">
-            {[tenant.email, tenant.phone].filter(Boolean).join(" · ") ||
+            {[customer.email, customer.phone].filter(Boolean).join(" · ") ||
               t("noContactDetails")}
           </span>
         </span>
@@ -284,7 +286,7 @@ function TenantRow({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={t("actionsLabel", { name: tenant.name })}
+              aria-label={t("actionsLabel", { name: customer.name })}
             />
           }
         >

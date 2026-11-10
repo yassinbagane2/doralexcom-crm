@@ -260,10 +260,10 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       if: isBusiness,
     },
     {
-      id: "tenants",
-      title: t("tenants"),
+      id: "customers",
+      title: t("customers"),
       icon: Contact,
-      link: routes.tenants,
+      link: routes.customers,
       if: isBusiness,
     },
     {
@@ -275,10 +275,10 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
     },
     // User routes
     {
-      id: "tenancy",
-      title: t("tenancy"),
+      id: "myHome",
+      title: t("myHome"),
       icon: Home,
-      link: routes.tenancy,
+      link: routes.myHome,
       if: role === "user",
     },
   ]

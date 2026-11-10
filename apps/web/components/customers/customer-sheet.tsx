@@ -14,55 +14,55 @@ import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
-  EMPTY_TENANT,
-  TenantForm,
-  toTenantFormValues,
-} from "@/components/tenants/tenant-form"
+  EMPTY_CUSTOMER,
+  CustomerForm,
+  toCustomerFormValues,
+} from "@/components/customers/customer-form"
 import { routes } from "@/config/routes"
-import { useCreateTenant, useUpdateTenant } from "@/hooks/queries/tenant"
+import { useCreateCustomer, useUpdateCustomer } from "@/hooks/queries/customer"
 import { orpc } from "@/lib/orpc"
 
-export type TenantEditor =
+export type CustomerEditor =
   | { mode: "create" }
-  | { mode: "edit"; tenantId: string }
-  | { mode: "copy"; tenantId: string }
+  | { mode: "edit"; customerId: string }
+  | { mode: "copy"; customerId: string }
 
 /**
- * Adds a tenant, edits one, or starts a new one from a copy of another. A
- * new tenant opens on its own page, ready for its leases.
+ * Adds a customer, edits one, or starts a new one from a copy of another. A
+ * new customer opens on its own page, ready for its leases.
  */
-export function TenantSheet({
+export function CustomerSheet({
   editor,
   onClose,
 }: {
-  editor: TenantEditor | null
+  editor: CustomerEditor | null
   onClose: () => void
 }) {
-  const t = useTranslations("Tenants")
+  const t = useTranslations("Customers")
   const router = useRouter()
-  const create = useCreateTenant()
-  const update = useUpdateTenant()
+  const create = useCreateCustomer()
+  const update = useUpdateCustomer()
   // Keep showing the last editor while the sheet animates closed.
   const [shown, setShown] = useState(editor)
   if (editor && editor !== shown) setShown(editor)
 
   const mode = shown?.mode ?? "create"
-  const sourceId = shown && shown.mode !== "create" ? shown.tenantId : null
+  const sourceId = shown && shown.mode !== "create" ? shown.customerId : null
   const { data: source } = useQuery({
-    ...orpc.tenant.get.queryOptions({ input: { id: sourceId ?? "" } }),
+    ...orpc.customer.get.queryOptions({ input: { id: sourceId ?? "" } }),
     enabled: sourceId !== null,
   })
   const ready = !sourceId || source?.id === sourceId
 
   const defaultValues =
     !source || !sourceId
-      ? EMPTY_TENANT
+      ? EMPTY_CUSTOMER
       : mode === "copy"
         ? {
-            ...toTenantFormValues(source, { copy: true }),
+            ...toCustomerFormValues(source, { copy: true }),
             name: t("copyName", { name: source.name }),
           }
-        : toTenantFormValues(source)
+        : toCustomerFormValues(source)
 
   return (
     <Sheet
@@ -85,8 +85,8 @@ export function TenantSheet({
         </SheetHeader>
         <div className="px-4 pb-6">
           {ready ? (
-            <TenantForm
-              // A fresh form for each tenant, so the last one's values never leak in.
+            <CustomerForm
+              // A fresh form for each customer, so the last one's values never leak in.
               key={`${mode}-${sourceId ?? "new"}`}
               defaultValues={defaultValues}
               isNew={mode !== "edit"}
@@ -104,7 +104,7 @@ export function TenantSheet({
                     {
                       onSuccess: ({ id }) => {
                         onClose()
-                        router.push(`${routes.tenants}/${id}`)
+                        router.push(`${routes.customers}/${id}`)
                       },
                     }
                   )

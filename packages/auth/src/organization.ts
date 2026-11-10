@@ -126,7 +126,7 @@ export const organizationAdditionalFields = {
     required: false,
     input: true,
   },
-  /** Where tenants pay rent: the bank, and the account's IBAN. */
+  /** Where customers pay rent: the bank, and the account's IBAN. */
   bankName: {
     type: "string",
     required: false,
@@ -148,9 +148,9 @@ export const organizationAdditionalFields = {
  *                  its details and settings, and is the only one who adds or
  *                  removes collaborators.
  *   collaborator — another `business` account the owner invited. Works on the
- *                  same records (properties, tenants, contracts…), but can't
+ *                  same records (properties, customers, contracts…), but can't
  *                  change the organization's settings or who has access.
- *   member       — a tenant (`user` account).
+ *   member       — a customer (`user` account).
  */
 export const MEMBER_ROLES = ["owner", "collaborator", "member"] as const
 
@@ -168,7 +168,7 @@ export function isStaffMemberRole(
   return STAFF_MEMBER_ROLES.includes(role as "owner")
 }
 
-/** The only role an invitation can grant: tenants are added as tenants. */
+/** The only role an invitation can grant: customers are added as customers. */
 export const INVITATION_ROLE = "collaborator" satisfies MemberRole
 
 /** How long an invitation link stays valid, in days. */

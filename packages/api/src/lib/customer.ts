@@ -5,11 +5,15 @@ import { lease, member, payment, user } from "@workspace/db/schema"
 import { and, eq, exists, notExists, sql } from "drizzle-orm"
 import { z } from "zod"
 
-import { NOTE_VISIBILITIES, TENANT_LIMITS, type NoteVisibility } from "../lease"
+import {
+  NOTE_VISIBILITIES,
+  CUSTOMER_LIMITS,
+  type NoteVisibility,
+} from "../lease"
 import { callAuth } from "./auth-error"
 
 /*
- * A tenant is a `user`-role account inside a business's organization: the
+ * A customer is a `user`-role account inside a business's organization: the
  * same accounts the business manages on its users page. What the business
  * records about them beyond name and email lives in `user.metadata`.
  */
@@ -22,28 +26,28 @@ const blankToNull = (max: number) =>
     .transform((value) => value || null)
 
 const optionalEmail = z
-  .union([z.literal(""), z.email().max(TENANT_LIMITS.email)])
+  .union([z.literal(""), z.email().max(CUSTOMER_LIMITS.email)])
   .transform((value) => value.toLowerCase() || null)
 
-/** One more person to reach about a tenant. */
-export const tenantContactInput = z.object({
-  name: z.string().trim().min(1).max(TENANT_LIMITS.name),
-  relation: blankToNull(TENANT_LIMITS.relation),
+/** One more person to reach about a customer. */
+export const customerContactInput = z.object({
+  name: z.string().trim().min(1).max(CUSTOMER_LIMITS.name),
+  relation: blankToNull(CUSTOMER_LIMITS.relation),
   email: optionalEmail,
-  phone: blankToNull(TENANT_LIMITS.phone),
+  phone: blankToNull(CUSTOMER_LIMITS.phone),
 })
 
-/** The details a business edits on a tenant, kept in `user.metadata`. */
-export const tenantMetadataInput = z.object({
-  phone: blankToNull(TENANT_LIMITS.phone),
-  address: blankToNull(TENANT_LIMITS.address),
-  contacts: z.array(tenantContactInput).max(TENANT_LIMITS.contacts),
+/** The details a business edits on a customer, kept in `user.metadata`. */
+export const customerMetadataInput = z.object({
+  phone: blankToNull(CUSTOMER_LIMITS.phone),
+  address: blankToNull(CUSTOMER_LIMITS.address),
+  contacts: z.array(customerContactInput).max(CUSTOMER_LIMITS.contacts),
 })
 
-export type TenantDetails = z.output<typeof tenantMetadataInput>
+export type CustomerDetails = z.output<typeof customerMetadataInput>
 
-/** A note in `user.metadata.notes`; `shared` ones the tenant sees too. */
-export interface TenantNote {
+/** A note in `user.metadata.notes`; `shared` ones the customer sees too. */
+export interface CustomerNote {
   id: string
   body: string
   visibility: NoteVisibility
@@ -53,8 +57,8 @@ export interface TenantNote {
   createdAt: string
 }
 
-/** Everything in a tenant's `user.metadata`. */
-export type TenantMetadata = TenantDetails & { notes: TenantNote[] }
+/** Everything in a customer's `user.metadata`. */
+export type CustomerMetadata = CustomerDetails & { notes: CustomerNote[] }
 
 const storedNote = z.object({
   id: z.string(),
@@ -81,7 +85,7 @@ const storedMetadata = z.object({
   notes: z.array(storedNote).catch([]),
 })
 
-const EMPTY_METADATA: TenantMetadata = {
+const EMPTY_METADATA: CustomerMetadata = {
   phone: null,
   address: null,
   contacts: [],
@@ -89,28 +93,28 @@ const EMPTY_METADATA: TenantMetadata = {
 }
 
 /**
- * `user.metadata` as tenant details and notes. Accounts made before the
+ * `user.metadata` as customer details and notes. Accounts made before the
  * business filled anything in (or with fields from elsewhere) read as blank,
  * never as an error.
  */
-export function readTenantMetadata(raw: unknown): TenantMetadata {
+export function readCustomerMetadata(raw: unknown): CustomerMetadata {
   const parsed = storedMetadata.safeParse(raw ?? {})
   return parsed.success ? parsed.data : EMPTY_METADATA
 }
 
-/** Rows of the organization's tenants: its `user`-role members. */
-export const tenantScope = (organizationId: string) =>
+/** Rows of the organization's customers: its `user`-role members. */
+export const customerScope = (organizationId: string) =>
   and(eq(member.organizationId, organizationId), eq(user.role, "user"))
 
-export function tenantNotFound() {
+export function customerNotFound() {
   return new ORPCError("NOT_FOUND", {
-    message: "Tenant not found.",
-    data: { code: "TENANT_NOT_FOUND" },
+    message: "Customer not found.",
+    data: { code: "CUSTOMER_NOT_FOUND" },
   })
 }
 
-/** The tenant, if it belongs to this organization; otherwise NOT_FOUND. */
-export async function findTenant(organizationId: string, tenantId: string) {
+/** The customer, if it belongs to this organization; otherwise NOT_FOUND. */
+export async function findCustomer(organizationId: string, customerId: string) {
   const [found] = await db
     .select({
       id: user.id,
@@ -120,10 +124,10 @@ export async function findTenant(organizationId: string, tenantId: string) {
     })
     .from(member)
     .innerJoin(user, eq(user.id, member.userId))
-    .where(and(tenantScope(organizationId), eq(user.id, tenantId)))
+    .where(and(customerScope(organizationId), eq(user.id, customerId)))
     .limit(1)
 
-  if (!found) throw tenantNotFound()
+  if (!found) throw customerNotFound()
   return found
 }
 
@@ -131,10 +135,10 @@ export async function findTenant(organizationId: string, tenantId: string) {
  * A new `user` account inside the organization. The role is fixed here, never
  * taken from the caller.
  */
-export async function createTenantAccount(
+export async function createCustomerAccount(
   organizationId: string,
   input: { name: string; email: string; password: string },
-  details: TenantDetails | null = null
+  details: CustomerDetails | null = null
 ) {
   // No request headers: the trusted server is creating the account, so the
   // admin plugin's own permission check (admins only) doesn't apply.
@@ -156,7 +160,7 @@ export async function createTenantAccount(
       })
     )
     if (details) {
-      const metadata: TenantMetadata = { ...details, notes: [] }
+      const metadata: CustomerMetadata = { ...details, notes: [] }
       await db.update(user).set({ metadata }).where(eq(user.id, created.id))
     }
   } catch (error) {
@@ -182,29 +186,29 @@ const inOrganization = (organizationId: string) =>
       )
   )
 
-/** Rent ever received from this tenant, on any of their leases. */
-const paymentsOf = (tenantId: typeof user.id) =>
+/** Rent ever received from this customer, on any of their leases. */
+const paymentsOf = (customerId: typeof user.id) =>
   db
     .select({ one: sql`1` })
     .from(payment)
     .innerJoin(lease, eq(lease.id, payment.leaseId))
-    .where(eq(lease.tenantId, tenantId))
+    .where(eq(lease.customerId, customerId))
 
 /**
- * Deletes a tenant's account, with its sessions, membership, leases and notes
+ * Deletes a customer's account, with its sessions, membership, leases and notes
  * (FK cascade). Refused once rent payments are recorded for them: the check
  * and the delete are one statement, so a payment recorded a moment ago still
  * counts.
  */
-export async function deleteTenantAccount(
+export async function deleteCustomerAccount(
   organizationId: string,
-  tenantId: string
+  customerId: string
 ) {
   const deleted = await db
     .delete(user)
     .where(
       and(
-        eq(user.id, tenantId),
+        eq(user.id, customerId),
         eq(user.role, "user"),
         inOrganization(organizationId),
         notExists(paymentsOf(user.id))
@@ -215,17 +219,17 @@ export async function deleteTenantAccount(
   if (deleted.length > 0) return
 
   // Tells "not yours" apart from "has payments".
-  await findTenant(organizationId, tenantId)
+  await findCustomer(organizationId, customerId)
   throw new ORPCError("CONFLICT", {
-    message: "Rent payments are recorded for this tenant.",
-    data: { code: "TENANT_HAS_PAYMENTS" },
+    message: "Rent payments are recorded for this customer.",
+    data: { code: "CUSTOMER_HAS_PAYMENTS" },
   })
 }
 
-/** The tenant's own row, when it belongs to the organization. */
-const ownTenantRow = (organizationId: string, tenantId: string) =>
+/** The customer's own row, when it belongs to the organization. */
+const ownCustomerRow = (organizationId: string, customerId: string) =>
   and(
-    eq(user.id, tenantId),
+    eq(user.id, customerId),
     eq(user.role, "user"),
     inOrganization(organizationId)
   )
@@ -237,11 +241,11 @@ const notesArray = sql`case when jsonb_typeof(${user.metadata}->'notes') = 'arra
  * Replaces the editable details, leaving the notes (and anything else in
  * the metadata) as they are.
  */
-export async function setTenantDetails(
+export async function setCustomerDetails(
   organizationId: string,
-  tenantId: string,
+  customerId: string,
   name: string,
-  details: TenantDetails
+  details: CustomerDetails
 ) {
   const updated = await db
     .update(user)
@@ -249,36 +253,36 @@ export async function setTenantDetails(
       name,
       metadata: sql`coalesce(${user.metadata}, '{}'::jsonb) || ${JSON.stringify(details)}::jsonb`,
     })
-    .where(ownTenantRow(organizationId, tenantId))
+    .where(ownCustomerRow(organizationId, customerId))
     .returning({ id: user.id })
 
-  if (updated.length === 0) throw tenantNotFound()
+  if (updated.length === 0) throw customerNotFound()
 }
 
 /**
  * Appends a note in one statement, so two notes added at once both land
  * instead of one overwriting the other.
  */
-export async function addTenantNote(
+export async function addCustomerNote(
   organizationId: string,
-  tenantId: string,
-  note: TenantNote
+  customerId: string,
+  note: CustomerNote
 ) {
   const updated = await db
     .update(user)
     .set({
       metadata: sql`jsonb_set(coalesce(${user.metadata}, '{}'::jsonb), '{notes}', ${notesArray} || ${JSON.stringify([note])}::jsonb)`,
     })
-    .where(ownTenantRow(organizationId, tenantId))
+    .where(ownCustomerRow(organizationId, customerId))
     .returning({ id: user.id })
 
-  if (updated.length === 0) throw tenantNotFound()
+  if (updated.length === 0) throw customerNotFound()
 }
 
 /** Removes one note in one statement; NOT_FOUND when there's no such note. */
-export async function removeTenantNote(
+export async function removeCustomerNote(
   organizationId: string,
-  tenantId: string,
+  customerId: string,
   noteId: string
 ) {
   const updated = await db
@@ -288,7 +292,7 @@ export async function removeTenantNote(
     })
     .where(
       and(
-        ownTenantRow(organizationId, tenantId),
+        ownCustomerRow(organizationId, customerId),
         sql`${notesArray} @> jsonb_build_array(jsonb_build_object('id', ${noteId}::text))`
       )
     )
