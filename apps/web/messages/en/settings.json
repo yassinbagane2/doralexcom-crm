@@ -25,7 +25,23 @@
     "removeDescription": "Their account is deleted and they're signed out everywhere. What they recorded stays with the business.",
     "removed": "Collaborator removed",
     "emptyTitle": "Just you so far",
-    "emptyDescription": "Invite someone to share the work."
+    "emptyDescription": "Invite someone to share the work.",
+    "memberCount": "{count, plural, one {# person} other {# people}}",
+    "search": "Search by name or email",
+    "noResults": "No one matches your search.",
+    "columns": {
+      "name": "Name",
+      "role": "Role",
+      "added": "Added",
+      "lastActive": "Last active",
+      "actions": "Actions"
+    },
+    "collaborator": "Collaborator",
+    "groupActive": "Active ({count})",
+    "groupInvited": "Invited ({count})",
+    "inviteSubtitle": "Send an invitation to join your business",
+    "namePlaceholder": "Jane Popescu",
+    "emailPlaceholder": "name@example.com"
   },
   "EmailSettings": {
     "metaTitle": "Email",

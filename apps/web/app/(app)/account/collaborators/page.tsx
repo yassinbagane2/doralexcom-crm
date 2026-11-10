@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import { SettingsSection } from "@/components/account/settings-section"
+import {
+  SettingsPage,
+  SettingsSection,
+} from "@/components/account/settings-section"
 import { Collaborators } from "@/components/settings/collaborators"
-import { getMemberRole, requireRole } from "@/lib/auth"
+import { getMemberRole, requireOrganization, requireRole } from "@/lib/auth"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Collaborators")
@@ -12,12 +15,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CollaboratorsPage() {
   const { user } = await requireRole("business")
-  const isOwner = (await getMemberRole()) === "owner"
+  const [role, organization] = await Promise.all([
+    getMemberRole(),
+    requireOrganization(),
+  ])
   const t = await getTranslations("Collaborators")
 
   return (
-    <SettingsSection title={t("title")} description={t("description")}>
-      <Collaborators isOwner={isOwner} currentUserId={user.id} />
-    </SettingsSection>
+    <SettingsPage wide>
+      <SettingsSection title={t("title")} description={t("description")}>
+        <Collaborators
+          isOwner={role === "owner"}
+          currentUserId={user.id}
+          organizationName={organization.name}
+        />
+      </SettingsSection>
+    </SettingsPage>
   )
 }

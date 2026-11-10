@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import { SettingsSection } from "@/components/account/settings-section"
+import {
+  SettingsPage,
+  SettingsSection,
+} from "@/components/account/settings-section"
 import { EmailSettings } from "@/components/settings/email-settings"
 import { requireOwner } from "@/lib/auth"
 
@@ -15,8 +18,10 @@ export default async function EmailSettingsPage() {
   const t = await getTranslations("EmailSettings")
 
   return (
-    <SettingsSection title={t("title")} description={t("description")}>
-      <EmailSettings />
-    </SettingsSection>
+    <SettingsPage>
+      <SettingsSection title={t("title")} description={t("description")}>
+        <EmailSettings />
+      </SettingsSection>
+    </SettingsPage>
   )
 }

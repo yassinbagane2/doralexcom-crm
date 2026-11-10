@@ -1,7 +1,6 @@
 {
   "AccountLayout": {
-    "title": "Cont",
-    "description": "Gestionează-ți profilul și modul în care te autentifici."
+    "title": "Profil"
   },
   "AccountSecurity": {
     "metaTitle": "Securitate"
@@ -17,7 +16,7 @@
     "none": "Niciuna"
   },
   "AccountProfile": {
-    "title": "Profil",
+    "title": "Date personale",
     "description": "Cum apari în aplicație.",
     "name": "Nume",
     "email": "Email",
@@ -31,7 +30,9 @@
     "dialogTitle": "Îți ștergi contul?",
     "dialogDescription": "Profilul, cheile de acces și sesiunile tale sunt eliminate imediat. Acțiunea nu poate fi anulată.",
     "submit": "Șterge contul",
-    "deleted": "Contul tău a fost șters"
+    "deleted": "Contul tău a fost șters",
+    "zoneTitle": "Zonă periculoasă",
+    "zoneDescription": "Închide-ți contul definitiv."
   },
   "AccountPasswordConfirm": {
     "password": "Parolă"
@@ -52,35 +53,19 @@
     "authenticatorApp": "Aplicație de autentificare",
     "on": "Activată",
     "off": "Dezactivată",
-    "newBackupCodes": "Coduri de rezervă noi",
     "turnOff": "Dezactivează",
     "setUp": "Configurează",
     "enableTitle": "Configurează autentificarea în doi pași",
     "enableDescription": "Confirmă parola pentru a continua.",
     "scanTitle": "Scanează codul QR",
     "scanDescription": "Folosește o aplicație de autentificare precum 1Password, Authy sau Google Authenticator, apoi introdu codul afișat.",
-    "cantScan": "Nu poți scana? Introdu în schimb această cheie:",
     "codeLabel": "Cod de autentificare",
     "turnOn": "Activează",
-    "saveCodesTitle": "Salvează codurile de rezervă",
-    "newCodesTitle": "Noile tale coduri de rezervă",
-    "codesDescription": "Dacă pierzi accesul la aplicația de autentificare, fiecare cod te autentifică o singură dată. Păstrează-le într-un loc sigur: nu vor mai fi afișate.",
-    "savedThem": "Le-am salvat",
-    "regenerateTitle": "Generează coduri de rezervă noi",
-    "regenerateDescription": "Codurile de rezervă actuale nu mai funcționează imediat ce sunt generate altele noi.",
-    "generateCodes": "Generează codurile",
     "disableTitle": "Dezactivezi autentificarea în doi pași?",
     "disableDescription": "Pentru autentificare îți vor trebui doar parola sau o cheie de acces.",
     "enabled": "Autentificarea în doi pași este activată",
     "disabled": "Autentificarea în doi pași este dezactivată",
     "totpUnavailable": "Configurarea cu aplicație de autentificare nu este disponibilă."
-  },
-  "AccountBackupCodes": {
-    "copy": "Copiază",
-    "copied": "Copiat",
-    "copyFailed": "Nu s-a putut copia. Selectează codurile și copiază-le manual.",
-    "download": "Descarcă",
-    "fileName": "coduri-de-rezerva.txt"
   },
   "AccountPasskeys": {
     "title": "Chei de acces",
@@ -96,7 +81,8 @@
     "nameLabel": "Nume (opțional)",
     "namePlaceholder": "MacBook Touch ID",
     "added": "Cheia de acces a fost adăugată",
-    "removed": "Cheia de acces a fost eliminată"
+    "removed": "Cheia de acces a fost eliminată",
+    "count": "{count, plural, =0 {Nicio cheie de acces} one {# cheie de acces} few {# chei de acces} other {# de chei de acces}}"
   },
   "AccountSessions": {
     "title": "Sesiuni",
@@ -105,12 +91,13 @@
     "lastActive": "Ultima activitate: {time}",
     "lastActiveJustNow": "Ultima activitate: chiar acum",
     "signOut": "Deconectează",
-    "signOutOthers": "Deconectează toate celelalte dispozitive",
     "unknownDevice": "Dispozitiv necunoscut",
     "unknownBrowser": "Browser necunoscut",
     "browserOnSystem": "{browser} pe {system}",
     "revoked": "Sesiunea a fost închisă",
-    "revokedOthers": "Toate celelalte dispozitive au fost deconectate"
+    "revokedOthers": "Toate celelalte dispozitive au fost deconectate",
+    "signOutAll": "Deconectează-le pe toate",
+    "otherCount": "{count, plural, one {# altă sesiune} few {# alte sesiuni} other {# de alte sesiuni}}"
   },
   "AccountVerifyEmail": {
     "banner": "Verifică adresa <b>{email}</b> pentru a-ți securiza contul.",

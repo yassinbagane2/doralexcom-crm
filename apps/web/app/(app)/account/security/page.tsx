@@ -4,7 +4,10 @@ import { getTranslations } from "next-intl/server"
 import { ChangePasswordForm } from "@/components/account/change-password-form"
 import { Passkeys } from "@/components/account/passkeys"
 import { Sessions } from "@/components/account/sessions"
-import { SettingsSection } from "@/components/account/settings-section"
+import {
+  SettingsPage,
+  SettingsSection,
+} from "@/components/account/settings-section"
 import { TwoFactorSettings } from "@/components/account/two-factor-settings"
 import { requireSession } from "@/lib/auth"
 
@@ -18,12 +21,12 @@ export default async function SecurityPage() {
   const t = await getTranslations()
 
   return (
-    <>
+    <SettingsPage>
       <SettingsSection
-        title={t("AccountPassword.title")}
-        description={t("AccountPassword.description")}
+        title={t("AccountSessions.title")}
+        description={t("AccountSessions.description")}
       >
-        <ChangePasswordForm />
+        <Sessions currentSessionId={session.id} />
       </SettingsSection>
 
       <SettingsSection
@@ -41,11 +44,11 @@ export default async function SecurityPage() {
       </SettingsSection>
 
       <SettingsSection
-        title={t("AccountSessions.title")}
-        description={t("AccountSessions.description")}
+        title={t("AccountPassword.title")}
+        description={t("AccountPassword.description")}
       >
-        <Sessions currentSessionId={session.id} />
+        <ChangePasswordForm />
       </SettingsSection>
-    </>
+    </SettingsPage>
   )
 }

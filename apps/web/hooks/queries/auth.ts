@@ -30,17 +30,12 @@ export function usePasskeySignIn() {
 export function useVerifyTwoFactor() {
   return useMutation({
     mutationFn: ({
-      method,
       code,
       trustDevice,
     }: {
-      method: "totp" | "backup-code"
       code: string
       trustDevice: boolean
-    }) =>
-      method === "totp"
-        ? unwrap(authClient.twoFactor.verifyTotp({ code, trustDevice }))
-        : unwrap(authClient.twoFactor.verifyBackupCode({ code, trustDevice })),
+    }) => unwrap(authClient.twoFactor.verifyTotp({ code, trustDevice })),
   })
 }
 

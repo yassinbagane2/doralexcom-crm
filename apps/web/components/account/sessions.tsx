@@ -1,9 +1,15 @@
 "use client"
 
-import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
+import { Chrome, Compass, Firefox } from "@workspace/ui/icons"
 import { useLocale, useTranslations } from "next-intl"
 
+import {
+  SettingsCard,
+  SettingsCardHeader,
+  SettingsCardRows,
+  SettingsRow,
+} from "@/components/account/settings-section"
 import {
   useRevokeOtherSessions,
   useRevokeSession,
@@ -11,6 +17,12 @@ import {
 } from "@/hooks/queries/session"
 import { formatRelative } from "@/lib/format"
 import { parseUserAgent } from "@/lib/user-agent"
+
+function BrowserIcon({ browser }: { browser: string | undefined }) {
+  if (browser === "Chrome") return <Chrome />
+  if (browser === "Firefox") return <Firefox />
+  return <Compass />
+}
 
 export function Sessions({ currentSessionId }: { currentSessionId: string }) {
   const t = useTranslations("AccountSessions")
@@ -35,62 +47,89 @@ export function Sessions({ currentSessionId }: { currentSessionId: string }) {
   }
 
   if (isPending) {
-    return <div className="h-14 animate-pulse rounded-lg bg-muted" />
+    return <div className="h-17 animate-pulse rounded-xl bg-muted" />
   }
 
-  // Current device first, then most recently active.
-  const sorted = [...(sessions ?? [])].sort((a, b) => {
-    if (a.id === currentSessionId) return -1
-    if (b.id === currentSessionId) return 1
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  })
-  const hasOthers = sorted.some((session) => session.id !== currentSessionId)
+  const all = sessions ?? []
+  const current = all.find((session) => session.id === currentSessionId)
+  // Most recently active first.
+  const others = all
+    .filter((session) => session.id !== currentSessionId)
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
+
+  function renderRow(session: (typeof all)[number], isCurrent: boolean) {
+    return (
+      <SettingsRow
+        className="group/session py-4"
+        icon={
+          <BrowserIcon browser={parseUserAgent(session.userAgent)?.browser} />
+        }
+        title={describeDevice(session.userAgent)}
+        description={
+          isCurrent ? (
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <span className="size-1.5 rounded-full bg-current" />
+              {t("thisDevice")}
+            </span>
+          ) : (
+            <span className="block truncate">
+              {[session.ipAddress, describeActivity(session.updatedAt)]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          )
+        }
+      >
+        {isCurrent ? null : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover/session:opacity-100"
+            disabled={revokeSession.isPending}
+            onClick={() => revokeSession.mutate(session.token)}
+          >
+            {t("signOut")}
+          </Button>
+        )}
+      </SettingsRow>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      <ul className="divide-y rounded-lg border">
-        {sorted.map((session) => {
-          const isCurrent = session.id === currentSessionId
+    <div className="flex flex-col gap-3">
+      {current ? (
+        <SettingsCard>
+          <div className="px-4">{renderRow(current, true)}</div>
+        </SettingsCard>
+      ) : null}
 
-          return (
-            <li key={session.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="flex items-center gap-2 text-sm font-medium">
-                  {describeDevice(session.userAgent)}
-                  {isCurrent ? (
-                    <Badge variant="secondary">{t("thisDevice")}</Badge>
-                  ) : null}
-                </span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {[session.ipAddress, describeActivity(session.updatedAt)]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              </div>
-              {isCurrent ? null : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={revokeSession.isPending}
-                  onClick={() => revokeSession.mutate(session.token)}
-                >
-                  {t("signOut")}
-                </Button>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-
-      {hasOthers ? (
-        <Button
-          variant="outline"
-          className="self-start"
-          disabled={revokeOthers.isPending}
-          onClick={() => revokeOthers.mutate()}
-        >
-          {t("signOutOthers")}
-        </Button>
+      {others.length > 0 ? (
+        <SettingsCard>
+          <SettingsCardHeader
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={revokeOthers.isPending}
+                onClick={() => revokeOthers.mutate()}
+              >
+                {t("signOutAll")}
+              </Button>
+            }
+          >
+            <span className="font-medium text-foreground">
+              {t("otherCount", { count: others.length })}
+            </span>
+          </SettingsCardHeader>
+          <SettingsCardRows className="border-t border-border/60">
+            {others.map((session) => (
+              <li key={session.id}>{renderRow(session, false)}</li>
+            ))}
+          </SettingsCardRows>
+        </SettingsCard>
       ) : null}
     </div>
   )

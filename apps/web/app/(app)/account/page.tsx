@@ -4,7 +4,10 @@ import { getTranslations } from "next-intl/server"
 import { AccountOverview } from "@/components/account/account-overview"
 import { DeleteAccount } from "@/components/account/delete-account"
 import { ProfileForm } from "@/components/account/profile-form"
-import { SettingsSection } from "@/components/account/settings-section"
+import {
+  SettingsPage,
+  SettingsSection,
+} from "@/components/account/settings-section"
 import { requireSession } from "@/lib/auth"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,13 +20,8 @@ export default async function AccountPage() {
   const t = await getTranslations()
 
   return (
-    <>
-      <SettingsSection
-        title={t("AccountOverview.title")}
-        description={t("AccountOverview.description")}
-      >
-        <AccountOverview />
-      </SettingsSection>
+    <SettingsPage>
+      <AccountOverview name={user.name} email={user.email} />
 
       <SettingsSection
         title={t("AccountProfile.title")}
@@ -33,11 +31,11 @@ export default async function AccountPage() {
       </SettingsSection>
 
       <SettingsSection
-        title={t("AccountDelete.title")}
-        description={t("AccountDelete.description")}
+        title={t("AccountDelete.zoneTitle")}
+        description={t("AccountDelete.zoneDescription")}
       >
         <DeleteAccount />
       </SettingsSection>
-    </>
+    </SettingsPage>
   )
 }

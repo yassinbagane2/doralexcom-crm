@@ -1,7 +1,13 @@
+import { LanguageIcon, Moon } from "@workspace/ui/icons"
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import { SettingsSection } from "@/components/account/settings-section"
+import {
+  SettingsCard,
+  SettingsPage,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/account/settings-section"
 import { LanguageSelect } from "@/components/language-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -14,36 +20,38 @@ export default async function PreferencesPage() {
   const t = await getTranslations()
 
   return (
-    <>
+    <SettingsPage>
       <SettingsSection
         title={t("Preferences.appearanceTitle")}
         description={t("Preferences.appearanceDescription")}
       >
-        <div className="flex items-center justify-between gap-4 rounded-xl border bg-card px-4 py-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium">{t("Theme.label")}</span>
-            <span className="text-xs text-muted-foreground">
-              {t("Theme.description")}
-            </span>
-          </div>
-          <ThemeToggle className="border bg-background text-foreground" />
-        </div>
+        <SettingsCard className="px-4">
+          <SettingsRow
+            icon={<Moon />}
+            title={t("Theme.label")}
+            description={t("Theme.description")}
+          >
+            <ThemeToggle className="border bg-background text-foreground" />
+          </SettingsRow>
+        </SettingsCard>
       </SettingsSection>
 
       <SettingsSection
         title={t("Preferences.languageTitle")}
         description={t("Preferences.languageDescription")}
       >
-        <div className="flex flex-col gap-2">
-          <label htmlFor="language" className="text-sm font-medium">
-            {t("Language.label")}
-          </label>
-          <LanguageSelect id="language" />
-          <p className="text-xs text-muted-foreground">
-            {t("Language.description")}
-          </p>
-        </div>
+        <SettingsCard className="px-4">
+          <SettingsRow
+            className="flex-wrap"
+            icon={<LanguageIcon />}
+            title={t("Language.label")}
+            description={t("Language.description")}
+            htmlFor="language"
+          >
+            <LanguageSelect id="language" />
+          </SettingsRow>
+        </SettingsCard>
       </SettingsSection>
-    </>
+    </SettingsPage>
   )
 }

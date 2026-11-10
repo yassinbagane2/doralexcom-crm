@@ -25,7 +25,23 @@
     "removeDescription": "Contul este șters și este deconectat de pe toate dispozitivele. Ce a înregistrat rămâne la firmă.",
     "removed": "Colaboratorul a fost eliminat",
     "emptyTitle": "Deocamdată doar tu",
-    "emptyDescription": "Invită pe cineva să împartă munca."
+    "emptyDescription": "Invită pe cineva să împartă munca.",
+    "memberCount": "{count, plural, one {# persoană} few {# persoane} other {# de persoane}}",
+    "search": "Caută după nume sau email",
+    "noResults": "Nimeni nu corespunde căutării.",
+    "columns": {
+      "name": "Nume",
+      "role": "Rol",
+      "added": "Adăugat",
+      "lastActive": "Ultima activitate",
+      "actions": "Acțiuni"
+    },
+    "collaborator": "Colaborator",
+    "groupActive": "Activi ({count})",
+    "groupInvited": "Invitați ({count})",
+    "inviteSubtitle": "Trimite o invitație de alăturare la firma ta",
+    "namePlaceholder": "Ana Popescu",
+    "emailPlaceholder": "nume@exemplu.ro"
   },
   "EmailSettings": {
     "metaTitle": "Email",

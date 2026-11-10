@@ -1,6 +1,5 @@
 "use client"
 
-import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
 import {
   Dialog,
@@ -9,77 +8,64 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/ui/dialog"
-import { OTPInput } from "@workspace/ui/components/ui/otp-input"
-import { Loader2 } from "@workspace/ui/icons"
+import { OTPInput } from "@workspace/ui/components/motion/otp-input"
+import { Loader2, ShieldCheck } from "@workspace/ui/icons"
 import { QRCodeSVG } from "qrcode.react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
-import { BackupCodes } from "@/components/account/backup-codes"
+import {
+  SettingsCard,
+  SettingsIcon,
+} from "@/components/account/settings-section"
 import { PasswordConfirmForm } from "@/components/account/password-confirm-form"
+import { StatusPill } from "@/components/admin/dashboard"
 import {
   useConfirmTwoFactor,
   useDisableTwoFactor,
   useEnableTwoFactor,
-  useGenerateBackupCodes,
 } from "@/hooks/queries/two-factor"
 
 const TOTP_LENGTH = 6
 
 /**
  * Each dialog flow, one step at a time. Enabling is the long one: confirm the
- * password, scan and prove the authenticator works, then save backup codes.
+ * password, then scan and prove the authenticator works.
  */
 type Flow =
   | { kind: "enable"; step: "password" }
-  | {
-      kind: "enable"
-      step: "scan"
-      totpURI: string
-      backupCodes: string[]
-    }
-  | { kind: "enable"; step: "codes"; backupCodes: string[] }
+  | { kind: "enable"; step: "scan"; totpURI: string }
   | { kind: "disable" }
-  | { kind: "regenerate"; step: "password" }
-  | { kind: "regenerate"; step: "codes"; backupCodes: string[] }
 
 export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
   const t = useTranslations("AccountTwoFactor")
   const [flow, setFlow] = useState<Flow | null>(null)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium">{t("authenticatorApp")}</span>
-        <Badge variant={enabled ? "default" : "outline"}>
+    <SettingsCard>
+      <div className="flex items-center gap-3 p-4">
+        <SettingsIcon>
+          <ShieldCheck />
+        </SettingsIcon>
+        <span className="flex-1 text-base font-semibold">
+          {t("authenticatorApp")}
+        </span>
+        <StatusPill tone={enabled ? "success" : "neutral"}>
           {enabled ? t("on") : t("off")}
-        </Badge>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {enabled ? (
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setFlow({ kind: "regenerate", step: "password" })}
-            >
-              {t("newBackupCodes")}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setFlow({ kind: "disable" })}
-            >
-              {t("turnOff")}
-            </Button>
-          </>
-        ) : (
-          <Button
-            variant="outline"
-            onClick={() => setFlow({ kind: "enable", step: "password" })}
-          >
-            {t("setUp")}
-          </Button>
-        )}
+        </StatusPill>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() =>
+            setFlow(
+              enabled
+                ? { kind: "disable" }
+                : { kind: "enable", step: "password" }
+            )
+          }
+        >
+          {enabled ? t("turnOff") : t("setUp")}
+        </Button>
       </div>
 
       <Dialog
@@ -98,7 +84,7 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
           ) : null}
         </DialogContent>
       </Dialog>
-    </div>
+    </SettingsCard>
   )
 }
 
@@ -111,46 +97,12 @@ function FlowStep({
   onChange: (flow: Flow) => void
   onDone: () => void
 }) {
-  const t = useTranslations("AccountTwoFactor")
-
   switch (flow.kind) {
     case "enable":
       if (flow.step === "password") {
         return <EnablePasswordStep onChange={onChange} />
       }
-      if (flow.step === "scan") {
-        return (
-          <ScanStep
-            totpURI={flow.totpURI}
-            onConfirmed={() =>
-              onChange({
-                kind: "enable",
-                step: "codes",
-                backupCodes: flow.backupCodes,
-              })
-            }
-          />
-        )
-      }
-      return (
-        <CodesStep
-          title={t("saveCodesTitle")}
-          codes={flow.backupCodes}
-          onDone={onDone}
-        />
-      )
-
-    case "regenerate":
-      if (flow.step === "password") {
-        return <RegeneratePasswordStep onChange={onChange} />
-      }
-      return (
-        <CodesStep
-          title={t("newCodesTitle")}
-          codes={flow.backupCodes}
-          onDone={onDone}
-        />
-      )
+      return <ScanStep totpURI={flow.totpURI} onConfirmed={onDone} />
 
     case "disable":
       return <DisableStep onDone={onDone} />
@@ -173,8 +125,8 @@ function EnablePasswordStep({ onChange }: { onChange: (flow: Flow) => void }) {
         isPending={enable.isPending}
         onSubmit={(password) =>
           enable.mutate(password, {
-            onSuccess: ({ totpURI, backupCodes }) =>
-              onChange({ kind: "enable", step: "scan", totpURI, backupCodes }),
+            onSuccess: ({ totpURI }) =>
+              onChange({ kind: "enable", step: "scan", totpURI }),
           })
         }
       />
@@ -192,7 +144,6 @@ function ScanStep({
   const t = useTranslations("AccountTwoFactor")
   const confirm = useConfirmTwoFactor()
   const [code, setCode] = useState("")
-  const secret = new URL(totpURI).searchParams.get("secret")
 
   function submit(value = code) {
     if (value.length !== TOTP_LENGTH || confirm.isPending) return
@@ -219,15 +170,6 @@ function ScanStep({
           <QRCodeSVG value={totpURI} size={168} />
         </div>
 
-        {secret ? (
-          <p className="text-center text-xs text-muted-foreground">
-            {t("cantScan")}
-            <code className="mt-1 block font-mono text-sm break-all text-foreground select-all">
-              {secret}
-            </code>
-          </p>
-        ) : null}
-
         <OTPInput
           aria-label={t("codeLabel")}
           length={TOTP_LENGTH}
@@ -247,56 +189,6 @@ function ScanStep({
           {t("turnOn")}
         </Button>
       </form>
-    </>
-  )
-}
-
-function CodesStep({
-  title,
-  codes,
-  onDone,
-}: {
-  title: string
-  codes: string[]
-  onDone: () => void
-}) {
-  const t = useTranslations("AccountTwoFactor")
-
-  return (
-    <>
-      <StepHeader title={title} description={t("codesDescription")} />
-      <div className="flex flex-col gap-5">
-        <BackupCodes codes={codes} />
-        <Button onClick={onDone}>{t("savedThem")}</Button>
-      </div>
-    </>
-  )
-}
-
-function RegeneratePasswordStep({
-  onChange,
-}: {
-  onChange: (flow: Flow) => void
-}) {
-  const t = useTranslations("AccountTwoFactor")
-  const generate = useGenerateBackupCodes()
-
-  return (
-    <>
-      <StepHeader
-        title={t("regenerateTitle")}
-        description={t("regenerateDescription")}
-      />
-      <PasswordConfirmForm
-        submitLabel={t("generateCodes")}
-        isPending={generate.isPending}
-        onSubmit={(password) =>
-          generate.mutate(password, {
-            onSuccess: ({ backupCodes }) =>
-              onChange({ kind: "regenerate", step: "codes", backupCodes }),
-          })
-        }
-      />
     </>
   )
 }

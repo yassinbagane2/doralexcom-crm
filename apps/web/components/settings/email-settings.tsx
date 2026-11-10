@@ -393,13 +393,12 @@ function EmailSettingsForm({ saved }: { saved: SavedSettings | null }) {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" size="lg" disabled={save.isPending}>
+        <Button type="submit" disabled={save.isPending}>
           {save.isPending ? <Loader2 className="animate-spin" /> : null}
           {t("save")}
         </Button>
         <Button
           type="button"
-          size="lg"
           variant="outline"
           disabled={test.isPending}
           onClick={form.handleSubmit((values) =>
@@ -462,9 +461,7 @@ function RemoveDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={<Button type="button" size="lg" variant="ghost" />}
-      >
+      <DialogTrigger render={<Button type="button" variant="ghost" />}>
         {t("remove")}
       </DialogTrigger>
       <DialogContent>

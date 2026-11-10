@@ -246,6 +246,13 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
     },
     // Business routes
     {
+      id: "dashboard",
+      title: t("dashboard"),
+      icon: LayoutDashboard,
+      link: routes.dashboard,
+      if: isBusiness,
+    },
+    {
       id: "properties",
       title: t("properties"),
       icon: Building2,

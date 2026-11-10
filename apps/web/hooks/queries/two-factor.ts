@@ -8,8 +8,7 @@ import { useRefreshSession } from "@/hooks/use-refresh-session"
 import { authClient, unwrap } from "@/lib/auth-client"
 
 /*
- * Enabling 2FA takes two steps: `enable` returns the TOTP secret and backup
- * codes, and 2FA only switches on once `confirm` proves the app is set up.
+ * Enabling 2FA takes two steps: `enable` returns the TOTP secret, and 2FA only switches on once `confirm` proves the app is set up.
  */
 
 export function useEnableTwoFactor() {
@@ -54,12 +53,5 @@ export function useDisableTwoFactor() {
       await refreshSession()
       toast.success(t("disabled"))
     },
-  })
-}
-
-export function useGenerateBackupCodes() {
-  return useMutation({
-    mutationFn: (password: string) =>
-      unwrap(authClient.twoFactor.generateBackupCodes({ password })),
   })
 }

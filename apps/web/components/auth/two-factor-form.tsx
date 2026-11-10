@@ -2,10 +2,8 @@
 
 import { Button } from "@workspace/ui/components/ui/button"
 import { Checkbox } from "@workspace/ui/components/ui/checkbox"
-import { Field } from "@workspace/ui/components/ui/field"
-import { Input } from "@workspace/ui/components/ui/input"
 import { Label } from "@workspace/ui/components/ui/label"
-import { OTPInput } from "@workspace/ui/components/ui/otp-input"
+import { OTPInput } from "@workspace/ui/components/motion/otp-input"
 import { Loader2 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -21,15 +19,12 @@ const TOTP_LENGTH = 6
 /** How long a trusted device skips the second step (Better Auth's default). */
 const TRUST_DEVICE_DAYS = 30
 
-type Method = "totp" | "backup-code"
-
 export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
   const t = useTranslations("TwoFactor")
   const tShared = useTranslations("AuthShared")
   const router = useRouter()
   const verify = useVerifyTwoFactor()
 
-  const [method, setMethod] = useState<Method>("totp")
   const [code, setCode] = useState("")
   const [trustDevice, setTrustDevice] = useState(false)
 
@@ -37,39 +32,24 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
     if (!value || verify.isPending) return
 
     verify.mutate(
-      { method, code: value.trim(), trustDevice },
+      { code: value.trim(), trustDevice },
       {
         onSuccess: () => {
           router.replace(redirectTo)
           router.refresh()
         },
-        // A wrong TOTP code is cleared so the next attempt starts fresh.
-        onError: () => {
-          if (method === "totp") setCode("")
-        },
+        // A wrong code is cleared so the next attempt starts fresh.
+        onError: () => setCode(""),
       }
     )
   }
 
-  function switchMethod() {
-    setMethod((current) => (current === "totp" ? "backup-code" : "totp"))
-    setCode("")
-    verify.reset()
-  }
-
   return (
     <div className="flex flex-col gap-8">
-      {method === "totp" ? (
-        <AuthHeader
-          title={t("totpTitle")}
-          description={t("totpDescription", { length: TOTP_LENGTH })}
-        />
-      ) : (
-        <AuthHeader
-          title={t("backupTitle")}
-          description={t("backupDescription")}
-        />
-      )}
+      <AuthHeader
+        title={t("totpTitle")}
+        description={t("totpDescription", { length: TOTP_LENGTH })}
+      />
 
       <form
         noValidate
@@ -79,32 +59,17 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
         }}
         className="flex flex-col gap-5"
       >
-        {method === "totp" ? (
-          <OTPInput
-            aria-label={t("codeAriaLabel")}
-            length={TOTP_LENGTH}
-            value={code}
-            onChange={setCode}
-            // Submits on the sixth digit; no need to reach for the button.
-            onComplete={submit}
-            status={verify.error ? "error" : "idle"}
-            disabled={verify.isPending}
-            autoFocus
-          />
-        ) : (
-          <Field>
-            <Label htmlFor="backup-code">{t("backupCodeLabel")}</Label>
-            <Input
-              id="backup-code"
-              autoComplete="one-time-code"
-              autoCapitalize="none"
-              spellCheck={false}
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              autoFocus
-            />
-          </Field>
-        )}
+        <OTPInput
+          aria-label={t("codeAriaLabel")}
+          length={TOTP_LENGTH}
+          value={code}
+          onChange={setCode}
+          // Submits on the sixth digit; no need to reach for the button.
+          onComplete={submit}
+          status={verify.error ? "error" : "idle"}
+          disabled={verify.isPending}
+          autoFocus
+        />
 
         <Label htmlFor="trust-device" className="font-normal">
           <Checkbox
@@ -124,9 +89,6 @@ export function TwoFactorForm({ redirectTo }: { redirectTo: string }) {
           {t("submit")}
         </Button>
 
-        <Button type="button" variant="ghost" onClick={switchMethod}>
-          {method === "totp" ? t("useBackupCode") : t("useAuthenticator")}
-        </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">

@@ -13,10 +13,16 @@ import {
 import { Field } from "@workspace/ui/components/ui/field"
 import { Input } from "@workspace/ui/components/ui/input"
 import { Label } from "@workspace/ui/components/ui/label"
-import { Loader2, Trash } from "@workspace/ui/icons"
+import { Fingerprint, Loader2, Plus, Trash } from "@workspace/ui/icons"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
+import {
+  SettingsCard,
+  SettingsCardHeader,
+  SettingsCardRows,
+  SettingsRow,
+} from "@/components/account/settings-section"
 import {
   useAddPasskey,
   useDeletePasskey,
@@ -30,46 +36,57 @@ export function Passkeys() {
   const { data: passkeys, isPending } = usePasskeys()
   const deletePasskey = useDeletePasskey()
 
+  const count = passkeys?.length ?? 0
+
   return (
-    <div className="flex flex-col gap-4">
-      {isPending ? (
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
-      ) : passkeys?.length ? (
-        <ul className="divide-y rounded-lg border">
-          {passkeys.map((passkey) => (
-            <li key={passkey.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-medium">
-                  {passkey.name || t("fallbackName")}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {t("addedOn", {
-                    date: formatDate(passkey.createdAt, locale),
-                  })}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={
-                  passkey.name
-                    ? t("remove", { name: passkey.name })
-                    : t("removeUnnamed")
+    <SettingsCard>
+      <SettingsCardHeader action={<AddPasskeyDialog />}>
+        {isPending ? (
+          <span className="block h-4 w-24 animate-pulse rounded bg-muted" />
+        ) : (
+          t("count", { count })
+        )}
+      </SettingsCardHeader>
+
+      {count > 0 ? (
+        <SettingsCardRows className="border-t border-border/60">
+          {passkeys?.map((passkey) => (
+            <li key={passkey.id}>
+              <SettingsRow
+                icon={<Fingerprint />}
+                title={
+                  <span className="truncate">
+                    {passkey.name || t("fallbackName")}
+                  </span>
                 }
-                disabled={deletePasskey.isPending}
-                onClick={() => deletePasskey.mutate(passkey.id)}
+                description={t("addedOn", {
+                  date: formatDate(passkey.createdAt, locale),
+                })}
               >
-                <Trash size={16} />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={
+                    passkey.name
+                      ? t("remove", { name: passkey.name })
+                      : t("removeUnnamed")
+                  }
+                  disabled={deletePasskey.isPending}
+                  onClick={() => deletePasskey.mutate(passkey.id)}
+                >
+                  <Trash size={16} />
+                </Button>
+              </SettingsRow>
             </li>
           ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        </SettingsCardRows>
+      ) : isPending ? null : (
+        <p className="border-t border-border/60 px-4 py-3 text-sm text-pretty text-muted-foreground">
+          {t("empty")}
+        </p>
       )}
-
-      <AddPasskeyDialog />
-    </div>
+    </SettingsCard>
   )
 }
 
@@ -88,9 +105,8 @@ function AddPasskeyDialog() {
         if (!next) setName("")
       }}
     >
-      <DialogTrigger
-        render={<Button variant="outline" className="self-start" />}
-      >
+      <DialogTrigger render={<Button variant="outline" />}>
+        <Plus size={16} />
         {t("add")}
       </DialogTrigger>
       <DialogContent className="max-w-md">

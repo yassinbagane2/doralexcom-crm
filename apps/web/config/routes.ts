@@ -16,6 +16,8 @@ export const routes = {
   accountEmail: "/account/email",
   /** Business owners: the business's own web address. */
   accountDomain: "/account/domain",
+  /** Business accounts: where they land after signing in. */
+  dashboard: "/dashboard",
   /** Business accounts: the properties they rent out. */
   properties: "/properties",
   /** Business accounts: the people they rent to. */
@@ -30,7 +32,9 @@ export const routes = {
 
 /** Where each kind of account starts out after signing in. */
 export function homeRouteFor(role: UserRole) {
-  return role === "admin" ? routes.admin : DEFAULT_SIGNED_IN_ROUTE
+  if (role === "admin") return routes.admin
+  if (role === "business") return routes.dashboard
+  return DEFAULT_SIGNED_IN_ROUTE
 }
 
 /** Where businesses and users land after signing in, when nothing else was requested. */
@@ -40,6 +44,7 @@ export const DEFAULT_SIGNED_IN_ROUTE = routes.account
 export const PROTECTED_ROUTES: readonly string[] = [
   routes.account,
   routes.onboarding,
+  routes.dashboard,
   routes.properties,
   routes.tenants,
   routes.templates,

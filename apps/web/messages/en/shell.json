@@ -2,6 +2,7 @@
   "Navigation": {
     "label": "Main",
     "home": "Home",
+    "dashboard": "Dashboard",
     "users": "Users",
     "properties": "Properties",
     "tenants": "Tenants",

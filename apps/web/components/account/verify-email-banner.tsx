@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/ui/dialog"
-import { OTPInput } from "@workspace/ui/components/ui/otp-input"
+import { OTPInput } from "@workspace/ui/components/motion/otp-input"
 import { Loader2, Mail } from "@workspace/ui/icons"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
