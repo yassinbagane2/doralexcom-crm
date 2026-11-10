@@ -1,6 +1,7 @@
 "use client"
 
 import type { JSONContent } from "@tiptap/core"
+import { formatIban } from "@workspace/auth/organization"
 import {
   fillMergeFields,
   isMergeFieldKey,
@@ -135,6 +136,7 @@ function longDate(day: string, locale: string) {
 export function useMergeValues() {
   const t = useTranslations("MergeFields.values")
   const tp = useTranslations("Properties")
+  const to = useTranslations("Organization")
   const locale = useLocale()
 
   return useCallback(
@@ -158,8 +160,15 @@ export function useMergeValues() {
         "landlord.name": landlord.name,
         "landlord.representative": landlord.representative ?? "",
         "landlord.email": landlord.email ?? "",
+        "landlord.legalStructure": landlord.legalStructure
+          ? to(`legalStructures.${landlord.legalStructure}`)
+          : "",
+        "landlord.address": landlord.address ?? "",
         "landlord.taxId": landlord.taxId ?? "",
         "landlord.registrationNumber": landlord.registrationNumber ?? "",
+        "landlord.vatNumber": landlord.vatNumber ?? "",
+        "landlord.bankName": landlord.bankName ?? "",
+        "landlord.iban": landlord.iban ? formatIban(landlord.iban) : "",
         "tenant.name": tenant.name,
         "tenant.email": tenant.email,
         "tenant.phone": tenant.phone ?? "",
@@ -191,7 +200,7 @@ export function useMergeValues() {
         "document.date": longDate(localToday(), locale),
       }
     },
-    [t, tp, locale]
+    [t, tp, to, locale]
   )
 }
 

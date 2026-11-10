@@ -1,14 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import {
-  template,
-  lease,
-  member,
-  organization,
-  property,
-  user,
-} from "@workspace/db/schema"
-import { and, asc, desc, eq } from "drizzle-orm"
+import { template, lease, property, user } from "@workspace/db/schema"
+import { and, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
@@ -17,6 +10,7 @@ import {
   documentContentSchema,
   type DocumentContent,
 } from "../contract"
+import { findLandlord, landlordSchema } from "../lib/landlord"
 import { readTenantMetadata } from "../lib/tenant"
 import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
 
@@ -47,10 +41,7 @@ const templateSummarySchema = z.object({
 })
 
 const ownTemplate = (organizationId: string, id: string) =>
-  and(
-    eq(template.id, id),
-    eq(template.organizationId, organizationId)
-  )
+  and(eq(template.id, id), eq(template.organizationId, organizationId))
 
 /**
  * The contract templates a business writes, and the details a lease fills
@@ -155,13 +146,7 @@ export const contractRouter = o.prefix("/contracts").router({
     .input(z.object({ leaseId: z.uuid() }))
     .output(
       z.object({
-        landlord: z.object({
-          name: z.string(),
-          representative: z.string().nullable(),
-          email: z.string().nullable(),
-          taxId: z.string().nullable(),
-          registrationNumber: z.string().nullable(),
-        }),
+        landlord: landlordSchema,
         tenant: z.object({
           name: z.string(),
           email: z.string(),
@@ -210,39 +195,12 @@ export const contractRouter = o.prefix("/contracts").router({
         })
       }
 
-      // The landlord is the business: its organization, signed for by the
-      // account that owns it.
-      const [landlord] = await db
-        .select({
-          name: organization.name,
-          taxId: organization.taxId,
-          registrationNumber: organization.registrationNumber,
-          representative: user.name,
-          email: user.email,
-        })
-        .from(organization)
-        .leftJoin(
-          member,
-          and(
-            eq(member.organizationId, organization.id),
-            eq(member.role, "owner")
-          )
-        )
-        .leftJoin(user, eq(user.id, member.userId))
-        .where(eq(organization.id, context.organizationId))
-        .orderBy(asc(member.createdAt))
-        .limit(1)
+      const landlord = await findLandlord(context.organizationId)
 
       const details = readTenantMetadata(row.tenant.metadata)
 
       return {
-        landlord: {
-          name: landlord?.name ?? "",
-          representative: landlord?.representative ?? null,
-          email: landlord?.email ?? null,
-          taxId: landlord?.taxId ?? null,
-          registrationNumber: landlord?.registrationNumber ?? null,
-        },
+        landlord,
         tenant: {
           name: row.tenant.name,
           email: row.tenant.email,

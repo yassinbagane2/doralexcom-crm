@@ -15,7 +15,12 @@
     "openMenu": "Deschide meniul contului",
     "signOut": "Deconectare",
     "adminBadge": "Admin",
-    "templates": "Șabloane"
+    "templates": "Șabloane",
+    "businessDetails": "Date firmă",
+    "collaborators": "Colaboratori",
+    "email": "Email",
+    "domain": "Adresă web",
+    "settings": "Setări"
   },
   "Preferences": {
     "metaTitle": "Preferințe",

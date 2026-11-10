@@ -29,14 +29,28 @@ const OTP_LENGTH = 6
  * Two steps on one page: ask for the email, then take the emailed code and the
  * new password together, so the code is checked and spent in a single request.
  */
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({
+  initialEmail = "",
+  invited = false,
+}: {
+  /** Prefilled from an invitation link. */
+  initialEmail?: string
+  /** Opened from a collaborator invitation: choosing a first password. */
+  invited?: boolean
+}) {
   const [email, setEmail] = useState<string | null>(null)
 
   if (email) {
     return <ResetPasswordStep email={email} onRestart={() => setEmail(null)} />
   }
 
-  return <RequestCodeStep onSent={setEmail} />
+  return (
+    <RequestCodeStep
+      onSent={setEmail}
+      initialEmail={initialEmail}
+      invited={invited}
+    />
+  )
 }
 
 function useRequestSchema() {
@@ -47,7 +61,15 @@ function useRequestSchema() {
 
 type RequestValues = z.infer<ReturnType<typeof useRequestSchema>>
 
-function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
+function RequestCodeStep({
+  onSent,
+  initialEmail,
+  invited,
+}: {
+  onSent: (email: string) => void
+  initialEmail: string
+  invited: boolean
+}) {
   const t = useTranslations("ForgotPassword")
   const tShared = useTranslations("AuthShared")
   const requestSchema = useRequestSchema()
@@ -55,7 +77,7 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
 
   const form = useForm<RequestValues>({
     resolver: zodResolver(requestSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: initialEmail },
   })
   const { errors } = form.formState
 
@@ -67,8 +89,10 @@ function RequestCodeStep({ onSent }: { onSent: (email: string) => void }) {
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        title={t("requestTitle")}
-        description={t("requestDescription")}
+        title={invited ? t("invitedTitle") : t("requestTitle")}
+        description={
+          invited ? t("invitedDescription") : t("requestDescription")
+        }
       />
 
       <form

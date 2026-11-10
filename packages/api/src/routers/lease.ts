@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { lease, payment, property } from "@workspace/db/schema"
+import { lease, payment, property, user } from "@workspace/db/schema"
 import {
   and,
   eq,
@@ -21,8 +21,9 @@ import {
   TENANT_LIMITS,
   termEndDate,
 } from "../lease"
+import { findLandlord, landlordSchema } from "../lib/landlord"
 import { holdsPropertyOn } from "../lib/lease"
-import { findTenant } from "../lib/tenant"
+import { findTenant, readTenantMetadata } from "../lib/tenant"
 import { PROPERTY_LIMITS, RENT_CURRENCIES } from "../property"
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -334,6 +335,70 @@ export const leaseRouter = o.prefix("/leases").router({
         .returning({ id: payment.id })
 
       return { id: created!.id }
+    }),
+
+  /**
+   * What a receipt for one payment prints: who paid whom, for what, and
+   * where future rent goes (the landlord's bank details from its settings).
+   */
+  receipt: businessProcedure
+    .route({ method: "GET", path: "/payments/{id}/receipt", tags: ["leases"] })
+    .input(z.object({ id: z.uuid() }))
+    .output(
+      z.object({
+        number: z.string(),
+        amount: z.number(),
+        paidOn: z.string(),
+        note: z.string().nullable(),
+        currency: z.enum(RENT_CURRENCIES),
+        landlord: landlordSchema,
+        tenant: z.object({
+          id: z.string(),
+          name: z.string(),
+          email: z.string(),
+          address: z.string().nullable(),
+        }),
+        property: z.object({ name: z.string(), address: z.string() }),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const [row] = await db
+        .select({ payment, lease, property, tenant: user })
+        .from(payment)
+        .innerJoin(lease, eq(lease.id, payment.leaseId))
+        .innerJoin(property, eq(property.id, lease.propertyId))
+        .innerJoin(user, eq(user.id, lease.tenantId))
+        .where(
+          and(
+            eq(payment.id, input.id),
+            eq(lease.organizationId, context.organizationId)
+          )
+        )
+        .limit(1)
+
+      if (!row) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Payment not found.",
+          data: { code: "PAYMENT_NOT_FOUND" },
+        })
+      }
+
+      return {
+        // Stable and unique enough to quote: the year, then the payment's id.
+        number: `${row.payment.paidOn.slice(0, 4)}-${row.payment.id.slice(0, 8).toUpperCase()}`,
+        amount: row.payment.amount,
+        paidOn: row.payment.paidOn,
+        note: row.payment.note,
+        currency: row.lease.currency,
+        landlord: await findLandlord(context.organizationId),
+        tenant: {
+          id: row.tenant.id,
+          name: row.tenant.name,
+          email: row.tenant.email,
+          address: readTenantMetadata(row.tenant.metadata).address,
+        },
+        property: { name: row.property.name, address: row.property.address },
+      }
     }),
 
   removePayment: businessProcedure

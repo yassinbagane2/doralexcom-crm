@@ -3,13 +3,13 @@ import { env } from "./env"
 /** Matches the emailOTP plugin's default `expiresIn`, in seconds. */
 export const OTP_EXPIRES_IN = 300
 
-interface Email {
+export interface Email {
   to: string
   subject: string
   text: string
 }
 
-async function sendEmail({ to, subject, text }: Email) {
+export async function sendEmail({ to, subject, text }: Email) {
   if (!env.RESEND_API_KEY) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("RESEND_API_KEY is not set; cannot send email.")

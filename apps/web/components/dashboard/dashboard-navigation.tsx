@@ -29,11 +29,17 @@ import {
   useIsAccountPage,
 } from "./navigation"
 
-export function NavigationRoutes({ role }: { role: UserRole }) {
+export function NavigationRoutes({
+  role,
+  isOwner,
+}: {
+  role: UserRole
+  isOwner: boolean
+}) {
   const t = useTranslations("Navigation")
   const isAccountPage = useIsAccountPage()
   const dashboardHome = useDashboardHome(role)
-  const dashboardRoutes = useGeneralRoutes(role)
+  const dashboardRoutes = useGeneralRoutes(role, isOwner)
   const { containerProps, getTargetProps, rect } = useHoverHighlight()
 
   return (
@@ -82,7 +88,9 @@ export function NavigationRoutes({ role }: { role: UserRole }) {
                       <Icon size={16} color="currentColor" />
                     </span>
                   ) : null}
-                  <span className="ml-2 text-sm font-medium">{route.title}</span>
+                  <span className="ml-2 text-sm font-medium">
+                    {route.title}
+                  </span>
                 </SidebarMenuButton>
                 {route.isActive && route.subs ? (
                   <SidebarMenuSub className="my-1 gap-y-0.5 pr-0">
@@ -94,7 +102,9 @@ export function NavigationRoutes({ role }: { role: UserRole }) {
                           <Link
                             href={subRoute.link}
                             prefetch
-                            aria-current={subRoute.isActive ? "page" : undefined}
+                            aria-current={
+                              subRoute.isActive ? "page" : undefined
+                            }
                             {...getTargetProps(0.6)}
                             className={cn(
                               "flex w-full flex-row items-center gap-x-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors",
@@ -123,8 +133,14 @@ export function NavigationRoutes({ role }: { role: UserRole }) {
 }
 
 /** The account menu's items. Render inside a DropdownMenuContent. */
-export function DropdownMenuRoutes({ role }: { role: UserRole }) {
-  const routes = useDropdownMenuRoutes(role)
+export function DropdownMenuRoutes({
+  role,
+  isOwner,
+}: {
+  role: UserRole
+  isOwner: boolean
+}) {
+  const routes = useDropdownMenuRoutes(role, isOwner)
 
   return (
     <>

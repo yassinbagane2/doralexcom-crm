@@ -5,11 +5,34 @@
     "nameHint": "The registered legal name, as it appears on contracts.",
     "taxIdLabel": "Tax ID (CUI)",
     "registrationNumberLabel": "Trade register no.",
+    "legalStructureLabel": "Legal structure",
+    "legalStructurePlaceholder": "Choose one",
+    "legalStructures": {
+      "individual": "Private individual",
+      "sole_trader": "Sole trader (PFA / II)",
+      "limited_company": "Limited company (SRL)",
+      "joint_stock_company": "Joint stock company (SA)",
+      "association": "Association or foundation",
+      "other": "Other"
+    },
+    "addressLabel": "Registered address",
+    "addressPlaceholder": "Str. Exemplu 10, București",
+    "vatNumberLabel": "VAT number",
+    "identifiersTitle": "Registration",
+    "bankTitle": "Payments",
+    "bankHint": "Where tenants pay rent. Printed on contracts and receipts.",
+    "bankNameLabel": "Bank",
+    "bankNamePlaceholder": "Banca Transilvania",
+    "ibanLabel": "IBAN",
     "validation": {
       "nameRequired": "Enter a name",
       "nameTooLong": "Name is too long",
       "taxIdInvalid": "Enter a valid code, e.g. RO12345678",
-      "registrationNumberTooLong": "Registration number is too long"
+      "registrationNumberTooLong": "Registration number is too long",
+      "ibanInvalid": "Check the IBAN: it doesn't add up",
+      "addressTooLong": "Address is too long",
+      "vatNumberTooLong": "VAT number is too long",
+      "bankNameTooLong": "Bank name is too long"
     }
   },
   "Onboarding": {
@@ -23,9 +46,9 @@
     "noBusinessDescription": "Your account isn't linked to any business. Ask the business you work with to add you again."
   },
   "OrganizationSettings": {
-    "metaTitle": "Organization",
-    "title": "Organization",
-    "description": "Your business's legal details, as they appear on your documents.",
-    "saved": "Organization updated"
+    "metaTitle": "Business details",
+    "title": "Business details",
+    "description": "Your landlord or business details, as they appear on contracts and receipts.",
+    "saved": "Business details saved"
   }
 }

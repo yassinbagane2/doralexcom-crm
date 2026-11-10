@@ -5,11 +5,34 @@
     "nameHint": "Denumirea legală înregistrată, așa cum apare pe contracte.",
     "taxIdLabel": "Cod fiscal (CUI)",
     "registrationNumberLabel": "Nr. Registrul Comerțului",
+    "legalStructureLabel": "Formă juridică",
+    "legalStructurePlaceholder": "Alege una",
+    "legalStructures": {
+      "individual": "Persoană fizică",
+      "sole_trader": "PFA / Întreprindere individuală",
+      "limited_company": "Societate cu răspundere limitată (SRL)",
+      "joint_stock_company": "Societate pe acțiuni (SA)",
+      "association": "Asociație sau fundație",
+      "other": "Altă formă"
+    },
+    "addressLabel": "Sediu / adresă",
+    "addressPlaceholder": "Str. Exemplu 10, București",
+    "vatNumberLabel": "Cod TVA",
+    "identifiersTitle": "Înregistrare",
+    "bankTitle": "Plăți",
+    "bankHint": "Unde plătesc chiriașii chiria. Apare pe contracte și chitanțe.",
+    "bankNameLabel": "Banca",
+    "bankNamePlaceholder": "Banca Transilvania",
+    "ibanLabel": "IBAN",
     "validation": {
       "nameRequired": "Introdu o denumire",
       "nameTooLong": "Denumirea este prea lungă",
       "taxIdInvalid": "Introdu un cod valid, de ex. RO12345678",
-      "registrationNumberTooLong": "Numărul de înregistrare este prea lung"
+      "registrationNumberTooLong": "Numărul de înregistrare este prea lung",
+      "ibanInvalid": "Verifică IBAN-ul: cifrele de control nu se potrivesc",
+      "addressTooLong": "Adresa este prea lungă",
+      "vatNumberTooLong": "Codul TVA este prea lung",
+      "bankNameTooLong": "Numele băncii este prea lung"
     }
   },
   "Onboarding": {
@@ -23,9 +46,9 @@
     "noBusinessDescription": "Contul tău nu este asociat niciunei firme. Cere firmei cu care lucrezi să te adauge din nou."
   },
   "OrganizationSettings": {
-    "metaTitle": "Organizație",
-    "title": "Organizație",
-    "description": "Datele legale ale firmei tale, așa cum apar pe documente.",
-    "saved": "Organizația a fost actualizată"
+    "metaTitle": "Date firmă",
+    "title": "Date firmă",
+    "description": "Datele tale de proprietar sau ale firmei, așa cum apar pe contracte și chitanțe.",
+    "saved": "Datele firmei au fost salvate"
   }
 }

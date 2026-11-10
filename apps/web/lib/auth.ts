@@ -77,3 +77,36 @@ export async function requireRole(...allowed: UserRole[]) {
 
   return { ...session, role }
 }
+
+/**
+ * The signed-in user's role inside their organization: "owner" for the
+ * business account that set it up, "collaborator" for the people it invited,
+ * "member" for tenants. Null outside any organization (admins).
+ */
+export const getMemberRole = cache(async () => {
+  // The organization the app shell works in, even for a session that
+  // predates `activeOrganizationId`.
+  const organization = await getActiveOrganization()
+  if (!organization) return null
+
+  const member = await auth.api
+    .getActiveMemberRole({
+      headers: await headers(),
+      query: { organizationId: organization.id },
+    })
+    .catch(() => null)
+
+  return member?.role ?? null
+})
+
+/**
+ * For the business's settings: its owner only. Collaborators are sent to
+ * their own account page instead.
+ */
+export async function requireOwner() {
+  const session = await requireRole("business")
+  if ((await getMemberRole()) !== "owner") {
+    redirect(routes.account)
+  }
+  return session
+}

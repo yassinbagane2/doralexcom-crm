@@ -81,6 +81,18 @@
     "DOCUMENT_NOT_FOUND": "Acest document nu mai există",
     "CONTENT_TOO_LARGE": "Documentul este prea mare pentru a fi salvat. Încearcă imagini mai mici",
     "DOCUMENT_TYPE": "Acest tip de fișier nu poate fi atașat",
-    "DOCUMENT_SIZE": "Fișierul este gol sau mai mare de 10 MB"
+    "DOCUMENT_SIZE": "Fișierul este gol sau mai mare de 10 MB",
+    "OWNER_ONLY": "Doar proprietarul firmei poate face asta",
+    "COLLABORATOR_NOT_FOUND": "Colaboratorul nu mai există",
+    "EMAIL_DELIVERY_FAILED": "Emailul nu a putut fi trimis",
+    "EMAIL_SECRET_REQUIRED": "Introdu parola sau cheia API",
+    "INVALID_HOSTNAME": "Aceasta nu este o adresă web validă",
+    "HOSTNAME_RESERVED": "Adresa aparține platformei",
+    "DOMAIN_TAKEN": "Altă firmă folosește deja această adresă",
+    "DOMAIN_NOT_FOUND": "Adaugă mai întâi o adresă web",
+    "INVALID_IBAN": "Verifică IBAN-ul: cifrele de control nu se potrivesc",
+    "INVALID_LEGAL_STRUCTURE": "Alege o formă juridică din listă",
+    "ORGANIZATION_FIELD_TOO_LONG": "Unul dintre câmpuri este prea lung",
+    "PAYMENT_NOT_FOUND": "Plata nu mai există"
   }
 }

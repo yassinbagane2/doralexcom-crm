@@ -10,8 +10,12 @@ export const routes = {
   accountSecurity: "/account/security",
   accountOrganization: "/account/organization",
   accountPreferences: "/account/preferences",
-  /** Business accounts: the users they've created. */
-  users: "/users",
+  /** Business accounts: who else works on the business's records. */
+  accountCollaborators: "/account/collaborators",
+  /** Business owners: the email service the business sends through. */
+  accountEmail: "/account/email",
+  /** Business owners: the business's own web address. */
+  accountDomain: "/account/domain",
   /** Business accounts: the properties they rent out. */
   properties: "/properties",
   /** Business accounts: the people they rent to. */
@@ -36,7 +40,6 @@ export const DEFAULT_SIGNED_IN_ROUTE = routes.account
 export const PROTECTED_ROUTES: readonly string[] = [
   routes.account,
   routes.onboarding,
-  routes.users,
   routes.properties,
   routes.tenants,
   routes.templates,

@@ -7,7 +7,9 @@
     ".": "./src/index.ts",
     "./password": "./src/password.ts",
     "./organization": "./src/organization.ts",
-    "./roles": "./src/roles.ts"
+    "./roles": "./src/roles.ts",
+    "./email": "./src/email.ts",
+    "./custom-domains": "./src/custom-domains.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

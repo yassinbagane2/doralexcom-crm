@@ -8,6 +8,18 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitle") }
 }
 
-export default function ForgotPasswordPage() {
-  return <ForgotPasswordForm />
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { email, invited } = await searchParams
+
+  // A collaborator's invitation links here to choose their first password.
+  return (
+    <ForgotPasswordForm
+      initialEmail={typeof email === "string" ? email : ""}
+      invited={invited === "1"}
+    />
+  )
 }

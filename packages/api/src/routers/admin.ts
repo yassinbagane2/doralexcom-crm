@@ -134,7 +134,7 @@ export const adminRouter = o.prefix("/admin").router({
           .select({ organizationId: member.organizationId, value: count() })
           .from(member)
           .where(
-            and(inArray(member.organizationId, ids), ne(member.role, "owner"))
+            and(inArray(member.organizationId, ids), eq(member.role, "member"))
           )
           .groupBy(member.organizationId),
         db

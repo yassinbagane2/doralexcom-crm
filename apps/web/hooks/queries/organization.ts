@@ -1,7 +1,10 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import type { OrganizationType } from "@workspace/auth/organization"
+import type {
+  LegalStructure,
+  OrganizationType,
+} from "@workspace/auth/organization"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
@@ -16,6 +19,12 @@ export interface OrganizationInput {
   /** An empty string clears a previously saved value (stored as null). */
   taxId: string
   registrationNumber: string
+  /** The rest of the business details, edited in settings. */
+  legalStructure?: LegalStructure
+  address?: string
+  vatNumber?: string
+  bankName?: string
+  iban?: string
 }
 
 /**

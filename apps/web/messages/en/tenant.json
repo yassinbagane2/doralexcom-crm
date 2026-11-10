@@ -229,7 +229,8 @@
     "monthlyHint": "Billed every month with the rent: {amount} in total.",
     "depositLine": "Deposit {amount}",
     "chargesLine": "{rent} rent + {extras} charges and costs",
-    "discountLine": "− {amount} discount"
+    "discountLine": "− {amount} discount",
+    "receipt": "Receipt"
   },
   "Tenancy": {
     "metaTitle": "My home",

@@ -20,7 +20,12 @@ export default async function AdminLayout({
   const { user } = await requireRole("admin")
 
   return (
-    <DashboardLayout role="admin" name={user.name} email={user.email}>
+    <DashboardLayout
+      role="admin"
+      isOwner={false}
+      name={user.name}
+      email={user.email}
+    >
       {children}
     </DashboardLayout>
   )

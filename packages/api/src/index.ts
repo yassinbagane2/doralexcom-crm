@@ -1,8 +1,9 @@
 import { ORPCError, os } from "@orpc/server"
+import { STAFF_MEMBER_ROLES } from "@workspace/auth/organization"
 import { getUserRole } from "@workspace/auth/roles"
 import { db } from "@workspace/db"
 import { member } from "@workspace/db/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray } from "drizzle-orm"
 
 import type { Context } from "./context"
 
@@ -33,8 +34,10 @@ const requireAdmin = o.middleware(async ({ context, next }) => {
 export const adminProcedure = protectedProcedure.use(requireAdmin)
 
 /**
- * Business accounts, scoped to the organization they own. Every business
- * procedure works inside `context.organizationId` and nowhere else.
+ * Business accounts, scoped to the organization they work in: the one they
+ * own, or the one whose owner invited them as a collaborator. Every business
+ * procedure works inside `context.organizationId` and nowhere else;
+ * `context.memberRole` says which of the two they are.
  */
 const requireBusiness = o.middleware(async ({ context, next }) => {
   const session = context.session
@@ -45,13 +48,13 @@ const requireBusiness = o.middleware(async ({ context, next }) => {
   const ownership = await db.query.member.findFirst({
     where: and(
       eq(member.userId, session.user.id),
-      eq(member.role, "owner"),
+      inArray(member.role, STAFF_MEMBER_ROLES),
       session.session.activeOrganizationId
         ? eq(member.organizationId, session.session.activeOrganizationId)
         : undefined
     ),
     orderBy: asc(member.createdAt),
-    columns: { organizationId: true },
+    columns: { organizationId: true, role: true },
   })
 
   if (!ownership) {
@@ -61,7 +64,28 @@ const requireBusiness = o.middleware(async ({ context, next }) => {
     })
   }
 
-  return next({ context: { organizationId: ownership.organizationId } })
+  return next({
+    context: {
+      organizationId: ownership.organizationId,
+      memberRole: ownership.role as (typeof STAFF_MEMBER_ROLES)[number],
+    },
+  })
 })
 
 export const businessProcedure = protectedProcedure.use(requireBusiness)
+
+/**
+ * The organization's owner only: its settings, and who else has access to
+ * it. Collaborators work on the records but can't change these.
+ */
+export const ownerProcedure = businessProcedure.use(
+  async ({ context, next }) => {
+    if (context.memberRole !== "owner") {
+      throw new ORPCError("FORBIDDEN", {
+        message: "Only the owner of the business can do this.",
+        data: { code: "OWNER_ONLY" },
+      })
+    }
+    return next()
+  }
+)

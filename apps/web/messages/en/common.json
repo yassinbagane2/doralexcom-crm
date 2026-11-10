@@ -81,6 +81,18 @@
     "DOCUMENT_NOT_FOUND": "This document no longer exists",
     "CONTENT_TOO_LARGE": "The document is too large to save. Try smaller images",
     "DOCUMENT_TYPE": "This kind of file can't be attached",
-    "DOCUMENT_SIZE": "The file is empty or larger than 10 MB"
+    "DOCUMENT_SIZE": "The file is empty or larger than 10 MB",
+    "OWNER_ONLY": "Only the owner of the business can do this",
+    "COLLABORATOR_NOT_FOUND": "That collaborator no longer exists",
+    "EMAIL_DELIVERY_FAILED": "The email couldn't be sent",
+    "EMAIL_SECRET_REQUIRED": "Enter the password or API key",
+    "INVALID_HOSTNAME": "That isn't a valid web address",
+    "HOSTNAME_RESERVED": "That address belongs to the platform",
+    "DOMAIN_TAKEN": "Another business already uses that address",
+    "DOMAIN_NOT_FOUND": "Add a web address first",
+    "INVALID_IBAN": "Check the IBAN: it doesn't add up",
+    "INVALID_LEGAL_STRUCTURE": "Choose a legal structure from the list",
+    "ORGANIZATION_FIELD_TOO_LONG": "One of the details is too long",
+    "PAYMENT_NOT_FOUND": "That payment no longer exists"
   }
 }

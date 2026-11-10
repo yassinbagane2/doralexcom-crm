@@ -229,7 +229,8 @@
     "monthlyHint": "Facturat lunar împreună cu chiria: {amount} în total.",
     "depositLine": "Garanție {amount}",
     "chargesLine": "{rent} chirie + {extras} cheltuieli și costuri",
-    "discountLine": "− {amount} reducere"
+    "discountLine": "− {amount} reducere",
+    "receipt": "Chitanță"
   },
   "Tenancy": {
     "metaTitle": "Locuința mea",

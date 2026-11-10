@@ -49,6 +49,7 @@ import {
   Phone,
   Plus,
   RefreshCw,
+  Receipt,
   Trash,
   UserCircle,
   Users,
@@ -536,6 +537,19 @@ function LeaseCard({
                   {payment.note}
                 </span>
                 <span className="tabular-nums">{money(payment.amount)}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t("receipt")}
+                  title={t("receipt")}
+                  render={
+                    <Link
+                      href={`${routes.tenants}/${tenant.id}/receipts/${payment.id}`}
+                    />
+                  }
+                >
+                  <Receipt size={12} />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon-xs"

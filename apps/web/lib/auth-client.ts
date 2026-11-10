@@ -1,5 +1,9 @@
 import { passkeyClient } from "@better-auth/passkey/client"
-import { organizationAdditionalFields } from "@workspace/auth/organization"
+import {
+  organizationAc,
+  organizationAdditionalFields,
+  organizationRoles,
+} from "@workspace/auth/organization"
 import { ac, roles } from "@workspace/auth/roles"
 import {
   adminClient,
@@ -10,17 +14,19 @@ import {
 } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
-import { env } from "@/env"
+import { serverUrl } from "@/lib/server-url"
 
 /** Talks to Better Auth on the API server, carrying the session cookie. */
 export const authClient = createAuthClient({
-  baseURL: env.NEXT_PUBLIC_SERVER_URL,
+  baseURL: serverUrl(),
   plugins: [
     emailOTPClient(),
     twoFactorClient(),
     passkeyClient(),
     adminClient({ ac, roles }),
     organizationClient({
+      ac: organizationAc,
+      roles: organizationRoles,
       schema: inferOrgAdditionalFields({
         organization: { additionalFields: organizationAdditionalFields },
       }),

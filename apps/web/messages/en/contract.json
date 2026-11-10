@@ -186,8 +186,13 @@
         "name": "Landlord name",
         "representative": "Landlord representative",
         "email": "Landlord email",
+        "legalStructure": "Landlord legal structure",
+        "address": "Landlord address",
         "taxId": "Landlord tax ID",
-        "registrationNumber": "Landlord registration number"
+        "registrationNumber": "Landlord registration number",
+        "vatNumber": "Landlord VAT number",
+        "bankName": "Landlord bank",
+        "iban": "Landlord IBAN"
       },
       "tenant": {
         "name": "Tenant name",

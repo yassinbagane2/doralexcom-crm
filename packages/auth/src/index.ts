@@ -15,12 +15,19 @@ import { openAPI } from "better-auth/plugins/open-api"
 import { organization } from "better-auth/plugins/organization"
 import { twoFactor } from "better-auth/plugins/two-factor"
 
+import { customDomainOrigins } from "./custom-domains"
 import { OTP_EXPIRES_IN, sendVerificationOTP } from "./email"
 import { env } from "./env"
 import {
   hasLegalIdentifiers,
+  isLegalStructure,
   isOrganizationType,
+  isValidIban,
+  normalizeIban,
+  ORGANIZATION_LIMITS,
+  organizationAc,
   organizationAdditionalFields,
+  organizationRoles,
 } from "./organization"
 import {
   ac,
@@ -55,8 +62,9 @@ const authOptions = {
   baseURL: env.NEXT_PUBLIC_SERVER_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema }),
-  // The web app calls the API from another origin; nothing else may.
-  trustedOrigins: [appUrl.origin],
+  // The web app calls the API from another origin; nothing else may. A
+  // business's verified domain serves the same app, so it counts too.
+  trustedOrigins: async () => [appUrl.origin, ...(await customDomainOrigins())],
   emailAndPassword: {
     enabled: true,
     // No public sign-up: admins create businesses, businesses create users.
@@ -132,6 +140,11 @@ const authOptions = {
       // Users join their business's organization, they never start their own.
       allowUserToCreateOrganization: async (user) =>
         getUserRole((user as { role?: string | null }).role) === "business",
+      // Owners run the organization; collaborators and tenants can't change
+      // it or its members through Better Auth's endpoints.
+      ac: organizationAc,
+      roles: organizationRoles,
+      creatorRole: "owner",
       schema: {
         organization: { additionalFields: organizationAdditionalFields },
       },
@@ -242,6 +255,67 @@ async function assertRoleChangeAllowed(
   }
 }
 
+const OPTIONAL_TEXT_FIELDS = [
+  "taxId",
+  "registrationNumber",
+  "legalStructure",
+  "address",
+  "vatNumber",
+  "bankName",
+  "iban",
+] as const
+
+function invalidField(code: string, message: string): never {
+  throw new APIError("BAD_REQUEST", { code, message })
+}
+
+/**
+ * Checks the business details Better Auth would otherwise store as sent: the
+ * legal structure must be a known one, text fits its column, the IBAN's check
+ * digits add up. An emptied field is stored as "not set".
+ */
+function normalizeBusinessDetails(data: Record<string, unknown>) {
+  const result: Record<string, unknown> = {}
+
+  for (const field of OPTIONAL_TEXT_FIELDS) {
+    const value = data[field]
+    if (value === undefined) continue
+    if (value === null || value === "") {
+      result[field] = null
+      continue
+    }
+    if (typeof value !== "string") {
+      invalidField("INVALID_ORGANIZATION_FIELD", `${field} must be text`)
+    }
+    result[field] = value.trim() || null
+  }
+
+  const { legalStructure, address, vatNumber, bankName, iban } = result
+  if (legalStructure != null && !isLegalStructure(legalStructure)) {
+    invalidField("INVALID_LEGAL_STRUCTURE", "Unknown legal structure")
+  }
+  const tooLong = (value: unknown, max: number) =>
+    typeof value === "string" && value.length > max
+  if (
+    tooLong(address, ORGANIZATION_LIMITS.address) ||
+    tooLong(bankName, ORGANIZATION_LIMITS.bankName) ||
+    tooLong(vatNumber, ORGANIZATION_LIMITS.vatNumber) ||
+    tooLong(result.registrationNumber, ORGANIZATION_LIMITS.registrationNumber)
+  ) {
+    invalidField("ORGANIZATION_FIELD_TOO_LONG", "A business detail is too long")
+  }
+  if (typeof vatNumber === "string") {
+    result.vatNumber = vatNumber.replace(/\s+/g, "").toUpperCase()
+  }
+  if (typeof iban === "string") {
+    if (!isValidIban(iban))
+      invalidField("INVALID_IBAN", "That IBAN isn't valid")
+    result.iban = normalizeIban(iban)
+  }
+
+  return result
+}
+
 /**
  * Rejects an unknown organization type, and clears identifiers that are empty
  * or don't apply to it: a personal landlord has no fiscal code, only businesses register with
@@ -253,11 +327,7 @@ function normalizeOrganizationFields(
 ) {
   const { type } = data
 
-  // Forms send "" for a field the user emptied; store that as "not set".
-  const cleared = {
-    ...(data.taxId === "" ? { taxId: null } : {}),
-    ...(data.registrationNumber === "" ? { registrationNumber: null } : {}),
-  }
+  const cleared = normalizeBusinessDetails(data)
 
   if (type === undefined && !requireType) return cleared
 
@@ -313,11 +383,33 @@ async function deleteSolelyOwnedOrganizations(userId: string) {
     owners.every((row) => row.organizationId !== id || row.userId === userId)
   )
 
-  if (soleOwned.length > 0) {
-    await db
-      .delete(schema.organization)
-      .where(inArray(schema.organization.id, soleOwned))
+  if (soleOwned.length === 0) return
+
+  // Collaborator accounts exist only to work in the owner's business: they
+  // go with it rather than being left without one.
+  const collaborators = await db
+    .select({ userId: schema.member.userId })
+    .from(schema.member)
+    .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+    .where(
+      and(
+        inArray(schema.member.organizationId, soleOwned),
+        eq(schema.member.role, "collaborator"),
+        eq(schema.user.role, "business")
+      )
+    )
+  if (collaborators.length > 0) {
+    await db.delete(schema.user).where(
+      inArray(
+        schema.user.id,
+        collaborators.map((row) => row.userId)
+      )
+    )
   }
+
+  await db
+    .delete(schema.organization)
+    .where(inArray(schema.organization.id, soleOwned))
 }
 
 export type Session = typeof auth.$Infer.Session

@@ -3,10 +3,10 @@ import { RPCLink } from "@orpc/client/fetch"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import type { AppRouterClient } from "@workspace/api/routers"
 
-import { env } from "@/env"
+import { serverUrl } from "@/lib/server-url"
 
 const link = new RPCLink({
-  url: `${env.NEXT_PUBLIC_SERVER_URL}/rpc`,
+  url: () => `${serverUrl()}/rpc`,
   fetch: (request, init) => fetch(request, { ...init, credentials: "include" }),
   // In the browser the cookie travels on its own. During server rendering
   // there is no browser, so forward the incoming request's cookie by hand.

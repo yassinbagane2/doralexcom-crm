@@ -75,6 +75,15 @@ pnpm auth:generate    # Regenerate the auth schema after changing Better Auth pl
 
 After `pnpm auth:generate`, run `pnpm db:generate` and `pnpm db:migrate` to apply the change.
 
+## Settings
+
+Under `/account`, everyone manages their profile, password, two-factor, passkeys, sessions and preferences. A business also gets:
+
+- **Business details** (owner): legal structure, address, tax, trade register and VAT numbers, bank and IBAN. Contracts use them as `landlord.*` merge fields, and each recorded payment has a printable receipt (`/tenants/<id>/receipts/<paymentId>`).
+- **Collaborators**: other `business` accounts working on the same records, as `collaborator` members of the organization. Only the owner invites or removes them (`ownerProcedure` in the API; Better Auth's organization roles block its own endpoints too). An invitation emails a link to choose a password; removing a collaborator deletes their account.
+- **Email** (owner): send the business's messages through Resend, Postmark or any SMTP server instead of the platform's. Secrets are encrypted with a key derived from `BETTER_AUTH_SECRET`; rotating it means re-entering them.
+- **Web address** (owner): a custom domain, verified through a TXT record and a CNAME to `CUSTOM_DOMAIN_TARGET`. Run `deploy/Caddyfile` in front of both apps: it issues HTTPS certificates on demand, only for verified domains, and serves the API on the same origin there. Passkeys only work on the platform's own address.
+
 ## Production
 
 - Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_SERVER_URL` to the deployed URLs. The API only accepts the web app's origin.

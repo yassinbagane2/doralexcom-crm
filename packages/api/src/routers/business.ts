@@ -51,7 +51,9 @@ export const businessRouter = o.prefix("/business").router({
         .where(
           and(
             eq(member.organizationId, context.organizationId),
-            ne(member.userId, context.session.user.id)
+            ne(member.userId, context.session.user.id),
+            // The owner and collaborators run the business; they aren't its users.
+            eq(user.role, "user")
           )
         )
         .orderBy(desc(user.createdAt))

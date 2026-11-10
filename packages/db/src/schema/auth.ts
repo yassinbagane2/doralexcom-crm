@@ -133,6 +133,20 @@ export const organization = pgTable("organization", {
   }).notNull(),
   taxId: text("tax_id"),
   registrationNumber: text("registration_number"),
+  legalStructure: text("legal_structure", {
+    enum: [
+      "individual",
+      "sole_trader",
+      "limited_company",
+      "joint_stock_company",
+      "association",
+      "other",
+    ],
+  }),
+  address: text("address"),
+  vatNumber: text("vat_number"),
+  bankName: text("bank_name"),
+  iban: text("iban"),
 })
 
 export const member = pgTable(

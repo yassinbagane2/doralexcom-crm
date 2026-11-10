@@ -283,3 +283,12 @@
     @apply bg-muted-foreground;
   }
 }
+
+/* Printing a page (a receipt) prints its content, not the app's chrome. */
+@media print {
+  [data-slot="sidebar"],
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-trigger"] {
+    display: none !important;
+  }
+}

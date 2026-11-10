@@ -1,0 +1,33 @@
+# Serves businesses' own web addresses (Settings → Web address) with
+# automatic HTTPS. Point CUSTOM_DOMAIN_TARGET's DNS at the machine running
+# this, and businesses CNAME their address to CUSTOM_DOMAIN_TARGET.
+#
+# Certificates are issued on demand, the first time a hostname is visited,
+# and only for hostnames the API says are a business's verified domain
+# (GET /tls/ask?domain=…), so nobody can make Caddy request certificates for
+# names that aren't ours to serve. Caddy renews them on its own.
+#
+# Adjust the upstreams to where the web app (3000) and API (3001) listen.
+
+{
+	on_demand_tls {
+		ask http://localhost:3001/tls/ask
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+
+	# On a business's domain the browser reaches the API on the same origin,
+	# which keeps the session cookie first-party (see apps/web/lib/server-url.ts).
+	@api path /rpc/* /api/auth/*
+	handle @api {
+		reverse_proxy localhost:3001
+	}
+
+	handle {
+		reverse_proxy localhost:3000
+	}
+}

@@ -4,11 +4,15 @@ import type { UserRole } from "@workspace/auth/roles"
 import {
   Building2,
   BuildingOffice,
+  Compass,
   Contact,
   FileText,
   Home,
   LayoutDashboard,
+  Lock,
   Logout,
+  Mail,
+  Settings,
   UserCircle,
   Users,
 } from "@workspace/ui/icons"
@@ -133,6 +137,7 @@ const useResolveRoutes = (
 /** The routes shown in the sidebar: the dashboard's, or the account pages'. */
 export const useGeneralRoutes = (
   role: UserRole,
+  isOwner: boolean,
   allowAll?: boolean
 ): RouteWithActive[] => {
   const t = useTranslations("Navigation")
@@ -140,8 +145,10 @@ export const useGeneralRoutes = (
 
   const list = useMemo(
     () =>
-      isAccountPage ? accountRoutesList(role, t) : generalRoutesList(role, t),
-    [role, t, isAccountPage]
+      isAccountPage
+        ? accountRoutesList(role, isOwner, t)
+        : generalRoutesList(role, t),
+    [role, isOwner, t, isAccountPage]
   )
 
   return useResolveRoutes(list, allowAll)
@@ -159,7 +166,10 @@ export const useDashboardHome = (role: UserRole) => {
   )
 }
 
-export const useDropdownMenuRoutes = (role: UserRole): DropdownMenuRoute[] => {
+export const useDropdownMenuRoutes = (
+  role: UserRole,
+  isOwner: boolean
+): DropdownMenuRoute[] => {
   const t = useTranslations("Navigation")
   const signOut = useSignOut()
   const { mutate, isPending } = signOut
@@ -168,35 +178,37 @@ export const useDropdownMenuRoutes = (role: UserRole): DropdownMenuRoute[] => {
     () =>
       getDropdownMenuRoutes({
         role,
+        isOwner,
         t,
         signOut: () => mutate(),
         signingOut: isPending,
       }).filter((route) => isAllowed(route.if)),
-    [role, t, mutate, isPending]
+    [role, isOwner, t, mutate, isPending]
   )
 }
 
 const getDropdownMenuRoutes = (ctx: {
   role: UserRole
+  isOwner: boolean
   t: Translate
   signOut: () => void
   signingOut: boolean
 }): DropdownMenuRoute[] => {
-  const { role, t, signOut, signingOut } = ctx
+  const { role, isOwner, t, signOut, signingOut } = ctx
 
   return [
     {
       id: "organization",
       title: t("organization"),
       icon: BuildingOffice,
-      // Only a business owns (and so can edit) an organization.
-      if: role === "business",
+      // Only the owner edits the business's details.
+      if: role === "business" && isOwner,
       href: routes.accountOrganization,
     },
     {
-      id: "profile",
-      title: t("profile"),
-      icon: UserCircle,
+      id: "settings",
+      title: t("settings"),
+      icon: Settings,
       href: routes.account,
     },
     {
@@ -234,13 +246,6 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
     },
     // Business routes
     {
-      id: "users",
-      title: t("users"),
-      icon: Users,
-      link: routes.users,
-      if: isBusiness,
-    },
-    {
       id: "properties",
       title: t("properties"),
       icon: Building2,
@@ -272,20 +277,66 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
   ]
 }
 
-const accountRoutesList = (role: UserRole, t: Translate): Route[] => [
-  {
-    id: "profile",
-    title: t("profile"),
-    icon: UserCircle,
-    link: routes.account,
-    // Every account page sits under this one, so only an exact match counts.
-    checkIsActive: (path) => path === routes.account,
-  },
-  {
-    id: "organization",
-    title: t("organization"),
-    icon: BuildingOffice,
-    link: routes.accountOrganization,
-    if: role === "business",
-  },
-]
+/**
+ * Settings. Everyone manages their own account; a business also sees who
+ * collaborates on it, and its owner the business's details, email service
+ * and web address.
+ */
+const accountRoutesList = (
+  role: UserRole,
+  isOwner: boolean,
+  t: Translate
+): Route[] => {
+  const isOwnerOfBusiness = role === "business" && isOwner
+
+  return [
+    {
+      id: "profile",
+      title: t("profile"),
+      icon: UserCircle,
+      link: routes.account,
+      // Every account page sits under this one, so only an exact match counts.
+      checkIsActive: (path) => path === routes.account,
+    },
+    {
+      id: "security",
+      title: t("security"),
+      icon: Lock,
+      link: routes.accountSecurity,
+    },
+    {
+      id: "preferences",
+      title: t("preferences"),
+      icon: Settings,
+      link: routes.accountPreferences,
+    },
+    {
+      id: "organization",
+      title: t("organization"),
+      icon: BuildingOffice,
+      link: routes.accountOrganization,
+      if: isOwnerOfBusiness,
+    },
+    {
+      id: "collaborators",
+      title: t("collaborators"),
+      icon: Users,
+      link: routes.accountCollaborators,
+      if: role === "business",
+    },
+    {
+      id: "email",
+      title: t("email"),
+      icon: Mail,
+      link: routes.accountEmail,
+      if: isOwnerOfBusiness,
+    },
+    {
+      id: "domain",
+      title: t("domain"),
+      icon: Compass,
+      link: routes.accountDomain,
+      if: isOwnerOfBusiness,
+    },
+  ]
+}

@@ -2,7 +2,10 @@
 
 import { useTranslations } from "next-intl"
 
-import { OrganizationForm } from "@/components/organization/organization-form"
+import {
+  EMPTY_ORGANIZATION_VALUES,
+  OrganizationForm,
+} from "@/components/organization/organization-form"
 import { useCreateOrganization } from "@/hooks/queries/organization"
 
 export function CreateOrganizationForm() {
@@ -11,11 +14,7 @@ export function CreateOrganizationForm() {
 
   return (
     <OrganizationForm
-      defaultValues={{
-        name: "",
-        taxId: "",
-        registrationNumber: "",
-      }}
+      defaultValues={EMPTY_ORGANIZATION_VALUES}
       submitLabel={t("submit")}
       isPending={create.isPending || create.isSuccess}
       onSubmit={(input) => create.mutate(input)}

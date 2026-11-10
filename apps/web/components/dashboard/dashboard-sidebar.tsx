@@ -30,11 +30,13 @@ import { DropdownMenuRoutes, NavigationRoutes } from "./dashboard-navigation"
 
 export function DashboardSidebar({
   role,
+  isOwner,
   name,
   email,
   organizationName,
 }: {
   role: UserRole
+  isOwner: boolean
   name: string
   email: string
   organizationName?: string
@@ -69,7 +71,7 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       <SidebarContent className="gap-4 p-2">
-        <NavigationRoutes role={role} />
+        <NavigationRoutes role={role} isOwner={isOwner} />
       </SidebarContent>
 
       <SidebarFooter>
@@ -104,7 +106,7 @@ export function DashboardSidebar({
                   </span>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuRoutes role={role} />
+                <DropdownMenuRoutes role={role} isOwner={isOwner} />
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

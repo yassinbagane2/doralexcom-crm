@@ -186,8 +186,13 @@
         "name": "Numele proprietarului",
         "representative": "Reprezentantul proprietarului",
         "email": "Emailul proprietarului",
+        "legalStructure": "Forma juridică a proprietarului",
+        "address": "Adresa proprietarului",
         "taxId": "CUI-ul proprietarului",
-        "registrationNumber": "Nr. de înregistrare al proprietarului"
+        "registrationNumber": "Nr. de înregistrare al proprietarului",
+        "vatNumber": "Codul TVA al proprietarului",
+        "bankName": "Banca proprietarului",
+        "iban": "IBAN-ul proprietarului"
       },
       "tenant": {
         "name": "Numele chiriașului",

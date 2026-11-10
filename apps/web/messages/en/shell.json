@@ -15,7 +15,12 @@
     "openMenu": "Open account menu",
     "signOut": "Sign out",
     "adminBadge": "Admin",
-    "templates": "Templates"
+    "templates": "Templates",
+    "businessDetails": "Business details",
+    "collaborators": "Collaborators",
+    "email": "Email",
+    "domain": "Web address",
+    "settings": "Settings"
   },
   "Preferences": {
     "metaTitle": "Preferences",

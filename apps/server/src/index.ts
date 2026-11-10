@@ -8,6 +8,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
 import { createContext } from "@workspace/api/context"
 import { appRouter } from "@workspace/api/routers"
 import { auth } from "@workspace/auth"
+import { isActiveCustomDomain } from "@workspace/auth/custom-domains"
 import { Hono } from "hono"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
@@ -32,7 +33,51 @@ app.use(
   })
 )
 
-app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
+/** The hostname a request was made to, as the browser saw it (no port). */
+function requestHostname(headers: Headers) {
+  const host =
+    headers.get("x-forwarded-host")?.split(",")[0]?.trim() ??
+    headers.get("host") ??
+    ""
+  return host.replace(/:\d+$/, "").toLowerCase()
+}
+
+/**
+ * On a business's own domain (proxied here by deploy/Caddyfile), cookies
+ * must belong to that host: a `Domain=` naming the platform's parent domain
+ * would make the browser drop them.
+ */
+async function scopeCookiesToHost(request: Request, response: Response) {
+  const cookies = response.headers.getSetCookie()
+  if (cookies.length === 0) return response
+  if (!(await isActiveCustomDomain(requestHostname(request.headers)))) {
+    return response
+  }
+
+  const scoped = new Response(response.body, response)
+  scoped.headers.delete("set-cookie")
+  for (const cookie of cookies) {
+    scoped.headers.append("set-cookie", cookie.replace(/;\s*domain=[^;]*/i, ""))
+  }
+  return scoped
+}
+
+app.on(["GET", "POST"], "/api/auth/*", async (c) =>
+  scopeCookiesToHost(c.req.raw, await auth.handler(c.req.raw))
+)
+
+/**
+ * Caddy's on-demand TLS asks here before getting a certificate for a
+ * hostname it hasn't seen (see deploy/Caddyfile): yes for a business's
+ * verified domain, no for anything else, so nobody can make it request
+ * certificates for arbitrary names.
+ */
+app.get("/tls/ask", async (c) => {
+  const domain = c.req.query("domain")?.toLowerCase()
+  return domain && (await isActiveCustomDomain(domain))
+    ? c.text("OK")
+    : c.text("Unknown domain", 404)
+})
 
 // The largest requests are documents: 10 MB uploads, and contracts whose
 // pictures travel inline (up to 15 MB of content). Anything bigger is refused
