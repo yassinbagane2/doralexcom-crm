@@ -33,20 +33,18 @@ export function DashboardSidebar({
   isOwner,
   name,
   email,
-  organizationName,
 }: {
   role: UserRole
   isOwner: boolean
   name: string
   email: string
-  organizationName?: string
 }) {
   const t = useTranslations("Navigation")
   const tCommon = useTranslations("Common")
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
-  // Admins run the platform; everyone else works inside an organization.
-  const subtitle = role === "admin" ? t("adminBadge") : organizationName
+  // Admins run the platform, so they get a badge next to the name.
+  const subtitle = role === "admin" ? t("adminBadge") : undefined
 
   return (
     <Sidebar variant="inset" collapsible="icon">

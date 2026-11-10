@@ -1,6 +1,6 @@
 {
   "Common": {
-    "appName": "Tube",
+    "appName": "Tenora",
     "save": "Salvează",
     "saveChanges": "Salvează modificările",
     "cancel": "Anulează",
@@ -83,7 +83,6 @@
     "DOCUMENT_TYPE": "Acest tip de fișier nu poate fi atașat",
     "DOCUMENT_SIZE": "Fișierul este gol sau mai mare de 10 MB",
     "OWNER_ONLY": "Doar proprietarul firmei poate face asta",
-    "COLLABORATOR_NOT_FOUND": "Colaboratorul nu mai există",
     "EMAIL_DELIVERY_FAILED": "Emailul nu a putut fi trimis",
     "EMAIL_SECRET_REQUIRED": "Introdu parola sau cheia API",
     "INVALID_HOSTNAME": "Aceasta nu este o adresă web validă",
@@ -93,6 +92,22 @@
     "INVALID_IBAN": "Verifică IBAN-ul: cifrele de control nu se potrivesc",
     "INVALID_LEGAL_STRUCTURE": "Alege o formă juridică din listă",
     "ORGANIZATION_FIELD_TOO_LONG": "Unul dintre câmpuri este prea lung",
-    "PAYMENT_NOT_FOUND": "Plata nu mai există"
+    "PAYMENT_NOT_FOUND": "Plata nu mai există",
+    "INVITATION_NOT_FOUND": "Această invitație nu mai este valabilă",
+    "INVITATION_EXPIRED": "Această invitație a expirat. Cere una nouă.",
+    "INVITATION_REQUIRED": "Ai nevoie de o invitație ca să îți creezi un cont",
+    "INVITATION_EMAIL_MISMATCH": "Folosește adresa de email la care a fost trimisă invitația",
+    "INVITATION_ROLE_NOT_ALLOWED": "Invitațiile pot adăuga doar colaboratori",
+    "EMAIL_HAS_ACCOUNT": "Această adresă are deja un cont la altă firmă sau ca chiriaș",
+    "ACCOUNT_CANNOT_JOIN": "Acest cont nu se poate alătura altei firme",
+    "USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION": "Persoana face deja parte din firma ta",
+    "USER_IS_ALREADY_INVITED_TO_THIS_ORGANIZATION": "Persoana a fost deja invitată",
+    "INVITATION_LIMIT_REACHED": "Ai prea multe invitații în așteptare. Anulează câteva mai întâi.",
+    "YOU_ARE_NOT_THE_RECIPIENT_OF_THE_INVITATION": "Această invitație a fost trimisă altei adrese de email",
+    "YOU_ARE_NOT_ALLOWED_TO_INVITE_USERS_TO_THIS_ORGANIZATION": "Doar proprietarul firmei poate invita persoane",
+    "YOU_ARE_NOT_ALLOWED_TO_CANCEL_THIS_INVITATION": "Doar proprietarul firmei poate anula invitații",
+    "YOU_ARE_NOT_ALLOWED_TO_DELETE_THIS_MEMBER": "Doar proprietarul firmei poate elimina persoane",
+    "MEMBER_NOT_FOUND": "Persoana nu mai face parte din firmă",
+    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "Firma a atins numărul maxim de membri"
   }
 }

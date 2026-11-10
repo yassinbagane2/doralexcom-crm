@@ -5,6 +5,8 @@ export const routes = {
   signIn: "/sign-in",
   forgotPassword: "/forgot-password",
   twoFactor: "/two-factor",
+  /** Public: where an invitation email lands, signed in or not. */
+  invite: "/invite",
   onboarding: "/onboarding",
   account: "/account",
   accountSecurity: "/account/security",
@@ -29,6 +31,17 @@ export const routes = {
   admin: "/admin",
   adminUsers: "/admin/users",
 } as const
+
+/** The page for one invitation, and its create-account step. */
+export function inviteRoute(invitationId: string, step?: "create-account") {
+  const path = `${routes.invite}/${encodeURIComponent(invitationId)}`
+  return step ? `${path}/${step}` : path
+}
+
+/** Sign-in, coming back to `path` afterwards. */
+export function signInRoute(path: string) {
+  return `${routes.signIn}?${new URLSearchParams({ [REDIRECT_PARAM]: path })}`
+}
 
 /** Where each kind of account starts out after signing in. */
 export function homeRouteFor(role: UserRole) {

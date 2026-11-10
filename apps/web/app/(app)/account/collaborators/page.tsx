@@ -27,6 +27,7 @@ export default async function CollaboratorsPage() {
         <Collaborators
           isOwner={role === "owner"}
           currentUserId={user.id}
+          organizationId={organization.id}
           organizationName={organization.name}
         />
       </SettingsSection>

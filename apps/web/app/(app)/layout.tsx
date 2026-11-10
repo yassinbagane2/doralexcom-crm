@@ -13,7 +13,7 @@ export default async function AppLayout({
   const role = getUserRole(user.role)
   // Admins run the platform from outside any organization. Everyone else
   // works inside one; a business without one yet goes to onboarding.
-  const organization = role === "admin" ? null : await requireOrganization()
+  if (role !== "admin") await requireOrganization()
   const isOwner = role === "business" && (await getMemberRole()) === "owner"
 
   return (
@@ -22,7 +22,6 @@ export default async function AppLayout({
       isOwner={isOwner}
       name={user.name}
       email={user.email}
-      organizationName={organization?.name}
     >
       {children}
     </DashboardLayout>

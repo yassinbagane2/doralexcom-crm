@@ -3,7 +3,7 @@ import type { RouterClient } from "@orpc/server"
 import { publicProcedure } from "../index"
 import { adminRouter } from "./admin"
 import { businessRouter } from "./business"
-import { collaboratorRouter } from "./collaborator"
+import { collaboratorRouter, invitationRouter } from "./collaborator"
 import { contractRouter } from "./contract"
 import { documentRouter } from "./document"
 import { leaseRouter } from "./lease"
@@ -25,6 +25,7 @@ export const appRouter = {
   contract: contractRouter,
   document: documentRouter,
   collaborator: collaboratorRouter,
+  invitation: invitationRouter,
   settings: settingsRouter,
 }
 

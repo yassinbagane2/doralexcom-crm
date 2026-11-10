@@ -16,7 +16,7 @@ export const env = createEnv({
     AUTH_COOKIE_DOMAIN: z.string().min(1).optional(),
     /** Without a key, emails are printed to the server console instead. */
     RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().min(1).default("Tube <onboarding@resend.dev>"),
+    EMAIL_FROM: z.string().min(1).default("Tenora <onboarding@resend.dev>"),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

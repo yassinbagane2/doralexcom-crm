@@ -108,7 +108,7 @@ const openApiHandler = new OpenAPIHandler(appRouter, {
     new OpenAPIReferencePlugin({
       schemaConverters: [new ZodToJsonSchemaConverter()],
       specGenerateOptions: async () => ({
-        info: { title: "Tube API", version: "0.0.1" },
+        info: { title: "Tenora API", version: "0.0.1" },
         servers: [{ url: `${env.NEXT_PUBLIC_SERVER_URL}/api-reference` }],
         paths: await getAuthPaths(),
       }),

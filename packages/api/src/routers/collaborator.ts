@@ -1,32 +1,38 @@
-import { randomBytes } from "node:crypto"
-
 import { ORPCError } from "@orpc/server"
 import { auth } from "@workspace/auth"
+import {
+  INVITATION_EXPIRES_IN_DAYS,
+  INVITATION_ROLE,
+} from "@workspace/auth/organization"
 import { db } from "@workspace/db"
 import {
   customDomain,
+  invitation,
   member,
   organization,
   session,
   user,
 } from "@workspace/db/schema"
-import { and, asc, eq, exists, inArray, max, sql } from "drizzle-orm"
+import { and, asc, eq, inArray, max } from "drizzle-orm"
 import { z } from "zod"
 
 import { env } from "../env"
-import { businessProcedure, o, ownerProcedure } from "../index"
+import { businessProcedure, o, ownerProcedure, publicProcedure } from "../index"
 import { callAuth } from "../lib/auth-error"
 import { deliveryFailed, sendOrganizationEmail } from "../lib/mailer"
 
 /*
- * Collaborators: other `business` accounts the owner lets into the
- * organization, to work on the same records. Only the owner adds or removes
- * them. Their account exists for this business alone, so removing a
- * collaborator deletes it.
+ * Collaborators: other `business` accounts working on the organization's
+ * records. The owner invites them through Better Auth's organization plugin;
+ * the invitation is emailed from here so it goes out through the business's
+ * own email service. The invitee accepts on /invite/{id}, creating their
+ * account there if they don't have one. Listing invitations, cancelling them
+ * and removing members go straight to the plugin from the web app.
  */
 
 const collaboratorSchema = z.object({
   id: z.string(),
+  memberId: z.string(),
   name: z.string(),
   email: z.string(),
   role: z.enum(["owner", "collaborator"]),
@@ -35,37 +41,12 @@ const collaboratorSchema = z.object({
   lastActiveAt: z.date().nullable(),
 })
 
-function collaboratorNotFound() {
+function invitationNotFound() {
   return new ORPCError("NOT_FOUND", {
-    message: "Collaborator not found.",
-    data: { code: "COLLABORATOR_NOT_FOUND" },
+    message: "Invitation not found.",
+    data: { code: "INVITATION_NOT_FOUND" },
   })
 }
-
-/** A collaborator of this organization (never its owner). */
-const collaboratorOf = (organizationId: string, userId: string) =>
-  and(
-    eq(user.id, userId),
-    eq(user.role, "business"),
-    exists(
-      db
-        .select({ one: sql`1` })
-        .from(member)
-        .where(
-          and(
-            eq(member.userId, user.id),
-            eq(member.organizationId, organizationId),
-            eq(member.role, "collaborator")
-          )
-        )
-    )
-  )
-
-/**
- * A password nobody knows, meeting the policy (an uppercase letter and a
- * special character): the collaborator chooses their own from the email.
- */
-const unusablePassword = () => `${randomBytes(24).toString("base64url")}A!`
 
 /** Where the invitation sends them: the business's own domain, if it has one. */
 async function appOrigin(organizationId: string) {
@@ -81,28 +62,50 @@ async function appOrigin(organizationId: string) {
 
 async function sendInvitation(
   organizationId: string,
-  invitee: { name: string; email: string },
-  inviterName: string
+  invite: { id: string; email: string },
+  inviter: { name: string; email: string }
 ) {
   const [org] = await db
     .select({ name: organization.name })
     .from(organization)
     .where(eq(organization.id, organizationId))
-  const link = new URL("/forgot-password", await appOrigin(organizationId))
-  link.searchParams.set("email", invitee.email)
-  link.searchParams.set("invited", "1")
+  const businessName = org?.name ?? "their business"
+  const link = new URL(`/invite/${invite.id}`, await appOrigin(organizationId))
 
   await sendOrganizationEmail(organizationId, {
-    to: invitee.email,
-    subject: `${inviterName} invited you to ${org?.name ?? "their business"}`,
+    to: invite.email,
+    subject: `${inviter.name} invited you to join ${businessName}`,
     text: [
-      `Hi ${invitee.name},`,
-      `${inviterName} invited you to work with them on ${org?.name ?? "their business"}: its properties, tenants, contracts and payments.`,
-      `Choose a password to get started:\n${link.toString()}`,
-      `Your sign-in email is ${invitee.email}. If you weren't expecting this, you can ignore this email.`,
+      `Hi,`,
+      `${inviter.name} (${inviter.email}) invited you to work with them on ${businessName}: its properties, tenants, contracts and payments.`,
+      `Accept the invitation:\n${link.toString()}`,
+      `It expires in ${INVITATION_EXPIRES_IN_DAYS} days. If you weren't expecting this, you can ignore this email.`,
     ].join("\n\n"),
   })
 }
+
+/** Creates (or, with `resend`, renews) an invitation through Better Auth. */
+function createInvitation(
+  headers: Headers,
+  organizationId: string,
+  email: string,
+  resend = false
+) {
+  return callAuth(() =>
+    auth.api.createInvitation({
+      headers,
+      body: { email, role: INVITATION_ROLE, organizationId, resend },
+    })
+  )
+}
+
+const invitationStatusSchema = z.enum([
+  "pending",
+  "accepted",
+  "rejected",
+  "canceled",
+  "expired",
+])
 
 export const collaboratorRouter = o.prefix("/collaborators").router({
   /** The owner and every collaborator. Collaborators see the list too. */
@@ -122,6 +125,7 @@ export const collaboratorRouter = o.prefix("/collaborators").router({
       const rows = await db
         .select({
           id: user.id,
+          memberId: member.id,
           name: user.name,
           email: user.email,
           role: member.role,
@@ -147,47 +151,25 @@ export const collaboratorRouter = o.prefix("/collaborators").router({
     }),
 
   invite: ownerProcedure
-    .route({ method: "POST", path: "/", tags: ["collaborators"] })
+    .route({ method: "POST", path: "/invitations", tags: ["collaborators"] })
     .input(
       z.object({
-        name: z.string().trim().min(1).max(100),
         email: z.email().transform((email) => email.toLowerCase()),
       })
     )
     .output(z.object({ id: z.string(), emailSent: z.boolean() }))
     .handler(async ({ input, context }) => {
-      const { user: created } = await callAuth(() =>
-        auth.api.createUser({
-          body: {
-            name: input.name,
-            email: input.email,
-            password: unusablePassword(),
-            role: "business",
-          },
-        })
+      const created = await createInvitation(
+        context.headers,
+        context.organizationId,
+        input.email
       )
 
-      try {
-        await callAuth(() =>
-          auth.api.addMember({
-            body: {
-              userId: created.id,
-              organizationId: context.organizationId,
-              role: "collaborator",
-            },
-          })
-        )
-      } catch (error) {
-        // A business account outside any organization would be stranded.
-        await db.delete(user).where(eq(user.id, created.id))
-        throw error
-      }
-
-      // The account stands either way; a failed email can be resent.
+      // The invitation stands either way; a failed email can be resent.
       const emailSent = await sendInvitation(
         context.organizationId,
-        input,
-        context.session.user.name
+        created,
+        context.session.user
       ).then(
         () => true,
         (error: unknown) => {
@@ -199,41 +181,108 @@ export const collaboratorRouter = o.prefix("/collaborators").router({
       return { id: created.id, emailSent }
     }),
 
+  /**
+   * Emails the invitation again. A pending one keeps its link and gets a
+   * fresh expiry; an expired, declined or canceled one is replaced.
+   */
   resendInvitation: ownerProcedure
     .route({
       method: "POST",
-      path: "/{userId}/invitation",
+      path: "/invitations/{invitationId}/resend",
       tags: ["collaborators"],
     })
-    .input(z.object({ userId: z.uuid() }))
-    .output(z.object({ success: z.boolean() }))
+    .input(z.object({ invitationId: z.uuid() }))
+    .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
-      const [found] = await db
-        .select({ name: user.name, email: user.email })
-        .from(user)
-        .where(collaboratorOf(context.organizationId, input.userId))
-      if (!found) throw collaboratorNotFound()
+      const found = await db.query.invitation.findFirst({
+        where: and(
+          eq(invitation.id, input.invitationId),
+          eq(invitation.organizationId, context.organizationId),
+          inArray(invitation.status, ["pending", "rejected", "canceled"])
+        ),
+        columns: { email: true },
+      })
+      if (!found) throw invitationNotFound()
 
+      const renewed = await createInvitation(
+        context.headers,
+        context.organizationId,
+        found.email,
+        true
+      )
       await sendInvitation(
         context.organizationId,
-        found,
-        context.session.user.name
+        renewed,
+        context.session.user
       ).catch(deliveryFailed)
-      return { success: true }
+
+      return { id: renewed.id }
     }),
+})
 
-  /** Deletes the collaborator's account, signing them out everywhere. */
-  remove: ownerProcedure
-    .route({ method: "DELETE", path: "/{userId}", tags: ["collaborators"] })
-    .input(z.object({ userId: z.uuid() }))
-    .output(z.object({ success: z.boolean() }))
-    .handler(async ({ input, context }) => {
-      const deleted = await db
-        .delete(user)
-        .where(collaboratorOf(context.organizationId, input.userId))
-        .returning({ id: user.id })
+/**
+ * What the invitation page shows to whoever holds the link, signed in or not.
+ * The id is a random UUID that only went to the invited address.
+ */
+export const invitationRouter = o.prefix("/invitations").router({
+  get: publicProcedure
+    .route({ method: "GET", path: "/{invitationId}", tags: ["invitations"] })
+    .input(z.object({ invitationId: z.string() }))
+    .output(
+      z.object({
+        id: z.string(),
+        email: z.string(),
+        role: z.string(),
+        status: invitationStatusSchema,
+        expiresAt: z.date(),
+        organizationName: z.string(),
+        inviter: z.object({ name: z.string(), email: z.string() }),
+        inviteeHasAccount: z.boolean(),
+      })
+    )
+    .handler(async ({ input }) => {
+      if (!z.uuid().safeParse(input.invitationId).success) {
+        throw invitationNotFound()
+      }
 
-      if (deleted.length === 0) throw collaboratorNotFound()
-      return { success: true }
+      const [found] = await db
+        .select({
+          id: invitation.id,
+          email: invitation.email,
+          role: invitation.role,
+          status: invitation.status,
+          expiresAt: invitation.expiresAt,
+          organizationName: organization.name,
+          inviterName: user.name,
+          inviterEmail: user.email,
+        })
+        .from(invitation)
+        .innerJoin(organization, eq(organization.id, invitation.organizationId))
+        .innerJoin(user, eq(user.id, invitation.inviterId))
+        .where(eq(invitation.id, input.invitationId))
+      if (!found) throw invitationNotFound()
+
+      const invitee = await db.query.user.findFirst({
+        where: eq(user.email, found.email.toLowerCase()),
+        columns: { id: true },
+      })
+
+      const status = invitationStatusSchema
+        .catch("canceled")
+        .parse(found.status)
+
+      return {
+        id: found.id,
+        email: found.email,
+        role: found.role ?? INVITATION_ROLE,
+        status:
+          status === "pending" && found.expiresAt < new Date()
+            ? "expired"
+            : status,
+        expiresAt: found.expiresAt,
+        organizationName: found.organizationName,
+        inviter: { name: found.inviterName, email: found.inviterEmail },
+        inviteeHasAccount: Boolean(invitee),
+      }
     }),
 })

@@ -16,10 +16,16 @@ import { organization } from "better-auth/plugins/organization"
 import { twoFactor } from "better-auth/plugins/two-factor"
 
 import { customDomainOrigins } from "./custom-domains"
-import { OTP_EXPIRES_IN, sendVerificationOTP } from "./email"
+import {
+  OTP_EXPIRES_IN,
+  sendInvitationResponse,
+  sendVerificationOTP,
+} from "./email"
 import { env } from "./env"
 import {
   hasLegalIdentifiers,
+  INVITATION_EXPIRES_IN_DAYS,
+  INVITATION_ROLE,
   isLegalStructure,
   isOrganizationType,
   isValidIban,
@@ -42,7 +48,7 @@ import {
   PASSWORD_MIN_LENGTH,
 } from "./password"
 
-const APP_NAME = "Tube"
+const APP_NAME = "Tenora"
 const isProduction = process.env.NODE_ENV === "production"
 
 /** Endpoints that set a new password, mapped to the body field carrying it. */
@@ -68,7 +74,9 @@ const authOptions = {
   emailAndPassword: {
     enabled: true,
     // No public sign-up: admins create businesses, businesses create users.
-    disableSignUp: true,
+    // The one exception is someone accepting a collaborator invitation, which
+    // `databaseHooks.user.create` checks before the account is made.
+    disableSignUp: false,
     autoSignIn: true,
     minPasswordLength: PASSWORD_MIN_LENGTH,
     maxPasswordLength: PASSWORD_MAX_LENGTH,
@@ -78,7 +86,9 @@ const authOptions = {
   },
   emailVerification: {
     // Delivered as a one-time code: emailOTP below overrides the default link.
-    sendOnSignUp: true,
+    // Not on sign-up: the only sign-up is through an emailed invitation, which
+    // already proves the address.
+    sendOnSignUp: false,
   },
   user: {
     deleteUser: { enabled: true },
@@ -145,6 +155,13 @@ const authOptions = {
       ac: organizationAc,
       roles: organizationRoles,
       creatorRole: "owner",
+      invitationExpiresIn: INVITATION_EXPIRES_IN_DAYS * 24 * 60 * 60,
+      // Inviting the same email again replaces the pending invitation.
+      cancelPendingInvitationsOnReInvite: true,
+      // Invitation ids are random UUIDs, sent only to the invited address.
+      requireEmailVerificationOnInvitation: false,
+      // No `sendInvitationEmail`: the API's collaborator router creates the
+      // invitation and emails it through the business's own email service.
       schema: {
         organization: { additionalFields: organizationAdditionalFields },
       },
@@ -160,6 +177,58 @@ const authOptions = {
             requireType: false,
           }),
         }),
+        // Invitations bring in collaborators, and only people whose account
+        // can become one: a new email, or a business account without a
+        // business of its own.
+        beforeCreateInvitation: async ({ invitation }) => {
+          if (invitation.role !== INVITATION_ROLE) {
+            throw new APIError("BAD_REQUEST", {
+              code: "INVITATION_ROLE_NOT_ALLOWED",
+              message: "Invitations can only add collaborators",
+            })
+          }
+          const existing = await db.query.user.findFirst({
+            where: eq(schema.user.email, invitation.email.toLowerCase()),
+            columns: { id: true, role: true },
+          })
+          if (existing && !(await canJoinAsCollaborator(existing))) {
+            throw new APIError("BAD_REQUEST", {
+              code: "EMAIL_HAS_ACCOUNT",
+              message: "That email already has an account elsewhere",
+            })
+          }
+        },
+        beforeAcceptInvitation: async ({ user }) => {
+          if (!(await canJoinAsCollaborator(user))) {
+            throw new APIError("FORBIDDEN", {
+              code: "ACCOUNT_CANNOT_JOIN",
+              message: "This account can't join another business",
+            })
+          }
+        },
+        afterAcceptInvitation: async ({ invitation, organization }) => {
+          await notifyOwners(organization, invitation.email, true)
+        },
+        afterRejectInvitation: async ({ invitation, organization }) => {
+          await notifyOwners(organization, invitation.email, false)
+        },
+        // A collaborator's account exists for this business alone: removing
+        // them deletes it, signing them out everywhere, rather than leaving a
+        // business account free to set up a business of its own.
+        afterRemoveMember: async ({ member, user }) => {
+          if (member.role !== INVITATION_ROLE) return
+          if (
+            getUserRole((user as { role?: string | null }).role) !== "business"
+          )
+            return
+          const remaining = await db.query.member.findFirst({
+            where: eq(schema.member.userId, user.id),
+            columns: { id: true },
+          })
+          if (!remaining) {
+            await db.delete(schema.user).where(eq(schema.user.id, user.id))
+          }
+        },
       },
     }),
     passkey({
@@ -172,6 +241,12 @@ const authOptions = {
   ],
   databaseHooks: {
     user: {
+      create: {
+        before: async (user, ctx) => {
+          if (ctx?.path !== "/sign-up/email") return
+          return { data: await acceptSignUpInvitation(user, ctx.query) }
+        },
+      },
       delete: {
         // Memberships go with the user (FK cascade), but an organization they
         // own would be left behind with nobody able to manage it. Remove those,
@@ -342,6 +417,96 @@ function normalizeOrganizationFields(
     ...cleared,
     ...(hasLegalIdentifiers(type) ? {} : { taxId: null }),
     ...(type === "business" ? {} : { registrationNumber: null }),
+  }
+}
+
+/**
+ * Whether an account may become a collaborator: a business account that
+ * doesn't already belong to a business. Admins, tenants and anyone already
+ * working somewhere can't; the app has one business per account.
+ */
+async function canJoinAsCollaborator(user: {
+  id: string
+  role?: string | null
+}) {
+  if (getUserRole(user.role) !== "business") return false
+  const membership = await db.query.member.findFirst({
+    where: eq(schema.member.userId, user.id),
+    columns: { id: true },
+  })
+  return !membership
+}
+
+function invitationError(code: string, message: string): never {
+  throw new APIError("BAD_REQUEST", { code, message })
+}
+
+/**
+ * Sign-up is open only to the person a pending invitation was sent to, who
+ * passes its id as `?invitationId=`. Their account is a business account, and
+ * their email counts as verified: the invitation reached it. The client then
+ * accepts the invitation to join.
+ */
+async function acceptSignUpInvitation<T extends { email: string }>(
+  user: T,
+  query: unknown
+) {
+  const invitationId = (query as { invitationId?: unknown } | undefined)
+    ?.invitationId
+  if (
+    typeof invitationId !== "string" ||
+    !/^[0-9a-f-]{36}$/i.test(invitationId)
+  ) {
+    invitationError("INVITATION_REQUIRED", "Sign-up needs an invitation")
+  }
+
+  const invitation = await db.query.invitation.findFirst({
+    where: eq(schema.invitation.id, invitationId),
+    columns: { email: true, status: true, expiresAt: true, role: true },
+  })
+  if (!invitation || invitation.status !== "pending") {
+    invitationError(
+      "INVITATION_NOT_FOUND",
+      "This invitation is no longer valid"
+    )
+  }
+  if (invitation.expiresAt < new Date()) {
+    invitationError("INVITATION_EXPIRED", "This invitation has expired")
+  }
+  if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
+    invitationError(
+      "INVITATION_EMAIL_MISMATCH",
+      "Sign up with the email the invitation was sent to"
+    )
+  }
+
+  return { ...user, role: "business", emailVerified: true }
+}
+
+async function notifyOwners(
+  organization: { id: string; name: string },
+  inviteeEmail: string,
+  accepted: boolean
+) {
+  const owners = await db
+    .select({ name: schema.user.name, email: schema.user.email })
+    .from(schema.member)
+    .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+    .where(
+      and(
+        eq(schema.member.organizationId, organization.id),
+        eq(schema.member.role, "owner")
+      )
+    )
+
+  for (const owner of owners) {
+    sendInvitationResponse({
+      to: owner.email,
+      ownerName: owner.name,
+      inviteeEmail,
+      organizationName: organization.name,
+      accepted,
+    })
   }
 }
 

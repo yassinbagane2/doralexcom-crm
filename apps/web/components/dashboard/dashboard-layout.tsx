@@ -15,7 +15,6 @@ export async function DashboardLayout({
   isOwner,
   name,
   email,
-  organizationName,
   children,
 }: {
   role: UserRole
@@ -23,7 +22,6 @@ export async function DashboardLayout({
   isOwner: boolean
   name: string
   email: string
-  organizationName?: string
   children: React.ReactNode
 }) {
   const defaultOpen = (await cookies()).get("sidebar_state")?.value !== "false"
@@ -36,7 +34,6 @@ export async function DashboardLayout({
           isOwner={isOwner}
           name={name}
           email={email}
-          organizationName={organizationName}
         />
         <SidebarInset className="min-h-0 bg-transparent md:my-2 md:mr-2 md:rounded-none! md:shadow-none!">
           <div className="flex items-center border-b p-3 md:hidden print:hidden">

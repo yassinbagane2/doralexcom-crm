@@ -1,6 +1,6 @@
 {
   "Common": {
-    "appName": "Tube",
+    "appName": "Tenora",
     "save": "Save",
     "saveChanges": "Save changes",
     "cancel": "Cancel",
@@ -83,7 +83,6 @@
     "DOCUMENT_TYPE": "This kind of file can't be attached",
     "DOCUMENT_SIZE": "The file is empty or larger than 10 MB",
     "OWNER_ONLY": "Only the owner of the business can do this",
-    "COLLABORATOR_NOT_FOUND": "That collaborator no longer exists",
     "EMAIL_DELIVERY_FAILED": "The email couldn't be sent",
     "EMAIL_SECRET_REQUIRED": "Enter the password or API key",
     "INVALID_HOSTNAME": "That isn't a valid web address",
@@ -93,6 +92,22 @@
     "INVALID_IBAN": "Check the IBAN: it doesn't add up",
     "INVALID_LEGAL_STRUCTURE": "Choose a legal structure from the list",
     "ORGANIZATION_FIELD_TOO_LONG": "One of the details is too long",
-    "PAYMENT_NOT_FOUND": "That payment no longer exists"
+    "PAYMENT_NOT_FOUND": "That payment no longer exists",
+    "INVITATION_NOT_FOUND": "This invitation is no longer valid",
+    "INVITATION_EXPIRED": "This invitation has expired. Ask for a new one.",
+    "INVITATION_REQUIRED": "You need an invitation to create an account",
+    "INVITATION_EMAIL_MISMATCH": "Use the email the invitation was sent to",
+    "INVITATION_ROLE_NOT_ALLOWED": "Invitations can only add collaborators",
+    "EMAIL_HAS_ACCOUNT": "That email already has an account with another business or as a tenant",
+    "ACCOUNT_CANNOT_JOIN": "This account can't join another business",
+    "USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION": "That person is already part of your business",
+    "USER_IS_ALREADY_INVITED_TO_THIS_ORGANIZATION": "That person has already been invited",
+    "INVITATION_LIMIT_REACHED": "You have too many pending invitations. Cancel some first.",
+    "YOU_ARE_NOT_THE_RECIPIENT_OF_THE_INVITATION": "This invitation was sent to another email",
+    "YOU_ARE_NOT_ALLOWED_TO_INVITE_USERS_TO_THIS_ORGANIZATION": "Only the owner of the business can invite people",
+    "YOU_ARE_NOT_ALLOWED_TO_CANCEL_THIS_INVITATION": "Only the owner of the business can cancel invitations",
+    "YOU_ARE_NOT_ALLOWED_TO_DELETE_THIS_MEMBER": "Only the owner of the business can remove people",
+    "MEMBER_NOT_FOUND": "That person is no longer part of the business",
+    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "This business has reached its member limit"
   }
 }

@@ -8,7 +8,7 @@ import type {
 import { motion, useAnimate } from "motion/react"
 
 const LogoutIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
-  ({ size = 24, color = "#FFFFFF", strokeWidth = 2, className = "" }, ref) => {
+  ({ size = 24, color = "currentColor", strokeWidth = 2, className = "" }, ref) => {
     const [scope, animate] = useAnimate()
 
     const start = useCallback(async () => {

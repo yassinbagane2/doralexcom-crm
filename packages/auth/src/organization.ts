@@ -168,6 +168,12 @@ export function isStaffMemberRole(
   return STAFF_MEMBER_ROLES.includes(role as "owner")
 }
 
+/** The only role an invitation can grant: tenants are added as tenants. */
+export const INVITATION_ROLE = "collaborator" satisfies MemberRole
+
+/** How long an invitation link stays valid, in days. */
+export const INVITATION_EXPIRES_IN_DAYS = 7
+
 /**
  * Better Auth's own organization endpoints are reachable from the browser,
  * so these permissions are what stop a collaborator from calling them to

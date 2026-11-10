@@ -1,4 +1,4 @@
-export const UserPlus = ({ size = 24, color = "#FFFFFF" }) => {
+export const UserPlus = ({ size = 24, color = "currentColor" }) => {
   return (
     <svg
       width={size}

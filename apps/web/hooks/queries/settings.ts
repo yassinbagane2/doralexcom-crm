@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import { useTranslations } from "next-intl"
 
+import { authClient, unwrap } from "@/lib/auth-client"
 import { orpc } from "@/lib/orpc"
 
 /*
@@ -17,15 +18,48 @@ export function useCollaborators() {
   return useQuery(orpc.collaborator.list.queryOptions())
 }
 
-function useInvalidateCollaborators() {
-  const queryClient = useQueryClient()
-  return () =>
-    queryClient.invalidateQueries({ queryKey: orpc.collaborator.list.key() })
+const invitationsKey = (organizationId: string) =>
+  ["organization", organizationId, "invitations"] as const
+
+/**
+ * Invitations the owner sent, newest first, one per email: re-inviting
+ * someone replaces their earlier invitation, so only the latest counts.
+ * Better Auth only lists them for the owner.
+ */
+export function useInvitations(organizationId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: invitationsKey(organizationId),
+    enabled,
+    queryFn: async () => {
+      const invitations = await unwrap(
+        authClient.organization.listInvitations({ query: { organizationId } })
+      )
+      const latest = new Map<string, (typeof invitations)[number]>()
+      for (const invitation of [...invitations].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )) {
+        const email = invitation.email.toLowerCase()
+        if (!latest.has(email)) latest.set(email, invitation)
+      }
+      return [...latest.values()]
+    },
+  })
 }
 
-export function useInviteCollaborator() {
+export type Invitation = NonNullable<
+  ReturnType<typeof useInvitations>["data"]
+>[number]
+
+function useInvalidateInvitations(organizationId: string) {
+  const queryClient = useQueryClient()
+  return () =>
+    queryClient.invalidateQueries({ queryKey: invitationsKey(organizationId) })
+}
+
+export function useInviteCollaborator(organizationId: string) {
   const t = useTranslations("Collaborators")
-  const invalidate = useInvalidateCollaborators()
+  const invalidate = useInvalidateInvitations(organizationId)
 
   return useMutation(
     orpc.collaborator.invite.mutationOptions({
@@ -34,35 +68,61 @@ export function useInviteCollaborator() {
         if (emailSent) {
           toast.success(t("invited", { email: input.email }))
         } else {
-          toast.error(t("invitedNoEmail", { name: input.name }))
+          toast.error(t("invitedNoEmail", { email: input.email }))
         }
       },
     })
   )
 }
 
-export function useResendInvitation() {
+export function useResendInvitation(organizationId: string) {
   const t = useTranslations("Collaborators")
+  const invalidate = useInvalidateInvitations(organizationId)
 
   return useMutation(
     orpc.collaborator.resendInvitation.mutationOptions({
-      onSuccess: () => toast.success(t("resent")),
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("resent"))
+      },
     })
   )
 }
 
-export function useRemoveCollaborator() {
+export function useCancelInvitation(organizationId: string) {
   const t = useTranslations("Collaborators")
-  const invalidate = useInvalidateCollaborators()
+  const invalidate = useInvalidateInvitations(organizationId)
 
-  return useMutation(
-    orpc.collaborator.remove.mutationOptions({
-      onSuccess: async () => {
-        await invalidate()
-        toast.success(t("removed"))
-      },
-    })
-  )
+  return useMutation({
+    mutationFn: (invitationId: string) =>
+      unwrap(authClient.organization.cancelInvitation({ invitationId })),
+    onSuccess: async () => {
+      await invalidate()
+      toast.success(t("canceled"))
+    },
+  })
+}
+
+/** Better Auth removes the membership; its hook then deletes the account. */
+export function useRemoveCollaborator(organizationId: string) {
+  const t = useTranslations("Collaborators")
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (memberId: string) =>
+      unwrap(
+        authClient.organization.removeMember({
+          memberIdOrEmail: memberId,
+          organizationId,
+        })
+      ),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: orpc.collaborator.list.key(),
+      })
+      toast.success(t("removed"))
+    },
+  })
 }
 
 // --- Email service -----------------------------------------------------------

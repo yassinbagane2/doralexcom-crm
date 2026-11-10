@@ -84,3 +84,35 @@ export function sendVerificationOTP({
     ].join("\n\n"),
   })
 }
+
+/**
+ * Tells the business's owners that someone answered their invitation. From
+ * the platform's address, like the other account emails: it is about the
+ * owner's account, not something the business sends.
+ */
+export function sendInvitationResponse({
+  to,
+  ownerName,
+  inviteeEmail,
+  organizationName,
+  accepted,
+}: {
+  to: string
+  ownerName: string
+  inviteeEmail: string
+  organizationName: string
+  accepted: boolean
+}) {
+  sendEmailInBackground({
+    to,
+    subject: accepted
+      ? `${inviteeEmail} joined ${organizationName}`
+      : `${inviteeEmail} declined your invitation`,
+    text: [
+      `Hi ${ownerName},`,
+      accepted
+        ? `${inviteeEmail} accepted your invitation and now works with you on ${organizationName}.`
+        : `${inviteeEmail} declined your invitation to ${organizationName}. You can invite them again from Settings → Collaborators.`,
+    ].join("\n\n"),
+  })
+}

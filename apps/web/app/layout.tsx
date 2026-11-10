@@ -6,7 +6,7 @@ import "@workspace/ui/globals.css"
 import { Providers } from "@/components/providers"
 
 export const metadata: Metadata = {
-  title: { default: "Tube", template: "%s · Tube" },
+  title: { default: "Tenora", template: "%s · Tenora" },
   description:
     "A Next.js starter with authentication and shared UI components.",
 }
