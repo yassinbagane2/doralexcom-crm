@@ -14,7 +14,8 @@
     "backToDashboard": "Back to dashboard",
     "openMenu": "Open account menu",
     "signOut": "Sign out",
-    "adminBadge": "Admin"
+    "adminBadge": "Admin",
+    "templates": "Templates"
   },
   "Preferences": {
     "metaTitle": "Preferences",

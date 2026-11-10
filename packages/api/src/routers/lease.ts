@@ -5,19 +5,23 @@ import {
   and,
   eq,
   exists,
-  gte,
   isNull,
   lte,
   ne,
   notExists,
-  or,
   sql,
   sum,
 } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
-import { leaseBalance, TENANT_LIMITS } from "../lease"
+import {
+  leaseBalance,
+  MAX_TERM_MONTHS,
+  TENANT_LIMITS,
+  termEndDate,
+} from "../lease"
+import { holdsPropertyOn } from "../lib/lease"
 import { findTenant } from "../lib/tenant"
 import { PROPERTY_LIMITS, RENT_CURRENCIES } from "../property"
 
@@ -25,11 +29,43 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 const day = z.iso.date()
 
-const terms = z.object({
+const amount = z.number().finite().nonnegative().max(PROPERTY_LIMITS.rent)
+
+/** Everything agreed on a lease but its rent. */
+const agreement = z.object({
   startDate: day,
   endDate: day.nullable(),
-  rent: z.number().finite().nonnegative().max(PROPERTY_LIMITS.rent),
+  /** A length in months sets `endDate` itself. */
+  termMonths: z.number().int().min(1).max(MAX_TERM_MONTHS).nullable(),
+  /** Only a lease agreed in months can renew. */
+  autoRenew: z.boolean(),
+  charges: amount,
+  additionalCosts: amount,
+  discount: amount,
+  deposit: amount,
+})
+
+const terms = agreement.extend({
+  rent: amount,
   currency: z.enum(RENT_CURRENCIES),
+})
+
+type Agreement = z.output<typeof agreement>
+
+/**
+ * A lease agreed in months ends when they're up, whatever date came along;
+ * any other lease can't renew, having no term to renew for.
+ */
+function settleTerm<T extends Agreement>(input: T): T {
+  return input.termMonths
+    ? { ...input, endDate: termEndDate(input.startDate, input.termMonths) }
+    : { ...input, autoRenew: false }
+}
+
+/** How long the lease holds its property: a renewing one, indefinitely. */
+const occupancy = (input: Agreement) => ({
+  startDate: input.startDate,
+  endDate: input.autoRenew ? null : input.endDate,
 })
 
 const exitAfterEntry: [
@@ -69,7 +105,7 @@ async function assertPropertyFree(
   exceptLeaseId?: string
 ) {
   const [locked] = await tx
-    .select({ id: property.id })
+    .select({ rent: property.rent, currency: property.currency })
     .from(property)
     .where(
       and(
@@ -94,7 +130,7 @@ async function assertPropertyFree(
         eq(lease.propertyId, propertyId),
         exceptLeaseId ? ne(lease.id, exceptLeaseId) : undefined,
         dates.endDate ? lte(lease.startDate, dates.endDate) : undefined,
-        or(isNull(lease.endDate), gte(lease.endDate, dates.startDate))
+        holdsPropertyOn(dates.startDate)
       )
     )
     .limit(1)
@@ -105,6 +141,8 @@ async function assertPropertyFree(
       data: { code: "LEASE_OVERLAP" },
     })
   }
+
+  return locked
 }
 
 /** A lease of this organization, with the rent received on it. */
@@ -142,30 +180,39 @@ const paymentsOf = (leaseId: typeof lease.id) =>
 
 /**
  * Which property a tenant occupies, when, for how much, and the rent paid on
- * it. Scoped to `context.organizationId` like every business procedure.
+ * it. A new lease takes the property's rent; editing a lease can change it.
+ * Scoped to `context.organizationId` like every business procedure.
  */
 export const leaseRouter = o.prefix("/leases").router({
   create: businessProcedure
     .route({ method: "POST", path: "/", tags: ["leases"] })
     .input(
-      terms
+      agreement
         .extend({ tenantId: z.uuid(), propertyId: z.uuid() })
         .refine(...exitAfterEntry)
     )
     .output(z.object({ id: z.string() }))
-    .handler(async ({ input, context }) => {
+    .handler(async ({ input: raw, context }) => {
+      const input = settleTerm(raw)
       await findTenant(context.organizationId, input.tenantId)
 
       const id = await db.transaction(async (tx) => {
-        await assertPropertyFree(
+        const rented = await assertPropertyFree(
           tx,
           context.organizationId,
           input.propertyId,
-          input
+          occupancy(input)
         )
+        // The lease starts at the property's rent, copied so a later change
+        // to the property never rewrites what this lease has charged.
         const [created] = await tx
           .insert(lease)
-          .values({ ...input, organizationId: context.organizationId })
+          .values({
+            ...input,
+            rent: rented.rent ?? 0,
+            currency: rented.currency,
+            organizationId: context.organizationId,
+          })
           .returning({ id: lease.id })
         return created!.id
       })
@@ -178,7 +225,7 @@ export const leaseRouter = o.prefix("/leases").router({
     .input(terms.extend({ id: z.uuid() }).refine(...exitAfterEntry))
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
-      const { id, ...values } = input
+      const { id, ...values } = settleTerm(input)
       const current = await findLease(context.organizationId, id)
       assertNotTerminated(current)
 
@@ -187,7 +234,7 @@ export const leaseRouter = o.prefix("/leases").router({
           tx,
           context.organizationId,
           current.propertyId,
-          values,
+          occupancy(values),
           id
         )
         await tx

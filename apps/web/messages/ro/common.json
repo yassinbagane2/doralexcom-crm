@@ -76,6 +76,11 @@
     "LEASE_OVERLAP": "Un alt contract acoperă deja aceste date pentru proprietate",
     "LEASE_TERMINATED": "Contractul a fost reziliat și nu mai poate fi modificat",
     "LEASE_HAS_PAYMENTS": "Pe acest contract sunt înregistrate plăți de chirie, așa că nu poate fi șters.",
-    "LEASE_END_BEFORE_START": "Data ieșirii nu poate fi înaintea datei intrării"
+    "LEASE_END_BEFORE_START": "Data ieșirii nu poate fi înaintea datei intrării",
+    "TEMPLATE_NOT_FOUND": "Acest șablon de contract nu mai există",
+    "DOCUMENT_NOT_FOUND": "Acest document nu mai există",
+    "CONTENT_TOO_LARGE": "Documentul este prea mare pentru a fi salvat. Încearcă imagini mai mici",
+    "DOCUMENT_TYPE": "Acest tip de fișier nu poate fi atașat",
+    "DOCUMENT_SIZE": "Fișierul este gol sau mai mare de 10 MB"
   }
 }

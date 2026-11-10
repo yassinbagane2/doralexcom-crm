@@ -36,6 +36,20 @@
       "when": 1794253808584,
       "tag": "0004_tenants",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794255005056,
+      "tag": "0005_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794256005056,
+      "tag": "0006_rename_template",
+      "breakpoints": true
     }
   ]
 }

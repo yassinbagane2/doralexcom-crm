@@ -1,0 +1,330 @@
+{
+  "Editor": {
+    "untitled": "Untitled document",
+    "exportFailed": "Couldn't create the Word document",
+    "headerPlaceholder": "Type the header…",
+    "footerPlaceholder": "Type the footer…",
+    "header": {
+      "title": "Document name",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsaved": "Unsaved changes",
+      "print": "Print",
+      "downloadWord": "Download as Word"
+    },
+    "toolbar": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "insert": "Insert",
+      "horizontalRule": "Horizontal rule",
+      "quote": "Quote",
+      "removeQuote": "Remove quote",
+      "codeBlock": "Code block",
+      "removeCodeBlock": "Remove code block",
+      "bulletList": "Bulleted list",
+      "bulletStyle": "Bullet style",
+      "numberedList": "Numbered list",
+      "numberStyle": "Numbering style",
+      "increaseIndent": "Increase indent",
+      "decreaseIndent": "Decrease indent",
+      "showMarks": "Show formatting marks",
+      "hideMarks": "Hide formatting marks",
+      "editingOn": "Turn editing on",
+      "editingOff": "Turn editing off",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "subscript": "Subscript",
+      "superscript": "Superscript",
+      "textColor": "Text colour",
+      "highlightColor": "Highlight colour",
+      "defaultColor": "Default",
+      "noHighlight": "No highlight",
+      "custom": "Custom",
+      "customColor": "Custom {label}",
+      "colors": "Colours",
+      "left": "Align left",
+      "center": "Align centre",
+      "right": "Align right",
+      "justify": "Justify",
+      "lineSpacing": "Line spacing",
+      "single": "Single",
+      "double": "Double",
+      "spellcheckOn": "Spelling check on",
+      "spellcheckOff": "Spelling check off",
+      "insertImage": "Insert image",
+      "image": "Image",
+      "imageOnly": "Only image files can be inserted",
+      "imageTooLarge": "Images must be 5 MB or smaller",
+      "imageUnreadable": "The image could not be read",
+      "fontSize": "Font size",
+      "decreaseFontSize": "Decrease font size",
+      "increaseFontSize": "Increase font size",
+      "styles": "Styles",
+      "paragraphStyle": "Paragraph style",
+      "theme": "Theme",
+      "documentTheme": "Document theme"
+    },
+    "pageSetup": {
+      "label": "Page setup",
+      "paperSize": "Paper size",
+      "orientation": "Orientation",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "margins": "Margins",
+      "customSides": "Custom sides"
+    },
+    "margins": {
+      "normal": "Normal",
+      "narrow": "Narrow",
+      "moderate": "Moderate",
+      "wide": "Wide"
+    },
+    "textStyles": {
+      "paragraph": "Normal text",
+      "title": "Title",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3"
+    },
+    "themes": {
+      "default": {
+        "label": "Default",
+        "description": "Calibri body, neutral headings"
+      },
+      "classic": {
+        "label": "Classic",
+        "description": "Times New Roman, navy headings"
+      },
+      "modern": {
+        "label": "Modern",
+        "description": "Arial body, teal headings"
+      },
+      "elegant": {
+        "label": "Elegant",
+        "description": "Garamond body, Georgia headings"
+      }
+    },
+    "bulletStyles": {
+      "disc": "Disc",
+      "circle": "Circle",
+      "square": "Square"
+    },
+    "colors": {
+      "black": "Black",
+      "darkGray": "Dark grey",
+      "gray": "Grey",
+      "lightGray": "Light grey",
+      "silver": "Silver",
+      "white": "White",
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Amber",
+      "yellow": "Yellow",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "indigo": "Indigo",
+      "purple": "Purple",
+      "pink": "Pink",
+      "darkRed": "Dark red",
+      "brown": "Brown",
+      "darkGreen": "Dark green",
+      "navy": "Navy",
+      "plum": "Plum"
+    },
+    "link": {
+      "insert": "Insert link",
+      "edit": "Edit link",
+      "to": "Link to",
+      "remove": "Remove",
+      "apply": "Apply"
+    },
+    "table": {
+      "label": "Table",
+      "insert": "Insert table",
+      "size": "{rows} × {cols} table",
+      "insertSize": "Insert {rows} by {cols} table",
+      "rowAbove": "Row above",
+      "rowBelow": "Row below",
+      "columnLeft": "Column left",
+      "columnRight": "Column right",
+      "deleteRow": "Delete row",
+      "deleteColumn": "Delete column",
+      "headerRow": "Header row",
+      "deleteTable": "Delete table"
+    },
+    "ruler": {
+      "leftMargin": "Left margin",
+      "rightMargin": "Right margin",
+      "valueText": "{value}, same on both sides",
+      "sideMargins": "Side margins: {value}"
+    },
+    "regions": {
+      "header": "Header",
+      "footer": "Footer"
+    },
+    "status": {
+      "page": "Page <strong>{current}</strong> of {count}",
+      "words": "{count, plural, one {# word} other {# words}}",
+      "characters": "{count, plural, one {# character} other {# characters}}"
+    }
+  },
+  "MergeFields": {
+    "insert": "Insert field",
+    "groups": {
+      "landlord": "Landlord",
+      "tenant": "Tenant",
+      "property": "Property",
+      "lease": "Lease",
+      "document": "Document"
+    },
+    "fields": {
+      "landlord": {
+        "name": "Landlord name",
+        "representative": "Landlord representative",
+        "email": "Landlord email",
+        "taxId": "Landlord tax ID",
+        "registrationNumber": "Landlord registration number"
+      },
+      "tenant": {
+        "name": "Tenant name",
+        "email": "Tenant email",
+        "phone": "Tenant phone",
+        "address": "Tenant address"
+      },
+      "property": {
+        "name": "Property name",
+        "type": "Property type",
+        "address": "Property address",
+        "surfaceArea": "Surface area",
+        "description": "Property description"
+      },
+      "lease": {
+        "startDate": "Start date",
+        "endDate": "End date",
+        "length": "Lease length",
+        "renewal": "Renewal clause",
+        "rent": "Rent",
+        "charges": "Charges",
+        "additionalCosts": "Additional costs",
+        "discount": "Discount",
+        "monthlyTotal": "Total per month",
+        "deposit": "Deposit",
+        "currency": "Currency"
+      },
+      "document": {
+        "date": "Today's date"
+      }
+    },
+    "values": {
+      "openEnded": "an indefinite period",
+      "noEndDate": "no fixed end date",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "renews": "At the end of the term, the lease renews automatically for further periods of {length}, unless either party ends it.",
+      "noRenewal": "The lease does not renew automatically."
+    }
+  },
+  "Contracts": {
+    "metaTitle": "Templates",
+    "title": "Templates",
+    "description": "Contract templates for your leases. Fields fill in from the landlord, tenant, property and lease when you generate a contract.",
+    "add": "New template",
+    "createTitle": "Create new template",
+    "createDescription": "Start from a blank page, then add fields for the tenant, property and lease.",
+    "fields": "Fields",
+    "editedAgo": "Edited {time}",
+    "editedJustNow": "Edited just now",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "copyName": "{name} (copy)",
+    "delete": "Delete",
+    "actionsLabel": "Actions for {name}",
+    "created": "Template created",
+    "saved": "Template saved",
+    "duplicated": "Template duplicated",
+    "deleted": "Template deleted",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "Contracts already generated from it keep their text. This can't be undone.",
+    "deleteSubmit": "Delete template",
+    "editor": {
+      "metaTitle": "Template",
+      "eyebrow": "Template",
+      "back": "Back to templates",
+      "newTitle": "Untitled template",
+      "placeholder": "Write your template. Insert fields from the toolbar to fill in the tenant and lease details.",
+      "banner": "Highlighted fields fill in automatically when you use this template. Add them with <strong>Insert field</strong>.",
+      "notFound": "This template doesn't exist or was deleted."
+    }
+  },
+  "ContractDocument": {
+    "metaTitle": "Contract",
+    "eyebrow": "Contract · {tenant}",
+    "back": "Back to {tenant}",
+    "placeholder": "Write the contract…",
+    "saved": "Contract saved",
+    "notFound": "This contract doesn't exist or was deleted.",
+    "lease": "Lease of {property}"
+  },
+  "Documents": {
+    "title": "Documents",
+    "upload": "Upload",
+    "empty": "No documents yet. Upload a signed lease, or generate a contract from one of the leases.",
+    "contract": "Contract",
+    "lease": "Lease of {property}",
+    "open": "Open",
+    "download": "Download",
+    "delete": "Delete",
+    "actionsLabel": "Actions for {name}",
+    "uploadTitle": "Upload a document",
+    "uploadDescription": "PDF, Word, text or photo, up to 10 MB. Tenants don't see these.",
+    "file": "File",
+    "chooseFile": "Choose a file",
+    "changeFile": "Change",
+    "leaseField": "Lease",
+    "noLease": "Not about a lease",
+    "uploadSubmit": "Upload",
+    "uploaded": "Document uploaded",
+    "deleted": "Document deleted",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "The document is removed for good.",
+    "deleteSubmit": "Delete document",
+    "tooLarge": "Files must be 10 MB or smaller",
+    "wrongType": "Use a PDF, Word document, text file or photo",
+    "generateTitle": "Generate a contract",
+    "generateDescription": "Fills a template in with the details of the lease for {property}. You can still edit the contract afterwards.",
+    "template": "Template",
+    "templatePlaceholder": "Choose a template",
+    "noTemplates": "No templates yet. <link>Write one</link> first.",
+    "name": "Name",
+    "generateSubmit": "Generate contract",
+    "generated": "Contract generated",
+    "contractName": "{template} – {tenant}"
+  },
+  "StarterContract": {
+    "title": "Residential lease agreement",
+    "intro": "This agreement is made on [document.date] between:",
+    "landlord": "**Landlord:** [landlord.name], tax ID [landlord.taxId], represented by [landlord.representative];",
+    "tenant": "**Tenant:** [tenant.name], residing at [tenant.address], phone [tenant.phone], email [tenant.email].",
+    "propertyHeading": "1. The property",
+    "property": "The landlord lets to the tenant the [property.type] known as [property.name], at [property.address], with a surface area of [property.surfaceArea].",
+    "termHeading": "2. Term",
+    "term": "The lease starts on [lease.startDate] and is agreed for [lease.length].",
+    "renewal": "[lease.renewal]",
+    "paymentHeading": "3. Rent and charges",
+    "payment": "Every month, in advance, the tenant pays:",
+    "rent": "Rent",
+    "charges": "Charges",
+    "additionalCosts": "Additional costs",
+    "discount": "Discount",
+    "total": "**Total per month**",
+    "depositHeading": "4. Deposit",
+    "deposit": "On signing, the tenant pays a security deposit of [lease.deposit]. It is returned when the tenant leaves, less any amounts still owed.",
+    "signaturesHeading": "5. Signatures",
+    "landlordSignature": "**Landlord**",
+    "tenantSignature": "**Tenant**"
+  }
+}

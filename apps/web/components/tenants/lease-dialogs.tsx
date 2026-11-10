@@ -2,13 +2,21 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from "@tanstack/react-query"
-import { leaseBalance, localToday, TENANT_LIMITS } from "@workspace/api/lease"
+import {
+  leaseBalance,
+  localToday,
+  MAX_TERM_MONTHS,
+  monthlyDue,
+  TENANT_LIMITS,
+  termEndDate,
+} from "@workspace/api/lease"
 import {
   PROPERTY_LIMITS,
   RENT_CURRENCIES,
   type RentCurrency,
 } from "@workspace/api/property"
 import { Button } from "@workspace/ui/components/ui/button"
+import { Checkbox } from "@workspace/ui/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -99,16 +107,59 @@ function useOpenSession(open: boolean) {
 
 // --- Assign a property / edit a lease's terms --------------------------------
 
+const LENGTH_MODES = ["open", "months", "date"] as const
+
+type LengthMode = (typeof LENGTH_MODES)[number]
+
 interface LeaseFormValues {
   propertyId: string
   tenantId: string
   startDate: string
+  /** How the lease's end is set: not at all, by a length, or by a date. */
+  lengthMode: LengthMode
+  termMonths: string
   endDate: string
+  autoRenew: boolean
   rent: string
   currency: RentCurrency
+  charges: string
+  additionalCosts: string
+  discount: string
+  deposit: string
 }
 
-type LeaseFormOutput = Omit<LeaseFormValues, "rent"> & { rent: number }
+type LeaseFormOutput = Omit<
+  LeaseFormValues,
+  | "rent"
+  | "charges"
+  | "additionalCosts"
+  | "discount"
+  | "deposit"
+  | "termMonths"
+  | "endDate"
+> & {
+  rent: number
+  charges: number
+  additionalCosts: number
+  discount: number
+  deposit: number
+  termMonths: number | null
+  endDate: string | null
+}
+
+/** The length a lease's form opens with: how its end was set. */
+function lengthModeOf(lease: TenantLease | undefined): LengthMode {
+  if (lease?.termMonths) return "months"
+  return lease?.endDate ? "date" : "open"
+}
+
+/** "12" reads as 12 months; anything else isn't a length. */
+function parseMonths(value: string) {
+  const months = Number(value.trim())
+  return Number.isInteger(months) && months >= 1 && months <= MAX_TERM_MONTHS
+    ? months
+    : null
+}
 
 type LeaseDialogProps = {
   open: boolean
@@ -118,15 +169,16 @@ type LeaseDialogProps = {
     { tenantId: string; property?: never; lease?: never }
   /** From the properties page: pick the tenant. */
   | { property: Property; tenantId?: never; lease?: never }
-  /** Change an existing lease's dates and rent. */
+  /** Change an existing lease's dates, rent and terms. */
   | { lease: TenantLease; tenantId?: never; property?: never }
 )
 
 /**
- * Creates a lease: a tenant occupying a property from an entry date and
- * optionally until an exit date. Opened from either side, so it asks for
- * whichever of the two isn't given. Editing changes the dates and rent of an
- * existing lease.
+ * Creates a lease: a tenant occupying a property from an entry date, for a
+ * number of months, until an exit date, or open-ended, with what's billed
+ * each month besides the rent and the deposit held. Opened from either side,
+ * so it asks for whichever of tenant and property isn't given. Editing
+ * changes all the terms of an existing lease.
  */
 export function LeaseDialog(props: LeaseDialogProps) {
   return <LeaseDialogBody key={useOpenSession(props.open)} {...props} />
@@ -143,6 +195,7 @@ function LeaseDialogBody({
   const pickTenant = !lease && !tenantId
   const t = useTranslations("Leases")
   const tc = useTranslations("Common")
+  const locale = useLocale()
   const create = useCreateLease()
   const update = useUpdateLease()
   const { data: properties } = useProperties()
@@ -160,14 +213,59 @@ function LeaseDialogBody({
           propertyId: z.string().min(1, tv("propertyRequired")),
           tenantId: z.string().min(1, tv("tenantRequired")),
           startDate: z.iso.date(tv("dateRequired")),
-          endDate: z.union([z.literal(""), z.iso.date()]),
+          lengthMode: z.enum(LENGTH_MODES),
+          termMonths: z.string(),
+          endDate: z.string(),
+          autoRenew: z.boolean(),
           rent: amount({ required: false, max: PROPERTY_LIMITS.rent }),
           currency: z.enum(RENT_CURRENCIES),
+          charges: amount({ required: false, max: PROPERTY_LIMITS.rent }),
+          additionalCosts: amount({
+            required: false,
+            max: PROPERTY_LIMITS.rent,
+          }),
+          discount: amount({ required: false, max: PROPERTY_LIMITS.rent }),
+          deposit: amount({ required: false, max: PROPERTY_LIMITS.rent }),
         })
-        .refine(
-          (values) => !values.endDate || values.endDate >= values.startDate,
-          { message: tv("endBeforeStart"), path: ["endDate"] }
-        ),
+        .superRefine((values, ctx) => {
+          if (values.lengthMode === "months" && !parseMonths(values.termMonths))
+            ctx.addIssue({
+              code: "custom",
+              message: tv("monthsInvalid"),
+              path: ["termMonths"],
+            })
+          if (values.lengthMode === "date") {
+            if (!z.iso.date().safeParse(values.endDate).success)
+              ctx.addIssue({
+                code: "custom",
+                message: tv("dateRequired"),
+                path: ["endDate"],
+              })
+            else if (values.endDate < values.startDate)
+              ctx.addIssue({
+                code: "custom",
+                message: tv("endBeforeStart"),
+                path: ["endDate"],
+              })
+          }
+        })
+        .transform((values): LeaseFormOutput => {
+          const months =
+            values.lengthMode === "months"
+              ? parseMonths(values.termMonths)
+              : null
+          return {
+            ...values,
+            termMonths: months,
+            endDate: months
+              ? termEndDate(values.startDate, months)
+              : values.lengthMode === "date"
+                ? values.endDate
+                : null,
+            // Only a lease agreed in months has a term to renew.
+            autoRenew: months !== null && values.autoRenew,
+          }
+        }),
     [amount, tv]
   )
 
@@ -183,22 +281,58 @@ function LeaseDialogBody({
           // Not edited: the lease keeps its tenant.
           tenantId: "unchanged",
           startDate: lease.startDate,
+          lengthMode: lengthModeOf(lease),
+          termMonths: lease.termMonths ? String(lease.termMonths) : "12",
           endDate: lease.endDate ?? "",
+          autoRenew: lease.autoRenew,
           rent: String(lease.rent),
           currency: lease.currency,
+          charges: lease.charges ? String(lease.charges) : "",
+          additionalCosts: lease.additionalCosts
+            ? String(lease.additionalCosts)
+            : "",
+          discount: lease.discount ? String(lease.discount) : "",
+          deposit: lease.deposit ? String(lease.deposit) : "",
         }
       : {
           propertyId: property?.id ?? "",
           tenantId: tenantId ?? "",
           startDate: localToday(),
+          lengthMode: "open",
+          termMonths: "12",
           endDate: "",
-          // Start from the property's own rent.
-          rent: property?.rent != null ? String(property.rent) : "",
-          currency: property?.currency ?? "RON",
+          autoRenew: false,
+          // Unused: a new lease takes the property's rent.
+          rent: "",
+          currency: "RON",
+          charges: "",
+          additionalCosts: "",
+          discount: "",
+          deposit: "",
         },
   })
   const { errors } = form.formState
   const isPending = create.isPending || update.isPending
+
+  const chosenProperty =
+    property ?? properties?.find((p) => p.id === form.watch("propertyId"))
+  // What the lease is billed in: its own currency, or a new one's property's.
+  const currency = lease ? form.watch("currency") : chosenProperty?.currency
+  const lengthMode = form.watch("lengthMode")
+  const startDate = form.watch("startDate")
+  const months = parseMonths(form.watch("termMonths"))
+  const termEnd =
+    months && /^\d{4}-\d{2}-\d{2}$/.test(startDate)
+      ? termEndDate(startDate, months)
+      : null
+  const monthly = monthlyDue({
+    rent: lease
+      ? (parseAmount(form.watch("rent")) ?? 0)
+      : (chosenProperty?.rent ?? 0),
+    charges: parseAmount(form.watch("charges")) ?? 0,
+    additionalCosts: parseAmount(form.watch("additionalCosts")) ?? 0,
+    discount: parseAmount(form.watch("discount")) ?? 0,
+  })
 
   const propertyItems = (properties ?? []).map((item) => ({
     value: item.id,
@@ -210,6 +344,40 @@ function LeaseDialogBody({
     label: tenant.name,
     email: tenant.email,
   }))
+  const lengthItems = LENGTH_MODES.map((value) => ({
+    value,
+    label: t(`lengthModes.${value}`),
+  }))
+
+  const extraAmount = (
+    name: "charges" | "additionalCosts" | "discount" | "deposit"
+  ) => (
+    <Field>
+      <Label htmlFor={`lease-${name}`}>
+        {t(`fields.${name}`)}{" "}
+        <span className="font-normal text-muted-foreground">
+          ({tc("optional").toLowerCase()})
+        </span>
+      </Label>
+      <div className="relative">
+        <Input
+          id={`lease-${name}`}
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="0"
+          aria-invalid={Boolean(errors[name])}
+          className={currency ? "pr-12" : undefined}
+          {...form.register(name)}
+        />
+        {currency ? (
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
+            {currency}
+          </span>
+        ) : null}
+      </div>
+      <FieldError>{errors[name]?.message}</FieldError>
+    </Field>
+  )
 
   return (
     <Dialog
@@ -242,18 +410,32 @@ function LeaseDialogBody({
           noValidate
           className="mt-5 flex flex-col gap-5"
           onSubmit={form.handleSubmit((values) => {
-            const terms = {
+            const agreement = {
               startDate: values.startDate,
-              endDate: values.endDate || null,
-              rent: values.rent,
-              currency: values.currency,
+              endDate: values.endDate,
+              termMonths: values.termMonths,
+              autoRenew: values.autoRenew,
+              charges: values.charges,
+              additionalCosts: values.additionalCosts,
+              discount: values.discount,
+              deposit: values.deposit,
             }
             const done = { onSuccess: () => onOpenChange(false) }
-            if (lease) update.mutate({ ...terms, id: lease.id }, done)
+            if (lease)
+              update.mutate(
+                {
+                  ...agreement,
+                  rent: values.rent,
+                  currency: values.currency,
+                  id: lease.id,
+                },
+                done
+              )
+            // A new lease takes the property's rent, set by the server.
             else
               create.mutate(
                 {
-                  ...terms,
+                  ...agreement,
                   tenantId: values.tenantId,
                   propertyId: values.propertyId,
                 },
@@ -315,16 +497,7 @@ function LeaseDialogBody({
                   <Select
                     items={propertyItems}
                     value={field.value || null}
-                    onValueChange={(value) => {
-                      if (!value) return
-                      field.onChange(value)
-                      // Start from the property's own rent.
-                      const chosen = properties?.find((p) => p.id === value)
-                      if (chosen?.rent != null) {
-                        form.setValue("rent", String(chosen.rent))
-                        form.setValue("currency", chosen.currency)
-                      }
-                    }}
+                    onValueChange={(value) => value && field.onChange(value)}
                   >
                     <SelectTrigger
                       id="lease-property"
@@ -367,38 +540,129 @@ function LeaseDialogBody({
               <FieldError>{errors.startDate?.message}</FieldError>
             </Field>
             <Field>
-              <Label htmlFor="lease-end">
-                {t("fields.endDate")}{" "}
-                <span className="font-normal text-muted-foreground">
-                  ({tc("optional").toLowerCase()})
-                </span>
-              </Label>
+              <Label htmlFor="lease-length">{t("fields.length")}</Label>
+              <Controller
+                control={form.control}
+                name="lengthMode"
+                render={({ field }) => (
+                  <Select
+                    items={lengthItems}
+                    value={field.value}
+                    onValueChange={(value) =>
+                      value && field.onChange(value as LengthMode)
+                    }
+                  >
+                    <SelectTrigger id="lease-length">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lengthItems.map(({ value, label }) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+          </div>
+
+          {lengthMode === "months" ? (
+            <div className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-3">
+              <Field>
+                <Label htmlFor="lease-months">{t("fields.termMonths")}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="lease-months"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className="w-24"
+                    aria-invalid={Boolean(errors.termMonths)}
+                    {...form.register("termMonths")}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {t("monthsUnit")}
+                  </span>
+                  {termEnd ? (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {t("endsOn", { date: formatDate(termEnd, locale) })}
+                    </span>
+                  ) : null}
+                </div>
+                <FieldError>{errors.termMonths?.message}</FieldError>
+              </Field>
+              <Controller
+                control={form.control}
+                name="autoRenew"
+                render={({ field }) => (
+                  <div className="flex items-start gap-2.5">
+                    <Checkbox
+                      id="lease-renew"
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(checked)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex flex-col gap-0.5">
+                      <Label htmlFor="lease-renew" className="font-normal">
+                        {t("fields.autoRenew")}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {t("autoRenewHint")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              />
+            </div>
+          ) : lengthMode === "date" ? (
+            <Field>
+              <Label htmlFor="lease-end">{t("fields.endDate")}</Label>
               <Input
                 id="lease-end"
                 type="date"
+                min={startDate}
                 aria-invalid={Boolean(errors.endDate)}
                 {...form.register("endDate")}
               />
               <FieldError>{errors.endDate?.message}</FieldError>
             </Field>
-          </div>
+          ) : null}
 
-          <Field>
-            <Label htmlFor="lease-rent">{t("fields.rent")}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="lease-rent"
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder="2500"
-                aria-invalid={Boolean(errors.rent)}
-                {...form.register("rent")}
-              />
-              <CurrencySelect control={form.control} />
-            </div>
-            <p className="text-xs text-muted-foreground">{t("rentHint")}</p>
-            <FieldError>{errors.rent?.message}</FieldError>
-          </Field>
+          {lease ? (
+            <Field>
+              <Label htmlFor="lease-rent">{t("fields.rent")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="lease-rent"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="2500"
+                  aria-invalid={Boolean(errors.rent)}
+                  {...form.register("rent")}
+                />
+                <CurrencySelect control={form.control} />
+              </div>
+              <p className="text-xs text-muted-foreground">{t("rentHint")}</p>
+              <FieldError>{errors.rent?.message}</FieldError>
+            </Field>
+          ) : (
+            <PropertyRent property={chosenProperty} />
+          )}
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {extraAmount("charges")}
+            {extraAmount("additionalCosts")}
+            {extraAmount("discount")}
+            {extraAmount("deposit")}
+          </div>
+          {currency && monthly > 0 ? (
+            <p className="-mt-2 text-xs text-muted-foreground">
+              {t("monthlyHint", {
+                amount: formatMoney(monthly, currency, locale),
+              })}
+            </p>
+          ) : null}
 
           <DialogFooter className="flex-row justify-end">
             <Button
@@ -420,6 +684,34 @@ function LeaseDialogBody({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** The rent a new lease will take, straight from the property. */
+function PropertyRent({ property }: { property: Property | undefined }) {
+  const t = useTranslations("Leases")
+  const locale = useLocale()
+
+  if (!property) return null
+
+  return (
+    <div className="rounded-lg border bg-muted/40 px-3 py-2.5 text-sm">
+      {property.rent != null && property.rent > 0 ? (
+        <>
+          <span className="text-muted-foreground">{t("fields.rent")}: </span>
+          <span className="font-medium tabular-nums">
+            {t("perMonth", {
+              amount: formatMoney(property.rent, property.currency, locale),
+            })}
+          </span>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t("rentFromProperty")}
+          </p>
+        </>
+      ) : (
+        <p className="text-muted-foreground">{t("noPropertyRent")}</p>
+      )}
+    </div>
   )
 }
 
@@ -499,7 +791,7 @@ function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
   >({
     resolver: zodResolver(schema),
     defaultValues: {
-      amount: lease.rent > 0 ? String(lease.rent) : "",
+      amount: monthlyDue(lease) > 0 ? String(monthlyDue(lease)) : "",
       paidOn: localToday(),
       note: "",
     },

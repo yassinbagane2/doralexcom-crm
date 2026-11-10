@@ -3,6 +3,8 @@ import type { RouterClient } from "@orpc/server"
 import { publicProcedure } from "../index"
 import { adminRouter } from "./admin"
 import { businessRouter } from "./business"
+import { contractRouter } from "./contract"
+import { documentRouter } from "./document"
 import { leaseRouter } from "./lease"
 import { propertyRouter } from "./property"
 import { tenantRouter } from "./tenant"
@@ -18,6 +20,8 @@ export const appRouter = {
   property: propertyRouter,
   tenant: tenantRouter,
   lease: leaseRouter,
+  contract: contractRouter,
+  document: documentRouter,
 }
 
 export type AppRouter = typeof appRouter

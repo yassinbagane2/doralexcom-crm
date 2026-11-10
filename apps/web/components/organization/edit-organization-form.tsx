@@ -1,6 +1,5 @@
 "use client"
 
-import type { OrganizationType } from "@workspace/auth/organization"
 import { useTranslations } from "next-intl"
 
 import { OrganizationForm } from "@/components/organization/organization-form"
@@ -12,7 +11,6 @@ export function EditOrganizationForm({
   organization: {
     id: string
     name: string
-    type: OrganizationType
     taxId?: string | null
     registrationNumber?: string | null
   }
@@ -23,7 +21,6 @@ export function EditOrganizationForm({
   return (
     <OrganizationForm
       defaultValues={{
-        type: organization.type,
         name: organization.name,
         taxId: organization.taxId ?? "",
         registrationNumber: organization.registrationNumber ?? "",

@@ -1,9 +1,13 @@
 "use client"
 
 import {
+  currentTermEnd,
   leaseBalance,
+  leaseMonths,
   leaseStatus,
   localToday,
+  monthlyDue,
+  renewsAutomatically,
   NOTE_VISIBILITIES,
   TENANT_LIMITS,
   tenantGroups,
@@ -33,15 +37,18 @@ import {
   Copy,
   DotsHorizontal,
   EyeOff,
+  FilePen,
   HandCoins,
   Loader2,
   LoaderCircle,
   Lock,
   Mail,
   MapPin,
+  Paperclip,
   Pencil,
   Phone,
   Plus,
+  RefreshCw,
   Trash,
   UserCircle,
   Users,
@@ -59,6 +66,11 @@ import {
   PaymentDialog,
   TerminateLeaseDialog,
 } from "@/components/tenants/lease-dialogs"
+import {
+  GenerateContractDialog,
+  TenantDocuments,
+  UploadDocumentDialog,
+} from "@/components/tenants/tenant-documents"
 import { LeaseBadge } from "@/components/tenants/tenant-list"
 import {
   TenantSheet,
@@ -198,11 +210,18 @@ export function TenantDetail({ tenantId }: { tenantId: string }) {
             ) : (
               <ul className="flex flex-col gap-3">
                 {tenant.leases.map((lease) => (
-                  <LeaseCard key={lease.id} lease={lease} today={today} />
+                  <LeaseCard
+                    key={lease.id}
+                    tenant={tenant}
+                    lease={lease}
+                    today={today}
+                  />
                 ))}
               </ul>
             )}
           </section>
+
+          <TenantDocuments tenant={tenant} />
 
           <Notes tenant={tenant} />
         </div>
@@ -346,9 +365,23 @@ function Contacts({ tenant }: { tenant: Tenant }) {
   )
 }
 
-type LeaseAction = "edit" | "payment" | "terminate" | "delete"
+type LeaseAction =
+  | "edit"
+  | "payment"
+  | "terminate"
+  | "delete"
+  | "contract"
+  | "attach"
 
-function LeaseCard({ lease, today }: { lease: TenantLease; today: string }) {
+function LeaseCard({
+  tenant,
+  lease,
+  today,
+}: {
+  tenant: Tenant
+  lease: TenantLease
+  today: string
+}) {
   const t = useTranslations("Leases")
   const locale = useLocale()
   const [action, setAction] = useState<LeaseAction | null>(null)
@@ -358,6 +391,11 @@ function LeaseCard({ lease, today }: { lease: TenantLease; today: string }) {
   const status = leaseStatus(lease, today)
   const money = (amount: number) => formatMoney(amount, lease.currency, locale)
   const close = (open: boolean) => !open && setAction(null)
+  const months = leaseMonths(lease)
+  const renewal = renewsAutomatically(lease)
+    ? currentTermEnd(lease, today)
+    : null
+  const extras = lease.charges + lease.additionalCosts
 
   return (
     <li className="flex flex-col gap-4 rounded-lg border p-4">
@@ -386,9 +424,36 @@ function LeaseCard({ lease, today }: { lease: TenantLease; today: string }) {
                 ? formatDate(lease.endDate, locale)
                 : t("openEnded"),
             })}
+            {months ? ` · ${t("termLength", { count: months })}` : null}
             {" · "}
-            {t("perMonth", { amount: money(lease.rent) })}
+            {t("perMonth", { amount: money(monthlyDue(lease)) })}
           </span>
+          {renewal ? (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <RefreshCw className="size-3 shrink-0" />
+              {t("renewsOn", { date: formatDate(renewal, locale) })}
+            </span>
+          ) : null}
+          {extras > 0 || lease.discount > 0 || lease.deposit > 0 ? (
+            <span className="text-xs text-muted-foreground">
+              {[
+                extras > 0
+                  ? t("chargesLine", {
+                      rent: money(lease.rent),
+                      extras: money(extras),
+                    })
+                  : null,
+                lease.discount > 0
+                  ? t("discountLine", { amount: money(lease.discount) })
+                  : null,
+                lease.deposit > 0
+                  ? t("depositLine", { amount: money(lease.deposit) })
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          ) : null}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -404,10 +469,18 @@ function LeaseCard({ lease, today }: { lease: TenantLease; today: string }) {
           >
             <DotsHorizontal size={16} />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem onClick={() => setAction("payment")}>
               <HandCoins className="size-4" />
               {t("recordPayment")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAction("contract")}>
+              <FilePen className="size-4" />
+              {t("generateContract")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAction("attach")}>
+              <Paperclip className="size-4" />
+              {t("attachDocument")}
             </DropdownMenuItem>
             {terminated ? null : (
               <>
@@ -496,6 +569,18 @@ function LeaseCard({ lease, today }: { lease: TenantLease; today: string }) {
       <DeleteLeaseDialog
         lease={lease}
         open={action === "delete"}
+        onOpenChange={close}
+      />
+      <GenerateContractDialog
+        tenant={tenant}
+        lease={lease}
+        open={action === "contract"}
+        onOpenChange={close}
+      />
+      <UploadDocumentDialog
+        tenant={tenant}
+        leaseId={lease.id}
+        open={action === "attach"}
         onOpenChange={close}
       />
     </li>

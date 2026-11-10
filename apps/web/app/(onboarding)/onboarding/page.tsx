@@ -49,7 +49,7 @@ export default async function OnboardingPage() {
         </span>
         <AuthHeader title={t("title")} description={t("description")} />
       </div>
-      <CreateOrganizationForm userName={user.name} />
+      <CreateOrganizationForm />
     </div>
   )
 }

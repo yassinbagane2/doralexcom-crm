@@ -1,7 +1,9 @@
 import { relations, sql } from "drizzle-orm"
 import {
+  boolean,
   date,
   index,
+  integer,
   numeric,
   pgTable,
   text,
@@ -26,6 +28,11 @@ import { property } from "./property"
  * A tenant occupying a property from `startDate` (entry) until `endDate`
  * (exit, inclusive; open-ended while null). Leases of one property never
  * overlap. Terminating one fixes its `endDate` and stamps `terminatedAt`.
+ *
+ * A lease agreed for `termMonths` ends on the day before that many months
+ * have passed. With `autoRenew` it starts another term of the same length
+ * each time one ends, so until it is terminated it holds the property
+ * open-ended; `endDate` stays the end of the first term.
  */
 export const lease = pgTable(
   "lease",
@@ -48,6 +55,29 @@ export const lease = pgTable(
     rent: numeric("rent", { precision: 12, scale: 2, mode: "number" })
       .default(0)
       .notNull(),
+    /** Monthly service charges (maintenance, utilities…), billed with rent. */
+    charges: numeric("charges", { precision: 12, scale: 2, mode: "number" })
+      .default(0)
+      .notNull(),
+    /** Other monthly costs billed with rent (parking, internet…). */
+    additionalCosts: numeric("additional_costs", {
+      precision: 12,
+      scale: 2,
+      mode: "number",
+    })
+      .default(0)
+      .notNull(),
+    /** Taken off every month's bill. */
+    discount: numeric("discount", { precision: 12, scale: 2, mode: "number" })
+      .default(0)
+      .notNull(),
+    /** Security deposit held for the lease. Not part of what's billed. */
+    deposit: numeric("deposit", { precision: 12, scale: 2, mode: "number" })
+      .default(0)
+      .notNull(),
+    /** Length agreed, in months; null when set by an exit date or open-ended. */
+    termMonths: integer("term_months"),
+    autoRenew: boolean("auto_renew").default(false).notNull(),
     currency: text("currency", { enum: ["RON", "EUR"] })
       .default("RON")
       .notNull(),

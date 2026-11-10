@@ -9,6 +9,7 @@ import { createContext } from "@workspace/api/context"
 import { appRouter } from "@workspace/api/routers"
 import { auth } from "@workspace/auth"
 import { Hono } from "hono"
+import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
@@ -32,6 +33,17 @@ app.use(
 )
 
 app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
+
+// The largest requests are documents: 10 MB uploads, and contracts whose
+// pictures travel inline (up to 15 MB of content). Anything bigger is refused
+// before it is read.
+app.use(
+  "/rpc/*",
+  bodyLimit({
+    maxSize: 20 * 1024 * 1024,
+    onError: (c) => c.json({ message: "Request too large." }, 413),
+  })
+)
 
 /** Expected failures (401, 404, validation…) are answers, not server errors. */
 function logUnexpectedError(error: unknown) {

@@ -5,6 +5,7 @@ import {
   Building2,
   BuildingOffice,
   Contact,
+  FileText,
   Home,
   LayoutDashboard,
   Logout,
@@ -251,6 +252,13 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       title: t("tenants"),
       icon: Contact,
       link: routes.tenants,
+      if: isBusiness,
+    },
+    {
+      id: "templates",
+      title: t("templates"),
+      icon: FileText,
+      link: routes.templates,
       if: isBusiness,
     },
     // User routes

@@ -6,6 +6,7 @@ import {
   localToday,
   TENANT_GROUPS,
   tenantGroups,
+  type LeaseDates,
   type TenantGroup,
 } from "@workspace/api/lease"
 import { Badge } from "@workspace/ui/components/ui/badge"
@@ -309,7 +310,8 @@ export function LeaseBadge({
   lease,
   today,
 }: {
-  lease: { startDate: string; endDate: string | null }
+  /** Pass the whole lease: a renewing one never shows as ending. */
+  lease: LeaseDates
   today: string
 }) {
   const t = useTranslations("Leases.status")

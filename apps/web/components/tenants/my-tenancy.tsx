@@ -1,6 +1,12 @@
 "use client"
 
-import { leaseStatus, localToday } from "@workspace/api/lease"
+import {
+  effectiveEnd,
+  leaseStatus,
+  localToday,
+  monthlyDue,
+  renewsAutomatically,
+} from "@workspace/api/lease"
 import { KeyRound, LoaderCircle, MapPin, Phone } from "@workspace/ui/icons"
 import { useLocale, useTranslations } from "next-intl"
 
@@ -81,16 +87,19 @@ export function MyTenancy() {
                           <LeaseBadge lease={lease} today={today} />
                         </div>
                         <span className="text-xs text-muted-foreground">
+                          {/* Rent with the charges and costs billed alongside it. */}
                           {t("rent", {
                             amount: formatMoney(
-                              lease.rent,
+                              monthlyDue(lease),
                               lease.currency,
                               locale
                             ),
                           })}
-                          {lease.endDate
-                            ? ` · ${t("until", { date: formatDate(lease.endDate, locale) })}`
-                            : ""}
+                          {renewsAutomatically(lease)
+                            ? ` · ${t("renews")}`
+                            : effectiveEnd(lease)
+                              ? ` · ${t("until", { date: formatDate(effectiveEnd(lease)!, locale) })}`
+                              : ""}
                         </span>
                       </div>
                     </div>

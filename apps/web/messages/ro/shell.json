@@ -14,7 +14,8 @@
     "backToDashboard": "Înapoi la panou",
     "openMenu": "Deschide meniul contului",
     "signOut": "Deconectare",
-    "adminBadge": "Admin"
+    "adminBadge": "Admin",
+    "templates": "Șabloane"
   },
   "Preferences": {
     "metaTitle": "Preferințe",

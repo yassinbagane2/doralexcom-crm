@@ -143,7 +143,7 @@
     "perMonth": "{amount}/mo",
     "actionsLabel": "Actions for {property}",
     "recordPayment": "Record payment",
-    "edit": "Edit dates and rent",
+    "edit": "Edit lease terms",
     "terminate": "Terminate lease",
     "delete": "Remove lease",
     "paymentsTitle": "Payments",
@@ -152,10 +152,10 @@
     "assignDescription": "The tenant occupies it from the entry date, and until the exit date if there is one.",
     "assignSubmit": "Assign property",
     "editTitle": "Edit lease",
-    "editDescription": "Dates and rent for {property}.",
+    "editDescription": "Dates, rent and terms for {property}.",
     "propertyPlaceholder": "Choose a property",
     "noProperties": "Add a property on the Properties page first.",
-    "rentHint": "Per month, due in advance from the entry date.",
+    "rentHint": "Per month, due in advance from the entry date. Changes apply to this lease only.",
     "fields": {
       "property": "Property",
       "startDate": "Entry date",
@@ -166,7 +166,14 @@
       "amount": "Amount ({currency})",
       "paidOn": "Paid on",
       "note": "Note",
-      "tenant": "Tenant"
+      "tenant": "Tenant",
+      "length": "Length",
+      "termMonths": "Number of months",
+      "autoRenew": "Renew automatically",
+      "charges": "Charges",
+      "additionalCosts": "Additional costs",
+      "discount": "Discount",
+      "deposit": "Deposit"
     },
     "paymentTitle": "Record a payment",
     "paymentDescription": "Rent received for {property}, in {currency}.",
@@ -182,7 +189,7 @@
     "deleteDescription": "Use this for a lease entered by mistake. To end a real lease, terminate it instead.",
     "deleteSubmit": "Remove lease",
     "balance": {
-      "due": "Rent charged",
+      "due": "Billed",
       "paid": "Paid",
       "projected": "Balance to date",
       "final": "Final balance",
@@ -196,12 +203,33 @@
       "endBeforeStart": "The exit date can't come before the entry date",
       "amountRequired": "Enter an amount",
       "amountInvalid": "Enter a positive number",
-      "tenantRequired": "Choose a tenant"
+      "tenantRequired": "Choose a tenant",
+      "monthsInvalid": "Enter a number of months from 1 to 1188",
+      "discountTooLarge": "The discount can't be more than the rent, charges and costs together"
     },
     "assignTenantTitle": "Assign a tenant to {property}",
     "assignTenantSubmit": "Assign tenant",
     "tenantPlaceholder": "Choose a tenant",
-    "noTenants": "Add a tenant on the Tenants page first."
+    "noTenants": "Add a tenant on the Tenants page first.",
+    "rentFromProperty": "Taken from the property. You can change it later from the lease.",
+    "noPropertyRent": "This property has no rent set, so the lease starts at 0. Set the rent on the property first, or edit the lease afterwards.",
+    "generateContract": "Generate contract",
+    "attachDocument": "Attach a document",
+    "termsTitle": "Terms",
+    "lengthModes": {
+      "open": "Open-ended",
+      "months": "Fixed length",
+      "date": "Until a date"
+    },
+    "monthsUnit": "months",
+    "endsOn": "Ends {date}",
+    "renewsOn": "Renews {date}",
+    "termLength": "{count, plural, one {# month} other {# months}}",
+    "autoRenewHint": "When a term ends, another of the same length starts, until the lease is terminated.",
+    "monthlyHint": "Billed every month with the rent: {amount} in total.",
+    "depositLine": "Deposit {amount}",
+    "chargesLine": "{rent} rent + {extras} charges and costs",
+    "discountLine": "− {amount} discount"
   },
   "Tenancy": {
     "metaTitle": "My home",
@@ -213,6 +241,7 @@
     "until": "until {date}",
     "doorCode": "Door code",
     "notesTitle": "From your landlord",
-    "notesEmpty": "No notes yet."
+    "notesEmpty": "No notes yet.",
+    "renews": "renews automatically"
   }
 }

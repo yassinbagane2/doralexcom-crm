@@ -1,21 +1,12 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
 import { lease, payment, property, user } from "@workspace/db/schema"
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  inArray,
-  isNull,
-  notExists,
-  or,
-  sql,
-} from "drizzle-orm"
+import { and, asc, desc, eq, inArray, notExists, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
+import { effectiveEnd } from "../lease"
+import { holdsPropertyOn } from "../lib/lease"
 import { PROPERTY_LIMITS, PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
 
 /** Blank text is stored as null, so "not set" has one spelling. */
@@ -78,10 +69,7 @@ const openLeases = (propertyId: typeof property.id) =>
     .select({ one: sql`1` })
     .from(lease)
     .where(
-      and(
-        eq(lease.propertyId, propertyId),
-        or(isNull(lease.endDate), gte(lease.endDate, sql`current_date`))
-      )
+      and(eq(lease.propertyId, propertyId), holdsPropertyOn(sql`current_date`))
     )
 
 /** Rent ever received on any lease of this property. */
@@ -121,6 +109,9 @@ export const propertyRouter = o.prefix("/properties").router({
               propertyId: lease.propertyId,
               startDate: lease.startDate,
               endDate: lease.endDate,
+              autoRenew: lease.autoRenew,
+              termMonths: lease.termMonths,
+              terminatedAt: lease.terminatedAt,
               tenant: { id: user.id, name: user.name, email: user.email },
             })
             .from(lease)
@@ -131,10 +122,7 @@ export const propertyRouter = o.prefix("/properties").router({
                   lease.propertyId,
                   rows.map((row) => row.id)
                 ),
-                or(
-                  isNull(lease.endDate),
-                  gte(lease.endDate, sql`current_date - 1`)
-                )
+                holdsPropertyOn(sql`current_date - 1`)
               )
             )
             .orderBy(asc(lease.startDate))
@@ -156,7 +144,8 @@ export const propertyRouter = o.prefix("/properties").router({
           .map((l) => ({
             id: l.id,
             startDate: l.startDate,
-            endDate: l.endDate,
+            // When the tenant leaves: never, while the lease keeps renewing.
+            endDate: effectiveEnd(l),
             tenant: l.tenant,
           })),
         createdAt: row.createdAt,

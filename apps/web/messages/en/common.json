@@ -76,6 +76,11 @@
     "LEASE_OVERLAP": "Another lease already covers those dates for this property",
     "LEASE_TERMINATED": "This lease has been terminated and can't be changed",
     "LEASE_HAS_PAYMENTS": "Rent payments are recorded on this lease, so it can't be deleted.",
-    "LEASE_END_BEFORE_START": "The exit date can't come before the entry date"
+    "LEASE_END_BEFORE_START": "The exit date can't come before the entry date",
+    "TEMPLATE_NOT_FOUND": "This contract template no longer exists",
+    "DOCUMENT_NOT_FOUND": "This document no longer exists",
+    "CONTENT_TOO_LARGE": "The document is too large to save. Try smaller images",
+    "DOCUMENT_TYPE": "This kind of file can't be attached",
+    "DOCUMENT_SIZE": "The file is empty or larger than 10 MB"
   }
 }

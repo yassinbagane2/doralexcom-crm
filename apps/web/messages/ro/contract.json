@@ -1,0 +1,330 @@
+{
+  "Editor": {
+    "untitled": "Document fără titlu",
+    "exportFailed": "Documentul Word nu a putut fi creat",
+    "headerPlaceholder": "Scrie antetul…",
+    "footerPlaceholder": "Scrie subsolul…",
+    "header": {
+      "title": "Numele documentului",
+      "save": "Salvează",
+      "saving": "Se salvează…",
+      "saved": "Salvat",
+      "unsaved": "Modificări nesalvate",
+      "print": "Tipărește",
+      "downloadWord": "Descarcă în format Word"
+    },
+    "toolbar": {
+      "undo": "Anulează",
+      "redo": "Refă",
+      "insert": "Inserează",
+      "horizontalRule": "Linie orizontală",
+      "quote": "Citat",
+      "removeQuote": "Elimină citatul",
+      "codeBlock": "Bloc de cod",
+      "removeCodeBlock": "Elimină blocul de cod",
+      "bulletList": "Listă cu marcatori",
+      "bulletStyle": "Stilul marcatorilor",
+      "numberedList": "Listă numerotată",
+      "numberStyle": "Stilul numerotării",
+      "increaseIndent": "Mărește indentarea",
+      "decreaseIndent": "Micșorează indentarea",
+      "showMarks": "Afișează marcajele de formatare",
+      "hideMarks": "Ascunde marcajele de formatare",
+      "editingOn": "Activează editarea",
+      "editingOff": "Dezactivează editarea",
+      "bold": "Aldin",
+      "italic": "Cursiv",
+      "underline": "Subliniat",
+      "strike": "Tăiat",
+      "subscript": "Indice",
+      "superscript": "Exponent",
+      "textColor": "Culoarea textului",
+      "highlightColor": "Culoarea evidențierii",
+      "defaultColor": "Implicită",
+      "noHighlight": "Fără evidențiere",
+      "custom": "Personalizată",
+      "customColor": "{label} personalizată",
+      "colors": "Culori",
+      "left": "Aliniere la stânga",
+      "center": "Centrat",
+      "right": "Aliniere la dreapta",
+      "justify": "Aliniere stânga-dreapta",
+      "lineSpacing": "Spațiere între rânduri",
+      "single": "Simplă",
+      "double": "Dublă",
+      "spellcheckOn": "Verificare ortografică activă",
+      "spellcheckOff": "Verificare ortografică oprită",
+      "insertImage": "Inserează o imagine",
+      "image": "Imagine",
+      "imageOnly": "Se pot insera doar imagini",
+      "imageTooLarge": "Imaginile pot avea cel mult 5 MB",
+      "imageUnreadable": "Imaginea nu a putut fi citită",
+      "fontSize": "Dimensiunea fontului",
+      "decreaseFontSize": "Micșorează fontul",
+      "increaseFontSize": "Mărește fontul",
+      "styles": "Stiluri",
+      "paragraphStyle": "Stilul paragrafului",
+      "theme": "Temă",
+      "documentTheme": "Tema documentului"
+    },
+    "pageSetup": {
+      "label": "Configurarea paginii",
+      "paperSize": "Dimensiunea hârtiei",
+      "orientation": "Orientare",
+      "portrait": "Portret",
+      "landscape": "Peisaj",
+      "margins": "Margini",
+      "customSides": "Laterale personalizate"
+    },
+    "margins": {
+      "normal": "Normale",
+      "narrow": "Înguste",
+      "moderate": "Moderate",
+      "wide": "Late"
+    },
+    "textStyles": {
+      "paragraph": "Text normal",
+      "title": "Titlu",
+      "heading1": "Titlu 1",
+      "heading2": "Titlu 2",
+      "heading3": "Titlu 3"
+    },
+    "themes": {
+      "default": {
+        "label": "Implicită",
+        "description": "Text Calibri, titluri neutre"
+      },
+      "classic": {
+        "label": "Clasică",
+        "description": "Times New Roman, titluri bleumarin"
+      },
+      "modern": {
+        "label": "Modernă",
+        "description": "Text Arial, titluri turcoaz"
+      },
+      "elegant": {
+        "label": "Elegantă",
+        "description": "Text Garamond, titluri Georgia"
+      }
+    },
+    "bulletStyles": {
+      "disc": "Disc",
+      "circle": "Cerc",
+      "square": "Pătrat"
+    },
+    "colors": {
+      "black": "Negru",
+      "darkGray": "Gri închis",
+      "gray": "Gri",
+      "lightGray": "Gri deschis",
+      "silver": "Argintiu",
+      "white": "Alb",
+      "red": "Roșu",
+      "orange": "Portocaliu",
+      "amber": "Chihlimbar",
+      "yellow": "Galben",
+      "green": "Verde",
+      "teal": "Turcoaz",
+      "blue": "Albastru",
+      "indigo": "Indigo",
+      "purple": "Violet",
+      "pink": "Roz",
+      "darkRed": "Roșu închis",
+      "brown": "Maro",
+      "darkGreen": "Verde închis",
+      "navy": "Bleumarin",
+      "plum": "Prună"
+    },
+    "link": {
+      "insert": "Inserează un link",
+      "edit": "Editează linkul",
+      "to": "Link către",
+      "remove": "Elimină",
+      "apply": "Aplică"
+    },
+    "table": {
+      "label": "Tabel",
+      "insert": "Inserează un tabel",
+      "size": "Tabel {rows} × {cols}",
+      "insertSize": "Inserează un tabel de {rows} pe {cols}",
+      "rowAbove": "Rând deasupra",
+      "rowBelow": "Rând dedesubt",
+      "columnLeft": "Coloană la stânga",
+      "columnRight": "Coloană la dreapta",
+      "deleteRow": "Șterge rândul",
+      "deleteColumn": "Șterge coloana",
+      "headerRow": "Rând de antet",
+      "deleteTable": "Șterge tabelul"
+    },
+    "ruler": {
+      "leftMargin": "Marginea din stânga",
+      "rightMargin": "Marginea din dreapta",
+      "valueText": "{value}, la fel pe ambele părți",
+      "sideMargins": "Margini laterale: {value}"
+    },
+    "regions": {
+      "header": "Antet",
+      "footer": "Subsol"
+    },
+    "status": {
+      "page": "Pagina <strong>{current}</strong> din {count}",
+      "words": "{count, plural, one {# cuvânt} few {# cuvinte} other {# de cuvinte}}",
+      "characters": "{count, plural, one {# caracter} few {# caractere} other {# de caractere}}"
+    }
+  },
+  "MergeFields": {
+    "insert": "Inserează un câmp",
+    "groups": {
+      "landlord": "Proprietar",
+      "tenant": "Chiriaș",
+      "property": "Proprietate",
+      "lease": "Contract",
+      "document": "Document"
+    },
+    "fields": {
+      "landlord": {
+        "name": "Numele proprietarului",
+        "representative": "Reprezentantul proprietarului",
+        "email": "Emailul proprietarului",
+        "taxId": "CUI-ul proprietarului",
+        "registrationNumber": "Nr. de înregistrare al proprietarului"
+      },
+      "tenant": {
+        "name": "Numele chiriașului",
+        "email": "Emailul chiriașului",
+        "phone": "Telefonul chiriașului",
+        "address": "Adresa chiriașului"
+      },
+      "property": {
+        "name": "Numele proprietății",
+        "type": "Tipul proprietății",
+        "address": "Adresa proprietății",
+        "surfaceArea": "Suprafața",
+        "description": "Descrierea proprietății"
+      },
+      "lease": {
+        "startDate": "Data începerii",
+        "endDate": "Data încheierii",
+        "length": "Durata contractului",
+        "renewal": "Clauza de prelungire",
+        "rent": "Chiria",
+        "charges": "Cheltuieli",
+        "additionalCosts": "Costuri suplimentare",
+        "discount": "Reducere",
+        "monthlyTotal": "Total pe lună",
+        "deposit": "Garanția",
+        "currency": "Moneda"
+      },
+      "document": {
+        "date": "Data de azi"
+      }
+    },
+    "values": {
+      "openEnded": "o perioadă nedeterminată",
+      "noEndDate": "fără o dată de încheiere",
+      "months": "{count, plural, one {# lună} few {# luni} other {# de luni}}",
+      "days": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+      "renews": "La încheierea perioadei, contractul se prelungește automat cu perioade succesive de {length}, dacă niciuna dintre părți nu îl reziliază.",
+      "noRenewal": "Contractul nu se prelungește automat."
+    }
+  },
+  "Contracts": {
+    "metaTitle": "Șabloane",
+    "title": "Șabloane",
+    "description": "Șabloane de contract pentru închirierile tale. Câmpurile se completează din datele proprietarului, chiriașului, proprietății și contractului atunci când generezi un contract.",
+    "add": "Șablon nou",
+    "createTitle": "Creează un șablon nou",
+    "createDescription": "Pornește de la o pagină goală, apoi adaugă câmpuri pentru chiriaș, proprietate și contract.",
+    "fields": "Câmpuri",
+    "editedAgo": "Modificat {time}",
+    "editedJustNow": "Modificat chiar acum",
+    "edit": "Editează",
+    "duplicate": "Duplică",
+    "copyName": "{name} (copie)",
+    "delete": "Șterge",
+    "actionsLabel": "Acțiuni pentru {name}",
+    "created": "Șablon creat",
+    "saved": "Șablon salvat",
+    "duplicated": "Șablon duplicat",
+    "deleted": "Șablon șters",
+    "deleteTitle": "Ștergi {name}?",
+    "deleteDescription": "Contractele deja generate din el își păstrează textul. Acțiunea nu poate fi anulată.",
+    "deleteSubmit": "Șterge șablonul",
+    "editor": {
+      "metaTitle": "Șablon",
+      "eyebrow": "Șablon",
+      "back": "Înapoi la șabloane",
+      "newTitle": "Șablon fără titlu",
+      "placeholder": "Scrie șablonul. Inserează câmpuri din bara de instrumente pentru datele chiriașului și ale contractului.",
+      "banner": "Câmpurile evidențiate se completează automat atunci când folosești acest șablon. Adaugă-le cu <strong>Inserează un câmp</strong>.",
+      "notFound": "Acest șablon nu există sau a fost șters."
+    }
+  },
+  "ContractDocument": {
+    "metaTitle": "Contract",
+    "eyebrow": "Contract · {tenant}",
+    "back": "Înapoi la {tenant}",
+    "placeholder": "Scrie contractul…",
+    "saved": "Contract salvat",
+    "notFound": "Acest contract nu există sau a fost șters.",
+    "lease": "Contractul pentru {property}"
+  },
+  "Documents": {
+    "title": "Documente",
+    "upload": "Încarcă",
+    "empty": "Niciun document încă. Încarcă un contract semnat sau generează unul din contractele de închiriere.",
+    "contract": "Contract",
+    "lease": "Contractul pentru {property}",
+    "open": "Deschide",
+    "download": "Descarcă",
+    "delete": "Șterge",
+    "actionsLabel": "Acțiuni pentru {name}",
+    "uploadTitle": "Încarcă un document",
+    "uploadDescription": "PDF, Word, text sau fotografie, de cel mult 10 MB. Chiriașii nu le văd.",
+    "file": "Fișier",
+    "chooseFile": "Alege un fișier",
+    "changeFile": "Schimbă",
+    "leaseField": "Contract de închiriere",
+    "noLease": "Nu ține de un contract",
+    "uploadSubmit": "Încarcă",
+    "uploaded": "Document încărcat",
+    "deleted": "Document șters",
+    "deleteTitle": "Ștergi {name}?",
+    "deleteDescription": "Documentul este eliminat definitiv.",
+    "deleteSubmit": "Șterge documentul",
+    "tooLarge": "Fișierele pot avea cel mult 10 MB",
+    "wrongType": "Folosește un PDF, un document Word, un fișier text sau o fotografie",
+    "generateTitle": "Generează un contract",
+    "generateDescription": "Completează un șablon cu datele contractului pentru {property}. Poți edita contractul și după aceea.",
+    "template": "Șablon",
+    "templatePlaceholder": "Alege un șablon",
+    "noTemplates": "Niciun șablon încă. <link>Scrie unul</link> mai întâi.",
+    "name": "Nume",
+    "generateSubmit": "Generează contractul",
+    "generated": "Contract generat",
+    "contractName": "{template} – {tenant}"
+  },
+  "StarterContract": {
+    "title": "Contract de închiriere a locuinței",
+    "intro": "Prezentul contract se încheie la data de [document.date] între:",
+    "landlord": "**Proprietar:** [landlord.name], CUI [landlord.taxId], reprezentat de [landlord.representative];",
+    "tenant": "**Chiriaș:** [tenant.name], cu domiciliul în [tenant.address], telefon [tenant.phone], email [tenant.email].",
+    "propertyHeading": "1. Obiectul contractului",
+    "property": "Proprietarul închiriază chiriașului [property.type] denumit „[property.name]”, situat la adresa [property.address], cu o suprafață de [property.surfaceArea].",
+    "termHeading": "2. Durata",
+    "term": "Contractul începe la data de [lease.startDate] și se încheie pe [lease.length].",
+    "renewal": "[lease.renewal]",
+    "paymentHeading": "3. Chiria și cheltuielile",
+    "payment": "Lunar, în avans, chiriașul plătește:",
+    "rent": "Chiria",
+    "charges": "Cheltuieli",
+    "additionalCosts": "Costuri suplimentare",
+    "discount": "Reducere",
+    "total": "**Total pe lună**",
+    "depositHeading": "4. Garanția",
+    "deposit": "La semnare, chiriașul plătește o garanție de [lease.deposit]. Aceasta se restituie la eliberarea locuinței, mai puțin eventualele sume datorate.",
+    "signaturesHeading": "5. Semnături",
+    "landlordSignature": "**Proprietar**",
+    "tenantSignature": "**Chiriaș**"
+  }
+}

@@ -143,7 +143,7 @@
     "perMonth": "{amount}/lună",
     "actionsLabel": "Acțiuni pentru {property}",
     "recordPayment": "Înregistrează plata",
-    "edit": "Editează datele și chiria",
+    "edit": "Editează condițiile",
     "terminate": "Reziliază contractul",
     "delete": "Elimină contractul",
     "paymentsTitle": "Plăți",
@@ -152,10 +152,10 @@
     "assignDescription": "Chiriașul o ocupă de la data intrării și până la data ieșirii, dacă există.",
     "assignSubmit": "Atribuie proprietatea",
     "editTitle": "Editează contractul",
-    "editDescription": "Datele și chiria pentru {property}.",
+    "editDescription": "Datele, chiria și condițiile pentru {property}.",
     "propertyPlaceholder": "Alege o proprietate",
     "noProperties": "Adaugă mai întâi o proprietate din pagina Proprietăți.",
-    "rentHint": "Pe lună, plătită în avans de la data intrării.",
+    "rentHint": "Pe lună, plătită în avans de la data intrării. Modificările se aplică doar acestui contract.",
     "fields": {
       "property": "Proprietate",
       "startDate": "Data intrării",
@@ -166,7 +166,14 @@
       "amount": "Sumă ({currency})",
       "paidOn": "Plătită pe",
       "note": "Notă",
-      "tenant": "Chiriaș"
+      "tenant": "Chiriaș",
+      "length": "Durată",
+      "termMonths": "Număr de luni",
+      "autoRenew": "Prelungire automată",
+      "charges": "Cheltuieli",
+      "additionalCosts": "Costuri suplimentare",
+      "discount": "Reducere",
+      "deposit": "Garanție"
     },
     "paymentTitle": "Înregistrează o plată",
     "paymentDescription": "Chirie primită pentru {property}, în {currency}.",
@@ -182,7 +189,7 @@
     "deleteDescription": "Folosește această opțiune pentru un contract introdus din greșeală. Pentru a încheia un contract real, reziliază-l.",
     "deleteSubmit": "Elimină contractul",
     "balance": {
-      "due": "Chirie facturată",
+      "due": "Facturat",
       "paid": "Plătit",
       "projected": "Sold la zi",
       "final": "Sold final",
@@ -196,12 +203,33 @@
       "endBeforeStart": "Data ieșirii nu poate fi înaintea datei intrării",
       "amountRequired": "Introdu o sumă",
       "amountInvalid": "Introdu un număr pozitiv",
-      "tenantRequired": "Alege un chiriaș"
+      "tenantRequired": "Alege un chiriaș",
+      "monthsInvalid": "Introdu un număr de luni între 1 și 1188",
+      "discountTooLarge": "Reducerea nu poate depăși chiria, cheltuielile și costurile la un loc"
     },
     "assignTenantTitle": "Atribuie un chiriaș pentru {property}",
     "assignTenantSubmit": "Atribuie chiriașul",
     "tenantPlaceholder": "Alege un chiriaș",
-    "noTenants": "Adaugă mai întâi un chiriaș din pagina Chiriași."
+    "noTenants": "Adaugă mai întâi un chiriaș din pagina Chiriași.",
+    "rentFromProperty": "Preluată de la proprietate. O poți schimba ulterior din contract.",
+    "noPropertyRent": "Proprietatea nu are chiria setată, așa că contractul pornește de la 0. Setează mai întâi chiria proprietății sau editează contractul după aceea.",
+    "generateContract": "Generează contractul",
+    "attachDocument": "Atașează un document",
+    "termsTitle": "Condiții",
+    "lengthModes": {
+      "open": "Pe perioadă nedeterminată",
+      "months": "Durată fixă",
+      "date": "Până la o dată"
+    },
+    "monthsUnit": "luni",
+    "endsOn": "Se încheie {date}",
+    "renewsOn": "Se prelungește {date}",
+    "termLength": "{count, plural, one {# lună} few {# luni} other {# de luni}}",
+    "autoRenewHint": "Când o perioadă se încheie, începe alta de aceeași durată, până la rezilierea contractului.",
+    "monthlyHint": "Facturat lunar împreună cu chiria: {amount} în total.",
+    "depositLine": "Garanție {amount}",
+    "chargesLine": "{rent} chirie + {extras} cheltuieli și costuri",
+    "discountLine": "− {amount} reducere"
   },
   "Tenancy": {
     "metaTitle": "Locuința mea",
@@ -213,6 +241,7 @@
     "until": "până pe {date}",
     "doorCode": "Cod interfon",
     "notesTitle": "De la proprietar",
-    "notesEmpty": "Nicio notiță încă."
+    "notesEmpty": "Nicio notiță încă.",
+    "renews": "se prelungește automat"
   }
 }

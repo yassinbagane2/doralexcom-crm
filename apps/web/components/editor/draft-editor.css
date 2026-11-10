@@ -1,0 +1,297 @@
+/*
+ * Styles for the paper page rendered by the drafting editor. The page is always
+ * white with dark ink, whatever the app theme, because it previews the printed
+ * document. Everything is scoped under `.draft-page` so nothing leaks.
+ */
+
+.draft-page {
+  --doc-body-font: Calibri, Carlito, sans-serif;
+  --doc-heading-font: Calibri, Carlito, sans-serif;
+  --doc-accent: #1f2937;
+  /* Selection tint in the app's accent, shared by text and cell selections. */
+  --draft-selection: color-mix(in oklab, var(--ring) 28%, transparent);
+  color: #1f2937;
+  font-family: var(--doc-body-font);
+  font-size: 11pt;
+  font-weight: 400;
+  line-height: 1.15;
+  -webkit-font-smoothing: auto;
+}
+
+.draft-sheet {
+  background: #ffffff;
+}
+
+.draft-page .ProseMirror {
+  /* flow-root keeps the first block's top margin inside the editor, so the
+     editor's top edge is exactly the top of the printable area. */
+  display: flow-root;
+  outline: none;
+  min-height: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ProseMirror hides the native selection while a cell selection is drawn. */
+.draft-page .ProseMirror:not(.ProseMirror-hideselection) ::selection {
+  background: var(--draft-selection);
+}
+
+/* Page-break spacers inserted by the pagination extension. They are
+   transparent so the sheets drawn behind the editor show through the gap. */
+.draft-page .draft-page-break {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.draft-page .ProseMirror p {
+  margin: 0 0 8pt;
+}
+
+.draft-page .ProseMirror h1,
+.draft-page .ProseMirror h2,
+.draft-page .ProseMirror h3,
+.draft-page .ProseMirror h4 {
+  color: var(--doc-accent);
+  font-family: var(--doc-heading-font);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 14pt 0 6pt;
+}
+
+/* The editor's four levels are Word's Title and Heading 1 to 3. */
+.draft-page .ProseMirror h1 {
+  color: var(--doc-accent);
+  font-family: var(--doc-heading-font);
+  font-size: 26pt;
+  font-weight: 400;
+  margin-top: 0;
+}
+
+.draft-page .ProseMirror h2 {
+  color: var(--doc-accent);
+  font-family: var(--doc-heading-font);
+  font-size: 18pt;
+  font-weight: 600;
+}
+
+.draft-page .ProseMirror h3 {
+  color: var(--doc-accent);
+  font-family: var(--doc-heading-font);
+  font-size: 14pt;
+  font-weight: 600;
+}
+
+.draft-page .ProseMirror h4 {
+  color: var(--doc-accent);
+  font-family: var(--doc-heading-font);
+  font-size: 12pt;
+  font-weight: 600;
+}
+
+.draft-page .ProseMirror ul,
+.draft-page .ProseMirror ol {
+  margin: 0 0 8pt;
+  padding-left: 1.6em;
+}
+
+.draft-page .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.draft-page .ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.draft-page .ProseMirror li > p {
+  margin-bottom: 2pt;
+}
+
+.draft-page .ProseMirror blockquote {
+  border-left: 3px solid #d1d5db;
+  color: #4b5563;
+  margin: 0 0 8pt;
+  padding-left: 1em;
+}
+
+.draft-page .ProseMirror pre {
+  background: #f3f4f6;
+  border-radius: 6px;
+  color: #111827;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10pt;
+  margin: 0 0 8pt;
+  padding: 10px 12px;
+}
+
+.draft-page .ProseMirror code {
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  padding: 0.1em 0.3em;
+}
+
+.draft-page .ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.draft-page .ProseMirror hr {
+  border: 0;
+  border-top: 1px solid #d1d5db;
+  margin: 12pt 0;
+}
+
+.draft-page .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.draft-page .ProseMirror mark {
+  border-radius: 2px;
+  color: inherit;
+  padding: 0 1px;
+}
+
+.draft-page .ProseMirror img {
+  display: block;
+  height: auto;
+  margin: 0 0 8pt;
+  max-width: 100%;
+}
+
+.draft-page .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Tables */
+.draft-page .ProseMirror table {
+  border-collapse: collapse;
+  margin: 0 0 8pt;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.draft-page .ProseMirror td,
+.draft-page .ProseMirror th {
+  border: 1px solid #9ca3af;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 4px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.draft-page .ProseMirror th {
+  background: #f3f4f6;
+  font-weight: 600;
+  text-align: left;
+}
+
+.draft-page .ProseMirror td > p:last-child,
+.draft-page .ProseMirror th > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Selected cells, and tables wholly inside a text selection (table-selection.ts). */
+.draft-page .ProseMirror .selectedCell::after,
+.draft-page .ProseMirror .draft-table-selected :is(td, th)::after {
+  background: var(--draft-selection);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+/* A table covered by a text selection is already tinted whole. */
+.draft-page .ProseMirror .draft-table-selected ::selection {
+  background: transparent;
+}
+
+.draft-page .ProseMirror .column-resize-handle {
+  background: var(--ring);
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 3px;
+}
+
+.draft-page .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Placeholder (from @tiptap/extensions) */
+.draft-page .ProseMirror p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Page header and footer (draft-page-regions.tsx), styled like the body. */
+.draft-region .ProseMirror > :last-child {
+  margin-bottom: 0;
+}
+
+/* Their placeholder only shows while they are being edited. */
+.draft-region:not([data-active="true"])
+  .ProseMirror
+  p.is-editor-empty:first-child::before {
+  content: none;
+}
+
+/* Empty lines in the read-only copies keep their height, as they do in the editor. */
+.draft-region-copy :is(p, h1, h2, h3, h4):empty::before {
+  content: "\200b";
+}
+
+/* Formatting marks (the pilcrow toggle) */
+.draft-page[data-show-marks="true"] .ProseMirror p::after,
+.draft-page[data-show-marks="true"] .ProseMirror h1::after,
+.draft-page[data-show-marks="true"] .ProseMirror h2::after,
+.draft-page[data-show-marks="true"] .ProseMirror h3::after,
+.draft-page[data-show-marks="true"] .ProseMirror h4::after {
+  color: #93c5fd;
+  content: "¶";
+  margin-left: 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.draft-page[data-show-marks="true"]
+  .ProseMirror
+  p.is-editor-empty:first-child::after {
+  content: none;
+}
+
+/* Editing turned off */
+.draft-page[data-editable="false"] .ProseMirror {
+  caret-color: transparent;
+}
+
+/* Merge fields (merge-field.ts): a value filled in from the lease when a
+   contract is generated, shown as a chip while it is still a placeholder. */
+.draft-page .draft-field,
+.draft-region-copy .draft-field {
+  background: #e0e7ff;
+  border-radius: 0.25em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: #3730a3;
+  padding: 0 0.2em;
+  white-space: nowrap;
+}
+
+.draft-page .draft-field.ProseMirror-selectednode {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}

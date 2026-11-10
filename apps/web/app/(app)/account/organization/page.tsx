@@ -19,7 +19,7 @@ export default async function OrganizationPage() {
     <SettingsSection title={t("title")} description={t("description")}>
       <EditOrganizationForm
         // Remount after a save so the form resets to what the server stored.
-        key={`${organization.type}:${organization.name}:${organization.taxId ?? ""}:${organization.registrationNumber ?? ""}`}
+        key={`${organization.name}:${organization.taxId ?? ""}:${organization.registrationNumber ?? ""}`}
         organization={organization}
       />
     </SettingsSection>

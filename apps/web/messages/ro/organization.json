@@ -1,40 +1,9 @@
 {
   "Organization": {
-    "typeLegend": "Cine închiriază proprietățile?",
-    "types": {
-      "personal": {
-        "title": "Proprietar persoană fizică",
-        "description": "Închiriezi proprietăți pe care le deții, ca persoană fizică."
-      },
-      "business": {
-        "title": "Firmă",
-        "description": "O companie sau agenție care deține ori administrează închirieri."
-      },
-      "institution": {
-        "title": "Instituție",
-        "description": "O instituție publică, asociație sau fundație."
-      }
-    },
-    "typeLabel": "Tip",
-    "nameLabel": {
-      "personal": "Numele tău",
-      "business": "Denumirea firmei",
-      "institution": "Denumirea instituției"
-    },
-    "namePlaceholder": {
-      "personal": "Ion Popescu",
-      "business": "Acme Imobiliare SRL",
-      "institution": "Primăria Sectorului 1"
-    },
-    "nameHint": {
-      "personal": "Apare pentru chiriași pe contracte și chitanțe.",
-      "business": "Denumirea legală înregistrată, așa cum apare pe contracte.",
-      "institution": "Denumirea oficială, așa cum apare pe contracte."
-    },
-    "taxIdLabel": {
-      "business": "Cod fiscal (CUI)",
-      "institution": "Cod de identificare fiscală (CIF)"
-    },
+    "nameLabel": "Denumirea firmei",
+    "namePlaceholder": "Acme Imobiliare SRL",
+    "nameHint": "Denumirea legală înregistrată, așa cum apare pe contracte.",
+    "taxIdLabel": "Cod fiscal (CUI)",
     "registrationNumberLabel": "Nr. Registrul Comerțului",
     "validation": {
       "nameRequired": "Introdu o denumire",
@@ -47,7 +16,7 @@
     "metaTitle": "Configurează organizația",
     "step": "Ultimul pas",
     "title": "Configurează organizația",
-    "description": "Spune-ne cine închiriază proprietățile. Poți schimba asta oricând din setările contului.",
+    "description": "Spune-ne despre firma ta. Poți schimba asta oricând din setările contului.",
     "submit": "Creează organizația",
     "signOut": "Deconectare",
     "noBusinessTitle": "Nu faci parte dintr-o firmă",
@@ -56,7 +25,7 @@
   "OrganizationSettings": {
     "metaTitle": "Organizație",
     "title": "Organizație",
-    "description": "Dacă închiriezi ca persoană fizică, firmă sau instituție, și datele care apar pe documentele tale.",
+    "description": "Datele legale ale firmei tale, așa cum apar pe documente.",
     "saved": "Organizația a fost actualizată"
   }
 }

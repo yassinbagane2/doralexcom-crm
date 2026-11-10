@@ -8,7 +8,8 @@
     "./context": "./src/context.ts",
     "./routers": "./src/routers/index.ts",
     "./property": "./src/property.ts",
-    "./lease": "./src/lease.ts"
+    "./lease": "./src/lease.ts",
+    "./contract": "./src/contract.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

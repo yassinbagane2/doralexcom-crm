@@ -21,9 +21,50 @@ export const TENANT_LIMITS = {
   paymentNote: 300,
 } as const
 
+/** Longest lease length the forms accept: 99 years. */
+export const MAX_TERM_MONTHS = 1188
+
 export interface LeaseDates {
   startDate: string
   endDate: string | null
+  /** Starts another term of `termMonths` each time one ends. */
+  autoRenew?: boolean
+  termMonths?: number | null
+  terminatedAt?: Date | string | null
+}
+
+/** What the tenant is billed each month, besides the one-off deposit. */
+export interface LeaseCharges {
+  rent: number
+  charges?: number
+  additionalCosts?: number
+  discount?: number
+}
+
+/**
+ * Whether the lease renews by itself: only one agreed for a number of months
+ * does, and never once terminated.
+ */
+export function renewsAutomatically(lease: LeaseDates) {
+  return Boolean(lease.autoRenew && lease.termMonths && !lease.terminatedAt)
+}
+
+/**
+ * The day the tenant moves out, as far as anyone knows: null while the lease
+ * is open-ended or keeps renewing.
+ */
+export function effectiveEnd(lease: LeaseDates) {
+  return renewsAutomatically(lease) ? null : lease.endDate
+}
+
+/** Rent, charges and costs, less the discount: never below zero. */
+export function monthlyDue(lease: LeaseCharges) {
+  const total =
+    lease.rent +
+    (lease.charges ?? 0) +
+    (lease.additionalCosts ?? 0) -
+    (lease.discount ?? 0)
+  return Math.max(0, Math.round(total * 100) / 100)
 }
 
 /**
@@ -35,9 +76,10 @@ export interface LeaseDates {
 export type LeaseStatus = "upcoming" | "active" | "ending" | "ended"
 
 export function leaseStatus(lease: LeaseDates, today: string): LeaseStatus {
+  const end = effectiveEnd(lease)
   if (lease.startDate > today) return "upcoming"
-  if (lease.endDate && lease.endDate < today) return "ended"
-  return lease.endDate ? "ending" : "active"
+  if (end && end < today) return "ended"
+  return end ? "ending" : "active"
 }
 
 /** Whether the lease still holds its property, now or later. */
@@ -84,6 +126,10 @@ function toUtc(day: string) {
   return Date.UTC(year!, month! - 1, date!)
 }
 
+function fromUtc(time: number) {
+  return new Date(time).toISOString().slice(0, 10)
+}
+
 /** `start` moved `months` ahead, on the same day of the month (or its last). */
 function addMonths(start: string, months: number) {
   const [year, month, date] = start.split("-").map(Number)
@@ -98,6 +144,49 @@ function addMonths(start: string, months: number) {
   )
 }
 
+/** The last day of a lease agreed for `months` from `start`. */
+export function termEndDate(start: string, months: number) {
+  return fromUtc(addMonths(start, months) - DAY)
+}
+
+/**
+ * The lease's length, when its dates span whole months: 12 for 1 Jan to
+ * 31 Dec. Null when open-ended or a few days off.
+ */
+export function leaseMonths(lease: LeaseDates): number | null {
+  if (lease.termMonths) return lease.termMonths
+  if (!lease.endDate) return null
+  const end = toUtc(lease.endDate)
+  for (let months = 1; months <= MAX_TERM_MONTHS; months++) {
+    const termEnd = addMonths(lease.startDate, months) - DAY
+    if (termEnd === end) return months
+    if (termEnd > end) return null
+  }
+  return null
+}
+
+/** Days from entry to exit, both included; null when open-ended. */
+export function leaseDays(lease: LeaseDates): number | null {
+  if (!lease.endDate) return null
+  return (toUtc(lease.endDate) - toUtc(lease.startDate)) / DAY + 1
+}
+
+/**
+ * When the term running on `today` ends: the next renewal of a lease that
+ * renews by itself, else its exit date (null while open-ended).
+ */
+export function currentTermEnd(lease: LeaseDates, today: string) {
+  if (!renewsAutomatically(lease)) return lease.endDate
+  const months = lease.termMonths!
+  const limit = toUtc(today)
+  // Bounded like rentDue: renewals stop counting after 100 years.
+  for (let term = 1; term * months <= 1200; term++) {
+    const end = addMonths(lease.startDate, term * months) - DAY
+    if (end >= limit) return fromUtc(end)
+  }
+  return lease.endDate
+}
+
 /** Today in the reader's own calendar, as "YYYY-MM-DD". */
 export function localToday(now = new Date()) {
   const pad = (value: number) => String(value).padStart(2, "0")
@@ -105,18 +194,21 @@ export function localToday(now = new Date()) {
 }
 
 /**
- * Rent charged on a lease by the end of `asOf`. Rent is due in advance on
- * the entry date and every month after it; a final, partial month is charged
- * by the day. Pass the exit date as `asOf` for the lease's total.
+ * Rent charged on a lease by the end of `asOf`: the monthly bill (rent,
+ * charges and costs, less the discount) is due in advance on the entry date
+ * and every month after it; a final, partial month is charged by the day.
+ * Pass the exit date as `asOf` for the lease's total.
  */
 export function rentDue(
-  lease: LeaseDates & { rent: number },
+  lease: LeaseDates & LeaseCharges,
   asOf: string
 ): number {
-  if (lease.rent <= 0) return 0
+  const monthly = monthlyDue(lease)
+  if (monthly <= 0) return 0
 
   const limit = toUtc(asOf)
-  const end = lease.endDate ? toUtc(lease.endDate) : Number.POSITIVE_INFINITY
+  const exit = effectiveEnd(lease)
+  const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
   let total = 0
 
   // Bounded so a nonsense date can't spin forever: 100 years of months.
@@ -128,10 +220,10 @@ export function rentDue(
     if (end < nextPeriod - DAY) {
       const daysLived = (end - periodStart) / DAY + 1
       const daysInPeriod = (nextPeriod - periodStart) / DAY
-      total += (lease.rent * daysLived) / daysInPeriod
+      total += (monthly * daysLived) / daysInPeriod
       break
     }
-    total += lease.rent
+    total += monthly
   }
 
   return Math.round(total * 100) / 100
@@ -143,7 +235,7 @@ export function rentDue(
  * one against what's been charged so far.
  */
 export function leaseBalance(
-  lease: LeaseDates & { rent: number; terminatedAt: Date | string | null },
+  lease: LeaseDates & LeaseCharges & { terminatedAt: Date | string | null },
   paid: number,
   today: string
 ) {

@@ -1,40 +1,9 @@
 {
   "Organization": {
-    "typeLegend": "Who rents out the properties?",
-    "types": {
-      "personal": {
-        "title": "Personal landlord",
-        "description": "You rent out property you own, as a private person."
-      },
-      "business": {
-        "title": "Business",
-        "description": "A company or agency that owns or manages rentals."
-      },
-      "institution": {
-        "title": "Institution",
-        "description": "A public body, association or foundation."
-      }
-    },
-    "typeLabel": "Type",
-    "nameLabel": {
-      "personal": "Your name",
-      "business": "Company name",
-      "institution": "Institution name"
-    },
-    "namePlaceholder": {
-      "personal": "Ion Popescu",
-      "business": "Acme Imobiliare SRL",
-      "institution": "Primăria Sectorului 1"
-    },
-    "nameHint": {
-      "personal": "Shown to tenants on contracts and receipts.",
-      "business": "The registered legal name, as it appears on contracts.",
-      "institution": "The official name, as it appears on contracts."
-    },
-    "taxIdLabel": {
-      "business": "Tax ID (CUI)",
-      "institution": "Fiscal code (CIF)"
-    },
+    "nameLabel": "Company name",
+    "namePlaceholder": "Acme Imobiliare SRL",
+    "nameHint": "The registered legal name, as it appears on contracts.",
+    "taxIdLabel": "Tax ID (CUI)",
     "registrationNumberLabel": "Trade register no.",
     "validation": {
       "nameRequired": "Enter a name",
@@ -47,7 +16,7 @@
     "metaTitle": "Set up your organization",
     "step": "Last step",
     "title": "Set up your organization",
-    "description": "Tell us who rents out the properties. You can change this later in your account settings.",
+    "description": "Tell us about your business. You can change this later in your account settings.",
     "submit": "Create organization",
     "signOut": "Sign out",
     "noBusinessTitle": "You're not part of a business",
@@ -56,7 +25,7 @@
   "OrganizationSettings": {
     "metaTitle": "Organization",
     "title": "Organization",
-    "description": "Whether you rent as a private person, a business or an institution, and the details that go on your documents.",
+    "description": "Your business's legal details, as they appear on your documents.",
     "saved": "Organization updated"
   }
 }
