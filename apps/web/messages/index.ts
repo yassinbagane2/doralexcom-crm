@@ -3,6 +3,7 @@ import enAdmin from "./en/admin.json"
 import enAuth from "./en/auth.json"
 import enCommon from "./en/common.json"
 import enContract from "./en/contract.json"
+import enDashboard from "./en/dashboard.json"
 import enOrganization from "./en/organization.json"
 import enProperty from "./en/property.json"
 import enSettings from "./en/settings.json"
@@ -13,6 +14,7 @@ import roAdmin from "./ro/admin.json"
 import roAuth from "./ro/auth.json"
 import roCommon from "./ro/common.json"
 import roContract from "./ro/contract.json"
+import roDashboard from "./ro/dashboard.json"
 import roOrganization from "./ro/organization.json"
 import roProperty from "./ro/property.json"
 import roSettings from "./ro/settings.json"
@@ -37,6 +39,7 @@ const en = {
   ...enCustomer,
   ...enContract,
   ...enSettings,
+  ...enDashboard,
 }
 
 export type Messages = typeof en
@@ -52,6 +55,7 @@ const ro = {
   ...roCustomer,
   ...roContract,
   ...roSettings,
+  ...roDashboard,
 } satisfies Messages
 
 export const messages: Record<Locale, Messages> = { en, ro }

@@ -1,0 +1,93 @@
+{
+  "Dashboard": {
+    "metaTitle": "Dashboard",
+    "title": "Dashboard",
+    "loadError": "The dashboard couldn't be loaded.",
+    "retry": "Try again",
+    "occupancy": {
+      "title": "Occupancy",
+      "rented": "{occupied} of {total} rented",
+      "incoming": "{count, plural, one {# moving in soon} other {# moving in soon}}",
+      "noProperties": "No properties yet",
+      "addProperty": "Add a property",
+      "legendOccupied": "Rented",
+      "legendIncoming": "Moving in",
+      "legendVacant": "Vacant",
+      "byTypeTitle": "By type"
+    },
+    "collected": {
+      "title": "Collected this month",
+      "ofBilled": "of {amount} billed",
+      "nothingBilled": "Nothing billed this month"
+    },
+    "outstanding": {
+      "title": "Outstanding rent",
+      "behind": "{count, plural, one {# lease behind} other {# leases behind}}",
+      "allPaid": "Everyone is paid up"
+    },
+    "renewalsKpi": {
+      "title": "Renewals",
+      "window": "In the next 90 days",
+      "next": "Next: {name}, {when}"
+    },
+    "tasks": {
+      "title": "Needs attention",
+      "emptyTitle": "You're all caught up",
+      "emptyDescription": "Overdue rent, renewals to decide and move-ins to prepare show up here.",
+      "showAll": "Show all {count}",
+      "showLess": "Show less",
+      "priority": {
+        "high": "Urgent",
+        "medium": "Soon",
+        "low": "When you can"
+      },
+      "collectRent": {
+        "title": "Collect {amount} from {customer}",
+        "detail": "{property} · rent overdue"
+      },
+      "decideRenewal": {
+        "title": "Decide on {customer}'s lease",
+        "detail": "{property} · ends {when}"
+      },
+      "reviewRenewal": {
+        "title": "Review {customer}'s renewal",
+        "detail": "{property} · renews automatically {when}"
+      },
+      "prepareMoveIn": {
+        "title": "Prepare {customer}'s move-in",
+        "detail": "{property} · moves in {when}"
+      },
+      "addContract": {
+        "title": "Add a contract for {customer}",
+        "detail": "{property} · no document on the lease"
+      },
+      "findCustomer": {
+        "title": "Find a customer for {property}",
+        "detail": "Vacant, no one moving in"
+      }
+    },
+    "rent": {
+      "title": "Rent status",
+      "overdue": "Overdue",
+      "due": "Due soon",
+      "paid": "Paid up",
+      "owes": "{amount} owed",
+      "dueOn": "Due {date}",
+      "paidUntil": "Next {date}",
+      "settled": "Settled",
+      "empty": "No leases are running yet.",
+      "showAll": "Show all {count}",
+      "showLess": "Show less"
+    },
+    "renewals": {
+      "title": "Upcoming renewals",
+      "empty": "No lease ends or renews in the next 90 days.",
+      "renews": "Renews automatically",
+      "ends": "Lease ends",
+      "endsFollowed": "Ends · {name} moves in after",
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "inDays": "in {count} days"
+    }
+  }
+}

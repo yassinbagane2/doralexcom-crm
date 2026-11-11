@@ -5,6 +5,7 @@ import { adminRouter } from "./admin"
 import { businessRouter } from "./business"
 import { collaboratorRouter, invitationRouter } from "./collaborator"
 import { contractRouter } from "./contract"
+import { dashboardRouter } from "./dashboard"
 import { documentRouter } from "./document"
 import { leaseRouter } from "./lease"
 import { propertyRouter } from "./property"
@@ -19,6 +20,7 @@ export const appRouter = {
   user: userRouter,
   admin: adminRouter,
   business: businessRouter,
+  dashboard: dashboardRouter,
   property: propertyRouter,
   customer: customerRouter,
   lease: leaseRouter,

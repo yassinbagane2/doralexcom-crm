@@ -15,13 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/ui/dropdown-menu"
 import { Field, FieldError } from "@workspace/ui/components/ui/field"
 import { Input } from "@workspace/ui/components/ui/input"
 import { Label } from "@workspace/ui/components/ui/label"
@@ -38,15 +31,7 @@ import {
   type FileUploadItem,
 } from "@workspace/ui/components/motion/file-upload"
 import { toast } from "@workspace/ui/components/motion/toaster"
-import {
-  DotsHorizontal,
-  Download,
-  Eye,
-  FilePen,
-  FileText,
-  Loader2,
-  Trash,
-} from "@workspace/ui/icons"
+import { Eye, FileText, Loader2, Trash } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
@@ -63,13 +48,11 @@ import {
   useContractTemplates,
   useCreateContractDocument,
   useDeleteDocument,
-  useDownloadDocument,
   useCustomerDocuments,
   useUploadDocument,
   type CustomerDocument,
 } from "@/hooks/queries/contract"
 import type { CustomerDetail, CustomerLease } from "@/hooks/queries/customer"
-import { saveFile } from "@/lib/download"
 import { fileKind, FileTypeIcon } from "@/lib/file-icon"
 import { formatDate } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
@@ -160,9 +143,6 @@ export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
               key={document.id}
               document={document}
               meta={meta(document)}
-              editHref={
-                document.kind === "contract" ? contractHref(document) : null
-              }
               onView={() => setViewing(document)}
               onDelete={() => setDeleting(document)}
             />
@@ -193,18 +173,15 @@ export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
 function DocumentRow({
   document,
   meta,
-  editHref,
   onView,
   onDelete,
 }: {
   document: CustomerDocument
   meta: string
-  editHref: string | null
   onView: () => void
   onDelete: () => void
 }) {
   const t = useTranslations("Documents")
-  const download = useDownloadDocument()
 
   return (
     <li className="group flex items-center gap-2 rounded-lg pr-1 transition-colors hover:bg-muted/50">
@@ -222,58 +199,28 @@ function DocumentRow({
           <span className="truncate text-sm font-medium">{document.name}</span>
           <span className="truncate text-xs text-muted-foreground">{meta}</span>
         </span>
-        <span className="hidden items-center gap-1 text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
-          <Eye size={14} />
-          {t("view")}
-        </span>
       </button>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t("actionsLabel", { name: document.name })}
-            />
-          }
+      {/* Revealed on hover or keyboard focus; always there on touch screens. */}
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          onClick={onView}
         >
-          {download.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <DotsHorizontal size={16} />
-          )}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={onView}>
-            <Eye size={16} />
-            {t("view")}
-          </DropdownMenuItem>
-          {editHref ? (
-            <DropdownMenuItem render={<Link href={editHref} />}>
-              <FilePen className="size-4" />
-              {t("edit")}
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              onClick={() =>
-                download.mutate(
-                  { id: document.id },
-                  { onSuccess: (file) => saveFile(file, document.name) }
-                )
-              }
-            >
-              <Download className="size-4" />
-              {t("download")}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={onDelete}>
-            <Trash size={16} />
-            {t("delete")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <Eye size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          aria-label={t("deleteLabel", { name: document.name })}
+          onClick={onDelete}
+        >
+          <Trash size={16} />
+        </Button>
+      </div>
     </li>
   )
 }

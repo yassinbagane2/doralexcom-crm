@@ -1,0 +1,93 @@
+{
+  "Dashboard": {
+    "metaTitle": "Panou",
+    "title": "Panou",
+    "loadError": "Panoul nu a putut fi încărcat.",
+    "retry": "Încearcă din nou",
+    "occupancy": {
+      "title": "Grad de ocupare",
+      "rented": "{occupied} din {total} închiriate",
+      "incoming": "{count, plural, one {# se mută în curând} few {# se mută în curând} other {# se mută în curând}}",
+      "noProperties": "Nicio proprietate încă",
+      "addProperty": "Adaugă o proprietate",
+      "legendOccupied": "Închiriate",
+      "legendIncoming": "Se mută",
+      "legendVacant": "Libere",
+      "byTypeTitle": "După tip"
+    },
+    "collected": {
+      "title": "Încasat luna aceasta",
+      "ofBilled": "din {amount} facturat",
+      "nothingBilled": "Nimic facturat luna aceasta"
+    },
+    "outstanding": {
+      "title": "Chirie restantă",
+      "behind": "{count, plural, one {# contract cu restanțe} few {# contracte cu restanțe} other {# de contracte cu restanțe}}",
+      "allPaid": "Toată lumea e la zi"
+    },
+    "renewalsKpi": {
+      "title": "Reînnoiri",
+      "window": "În următoarele 90 de zile",
+      "next": "Următorul: {name}, {when}"
+    },
+    "tasks": {
+      "title": "Necesită atenție",
+      "emptyTitle": "Totul e la zi",
+      "emptyDescription": "Chiriile restante, reînnoirile de decis și mutările de pregătit apar aici.",
+      "showAll": "Arată toate ({count})",
+      "showLess": "Arată mai puține",
+      "priority": {
+        "high": "Urgent",
+        "medium": "În curând",
+        "low": "Când poți"
+      },
+      "collectRent": {
+        "title": "Încasează {amount} de la {customer}",
+        "detail": "{property} · chirie restantă"
+      },
+      "decideRenewal": {
+        "title": "Decide asupra contractului lui {customer}",
+        "detail": "{property} · se încheie {when}"
+      },
+      "reviewRenewal": {
+        "title": "Verifică reînnoirea pentru {customer}",
+        "detail": "{property} · se reînnoiește automat {when}"
+      },
+      "prepareMoveIn": {
+        "title": "Pregătește mutarea lui {customer}",
+        "detail": "{property} · se mută {when}"
+      },
+      "addContract": {
+        "title": "Adaugă un contract pentru {customer}",
+        "detail": "{property} · niciun document pe contract"
+      },
+      "findCustomer": {
+        "title": "Găsește un client pentru {property}",
+        "detail": "Liberă, nu se mută nimeni"
+      }
+    },
+    "rent": {
+      "title": "Situația chiriilor",
+      "overdue": "Restante",
+      "due": "Scadente curând",
+      "paid": "La zi",
+      "owes": "{amount} datorat",
+      "dueOn": "Scadent {date}",
+      "paidUntil": "Următoarea {date}",
+      "settled": "Achitat",
+      "empty": "Niciun contract nu rulează încă.",
+      "showAll": "Arată toate ({count})",
+      "showLess": "Arată mai puține"
+    },
+    "renewals": {
+      "title": "Reînnoiri apropiate",
+      "empty": "Niciun contract nu se încheie sau reînnoiește în următoarele 90 de zile.",
+      "renews": "Se reînnoiește automat",
+      "ends": "Contractul se încheie",
+      "endsFollowed": "Se încheie · urmează {name}",
+      "today": "azi",
+      "tomorrow": "mâine",
+      "inDays": "în {count} zile"
+    }
+  }
+}

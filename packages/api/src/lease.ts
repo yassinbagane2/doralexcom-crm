@@ -243,3 +243,30 @@ export function leaseBalance(
   const due = rentDue(lease, asOf)
   return { due, paid, balance: Math.round((due - paid) * 100) / 100 }
 }
+
+/**
+ * The next day rent falls due after `today`: the next monthly anniversary of
+ * the entry date, while the lease still runs then. Null once it has ended.
+ */
+export function nextRentDate(lease: LeaseDates, today: string) {
+  const limit = toUtc(today)
+  const exit = effectiveEnd(lease)
+  const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
+  // Bounded like rentDue: 100 years of months.
+  for (let month = 0; month < 1200; month++) {
+    const due = addMonths(lease.startDate, month)
+    if (due > end) return null
+    if (due > limit) return fromUtc(due)
+  }
+  return null
+}
+
+/** Whole days from `from` to `to` ("YYYY-MM-DD"); negative when `to` is earlier. */
+export function daysBetween(from: string, to: string) {
+  return Math.round((toUtc(to) - toUtc(from)) / DAY)
+}
+
+/** `day` moved `days` ahead (or back, when negative). */
+export function addDays(day: string, days: number) {
+  return fromUtc(toUtc(day) + days * DAY)
+}

@@ -288,7 +288,7 @@
     "previewUnavailableHint": "Descarcă-l pentru a-l deschide pe calculator.",
     "download": "Descarcă",
     "delete": "Șterge",
-    "actionsLabel": "Acțiuni pentru {name}",
+    "deleteLabel": "Șterge {name}",
     "uploadTitle": "Încarcă un document",
     "uploadDescription": "PDF, Word, text sau fotografie, de cel mult 10 MB. Clienții nu le văd.",
     "chooseFile": "Alege un fișier",

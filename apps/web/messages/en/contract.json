@@ -288,7 +288,7 @@
     "previewUnavailableHint": "Download it to open it on your computer.",
     "download": "Download",
     "delete": "Delete",
-    "actionsLabel": "Actions for {name}",
+    "deleteLabel": "Delete {name}",
     "uploadTitle": "Upload a document",
     "uploadDescription": "PDF, Word, text or photo, up to 10 MB. Customers don't see these.",
     "chooseFile": "Choose a file",
