@@ -22,7 +22,6 @@ import { PdfViewer } from "@/components/documents/pdf-viewer-lazy"
 import { SignaturePad } from "@/components/signature/signature-pad"
 import {
   AuditTrail,
-  ContentHash,
   Signers,
   SignatureStatusBadge,
 } from "@/components/signature/signing-panel"
@@ -146,7 +145,6 @@ export function SignDocument({
             </summary>
             <div className="mt-3 flex flex-col gap-4">
               <AuditTrail signing={signing} />
-              <ContentHash signing={signing} />
             </div>
           </details>
         </aside>

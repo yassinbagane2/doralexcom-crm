@@ -84,7 +84,6 @@
       "withdrawn": "Retras de {name}"
     },
     "ip": "IP {ip}",
-    "contentHash": "Amprenta documentului (SHA-256)",
     "notFound": "Acest document nu este disponibil.",
     "backHome": "Locuința mea",
     "from": "De la {landlord}",

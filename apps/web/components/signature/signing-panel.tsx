@@ -3,7 +3,7 @@
 import type { SignerRole } from "@workspace/api/contract"
 import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
-import { CircleCheck, Clock, Fingerprint, Loader2 } from "@workspace/ui/icons"
+import { CircleCheck, Clock, Loader2 } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import { useFormatter, useTranslations } from "next-intl"
 
@@ -118,23 +118,6 @@ export function AuditTrail({
   )
 }
 
-/** The document's fingerprint: proof the content signed is what was sent. */
-export function ContentHash({ signing }: { signing: SigningRecord }) {
-  const t = useTranslations("Signing")
-  if (!signing.contentHash) return null
-  return (
-    <div className="flex items-start gap-2 text-xs text-muted-foreground">
-      <Fingerprint className="mt-0.5 size-3.5 shrink-0" />
-      <span className="min-w-0">
-        {t("contentHash")}
-        <span className="block font-mono break-all text-foreground/80">
-          {signing.contentHash}
-        </span>
-      </span>
-    </div>
-  )
-}
-
 /**
  * Where a contract sent for signature stands, for the business: who signed,
  * the audit trail, and taking it back while the customer hasn't signed.
@@ -173,7 +156,6 @@ export function SigningPanel({
         </h3>
         <AuditTrail signing={signing} compact />
       </div>
-      <ContentHash signing={signing} />
     </div>
   )
 }

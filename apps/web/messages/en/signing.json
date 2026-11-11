@@ -84,7 +84,6 @@
       "withdrawn": "Withdrawn by {name}"
     },
     "ip": "IP {ip}",
-    "contentHash": "Document fingerprint (SHA-256)",
     "notFound": "This document isn't available.",
     "backHome": "My home",
     "from": "From {landlord}",

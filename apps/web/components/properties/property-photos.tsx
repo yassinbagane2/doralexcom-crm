@@ -302,7 +302,7 @@ function PhotoTile({
       </DropdownMenu>
 
       {confirming ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/85 p-3 text-center backdrop-blur-sm">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background p-3 text-center">
           <p className="text-sm font-medium">{t("deleteConfirm")}</p>
           <div className="flex gap-2">
             <Button
