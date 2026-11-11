@@ -1,6 +1,12 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { lease, payment, property, user } from "@workspace/db/schema"
+import {
+  lease,
+  payment,
+  property,
+  propertyPhoto,
+  user,
+} from "@workspace/db/schema"
 import {
   and,
   asc,
@@ -18,8 +24,10 @@ import { z } from "zod"
 import { businessProcedure, o } from "../index"
 import { effectiveEnd, localToday } from "../lease"
 import { containing, holdsPropertyOn, leaseCurrent } from "../lib/lease"
+import { discardPropertyPhotos } from "../lib/storage"
 import { paginatedOutput, pageOffset, paginationShape } from "../pagination"
 import { PROPERTY_LIMITS, PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
+import { photosOf } from "./property-photo"
 
 /** Blank text is stored as null, so "not set" has one spelling. */
 const optionalText = (max: number) =>
@@ -55,6 +63,8 @@ const propertySchema = z.object({
   phone: z.string().nullable(),
   rent: z.number().nullable(),
   currency: z.enum(RENT_CURRENCIES),
+  /** In order: the first one is the cover. */
+  photos: z.array(z.object({ id: z.string() })),
   /**
    * Leases that hold it now or later (plus any that ended yesterday, so the
    * reader's own "today" decides). The web app picks the occupant from these.
@@ -190,6 +200,7 @@ export const propertyRouter = o.prefix("/properties").router({
             .orderBy(asc(lease.startDate))
         : []
 
+      const photos = await photosOf(rows.map((row) => row.id))
       const total = counted?.total ?? 0
 
       return {
@@ -204,6 +215,7 @@ export const propertyRouter = o.prefix("/properties").router({
           phone: row.phone,
           rent: row.rent,
           currency: row.currency,
+          photos: photos.get(row.id) ?? [],
           leases: leases
             .filter((l) => l.propertyId === row.id)
             .map((l) => ({
@@ -300,22 +312,25 @@ export const propertyRouter = o.prefix("/properties").router({
 
       if (!row) throw notFound()
 
-      const leases = await db
-        .select({
-          id: lease.id,
-          startDate: lease.startDate,
-          endDate: lease.endDate,
-          autoRenew: lease.autoRenew,
-          termMonths: lease.termMonths,
-          terminatedAt: lease.terminatedAt,
-          rent: lease.rent,
-          currency: lease.currency,
-          customer: { id: user.id, name: user.name, email: user.email },
-        })
-        .from(lease)
-        .innerJoin(user, eq(user.id, lease.customerId))
-        .where(eq(lease.propertyId, row.id))
-        .orderBy(asc(lease.startDate))
+      const [leases, photos] = await Promise.all([
+        db
+          .select({
+            id: lease.id,
+            startDate: lease.startDate,
+            endDate: lease.endDate,
+            autoRenew: lease.autoRenew,
+            termMonths: lease.termMonths,
+            terminatedAt: lease.terminatedAt,
+            rent: lease.rent,
+            currency: lease.currency,
+            customer: { id: user.id, name: user.name, email: user.email },
+          })
+          .from(lease)
+          .innerJoin(user, eq(user.id, lease.customerId))
+          .where(eq(lease.propertyId, row.id))
+          .orderBy(asc(lease.startDate)),
+        photosOf([row.id]),
+      ])
 
       return {
         id: row.id,
@@ -328,6 +343,7 @@ export const propertyRouter = o.prefix("/properties").router({
         phone: row.phone,
         rent: row.rent,
         currency: row.currency,
+        photos: photos.get(row.id) ?? [],
         leases: leases.map((l) => ({
           id: l.id,
           startDate: l.startDate,
@@ -389,6 +405,21 @@ export const propertyRouter = o.prefix("/properties").router({
         eq(property.organizationId, context.organizationId)
       )
 
+      // Its photos go with it (FK cascade); their images are cleared after.
+      const photos = await db
+        .select({
+          id: propertyPhoto.id,
+          organizationId: propertyPhoto.organizationId,
+          propertyId: propertyPhoto.propertyId,
+        })
+        .from(propertyPhoto)
+        .where(
+          and(
+            eq(propertyPhoto.propertyId, input.id),
+            eq(propertyPhoto.organizationId, context.organizationId)
+          )
+        )
+
       // The checks and the delete are one statement, so a lease signed a
       // moment ago can't slip past them. Past leases without payments go
       // along with the property (FK cascade).
@@ -403,7 +434,10 @@ export const propertyRouter = o.prefix("/properties").router({
         )
         .returning({ id: property.id })
 
-      if (deleted.length > 0) return { success: true }
+      if (deleted.length > 0) {
+        await discardPropertyPhotos(photos)
+        return { success: true }
+      }
 
       const [existing] = await db
         .select({

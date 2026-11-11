@@ -135,6 +135,37 @@
         "title": "Description",
         "description": "Floor, rooms, furnishing, anything worth remembering."
       }
+    },
+    "photos": {
+      "manage": "Photos",
+      "add": "Add photos",
+      "addOrDrop": "Add photos, or drop them here",
+      "uploading": "Uploading {done} of {total}",
+      "uploaded": "{count, plural, one {Photo added} other {# photos added}}",
+      "unreadable": "{count, plural, one {One picture couldn't be read, so it was skipped} other {# pictures couldn't be read, so they were skipped}}",
+      "notImages": "Only pictures can be added as photos",
+      "limit": "A property holds up to {max} photos",
+      "deleted": "Photo deleted",
+      "title": "Photos",
+      "description": "The first photo is the cover, shown on the property's card. Up to {max} photos.",
+      "cover": "Cover",
+      "makeCover": "Make cover",
+      "moveEarlier": "Move earlier",
+      "moveLater": "Move later",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteConfirm": "Delete this photo?",
+      "photoActions": "Actions for photo {number}",
+      "thumbnailAlt": "Photo {number}",
+      "photoAlt": "{name}, photo {number}",
+      "viewFullSize": "View photo {number} of {name} full size",
+      "showPhoto": "Show photo {number} of {name}",
+      "goToPhoto": "Go to photo {number}",
+      "showAll": "Show all {count} photos",
+      "viewerLabel": "Photos of {name}",
+      "close": "Close",
+      "previousPhoto": "Previous photo",
+      "nextPhoto": "Next photo"
     }
   }
 }

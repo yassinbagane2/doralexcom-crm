@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server"
 import type { OpenAPIGeneratorGenerateOptions } from "@orpc/openapi"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
-import { onError, ORPCError } from "@orpc/server"
+import { call, onError, ORPCError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
 import { createContext } from "@workspace/api/context"
@@ -78,6 +78,36 @@ app.get("/tls/ask", async (c) => {
   return domain && (await isActiveCustomDomain(domain))
     ? c.text("OK")
     : c.text("Unknown domain", 404)
+})
+
+/**
+ * A property's photo as a plain image, so the web app can point <img> tags
+ * at it: the session cookie rides along, and the photo router decides who
+ * may see it. A photo never changes once uploaded (a new one gets a new id),
+ * so the browser may keep it for good.
+ */
+app.get("/files/property-photos/:id", async (c) => {
+  const context = await createContext({ headers: c.req.raw.headers })
+  try {
+    const file = await call(
+      appRouter.propertyPhoto.file,
+      { id: c.req.param("id") },
+      { context }
+    )
+    return new Response(file, {
+      headers: {
+        "Content-Type": file.type,
+        "Cache-Control": "private, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
+      },
+    })
+  } catch (error) {
+    if (error instanceof ORPCError && error.status < 500) {
+      return c.body(null, error.status as 400)
+    }
+    console.error(error)
+    return c.body(null, 500)
+  }
 })
 
 // The largest requests are documents: 10 MB uploads, and contracts whose

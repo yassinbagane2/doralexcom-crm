@@ -231,6 +231,7 @@ function PropertyCard({
       >
         <PropertyCover
           type={property.type}
+          photoId={property.photos[0]?.id}
           className="aspect-[16/10] rounded-xl transition-[filter] group-hover/card:brightness-[0.97] dark:group-hover/card:brightness-110"
         >
           <OccupancyPill

@@ -126,6 +126,37 @@ export function paymentProofLocation(proof: CustomerObject) {
   }
 }
 
+/** Where a property's photo lives: with the business's other uploads. */
+export function propertyPhotoLocation(photo: {
+  id: string
+  organizationId: string
+  propertyId: string
+}) {
+  return {
+    storage: fileStorage,
+    key: `${photo.organizationId}/properties/${photo.propertyId}/photos/${photo.id}`,
+  }
+}
+
+/**
+ * Removes photos' images once their rows are gone. Best effort, like
+ * documents: a leftover object is only wasted space.
+ */
+export async function discardPropertyPhotos(
+  photos: { id: string; organizationId: string; propertyId: string }[]
+) {
+  await Promise.all(
+    photos.map(async (photo) => {
+      const { storage, key } = propertyPhotoLocation(photo)
+      try {
+        await storage.deleteObject(key)
+      } catch (error) {
+        console.error(`Could not delete ${storage.bucket}/${key}`, error)
+      }
+    })
+  )
+}
+
 /** Where a contract sent for signature keeps its PDF, beside its content. */
 export function signedPdfKey(document: CustomerObject) {
   return `${customerFolder(document)}/contracts/${document.id}.signed.pdf`

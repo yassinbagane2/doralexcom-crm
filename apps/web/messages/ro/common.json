@@ -118,6 +118,11 @@
     "NO_CUSTOMER_SIGNATURE_FIELD": "Adaugă mai întâi în contract un câmp pentru semnătura clientului.",
     "DOCUMENT_LOCKED": "Acest contract a fost trimis spre semnare. Retrage-l înainte de a-l edita.",
     "DOCUMENT_NOT_PENDING": "Acest document nu așteaptă o semnătură.",
-    "DOCUMENT_TAMPERED": "Documentul a fost modificat după ce a fost trimis. Roagă proprietarul să îl trimită din nou."
+    "DOCUMENT_TAMPERED": "Documentul a fost modificat după ce a fost trimis. Roagă proprietarul să îl trimită din nou.",
+    "PHOTO_TYPE": "Fotografiile trebuie să fie imagini JPEG, PNG sau WebP",
+    "PHOTO_SIZE": "Fotografia este goală sau mai mare de 10 MB",
+    "PHOTO_LIMIT": "Această proprietate are deja 30 de fotografii",
+    "PHOTO_NOT_FOUND": "Fotografia nu mai există",
+    "PHOTOS_CHANGED": "Fotografiile s-au schimbat între timp. Încearcă din nou."
   }
 }

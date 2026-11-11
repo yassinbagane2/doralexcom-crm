@@ -18,6 +18,7 @@ import {
   DotsHorizontal,
   ExternalLink,
   HistoryIcon,
+  ImageUp,
   KeyRound,
   LoaderCircle,
   MapPin,
@@ -34,15 +35,20 @@ import { useState, type ReactNode } from "react"
 import { LeaseDialog } from "@/components/customers/lease-dialogs"
 import { LeaseBadge } from "@/components/customers/customer-list"
 import { Section, SectionEmpty } from "@/components/customers/section"
-import { PropertyCover } from "@/components/properties/property-cover"
 import {
   DeletePropertyDialog,
   OccupancyPill,
   occupancy,
 } from "@/components/properties/property-dialogs"
+import { PropertyGallery } from "@/components/properties/property-gallery"
+import {
+  AddPhotosButton,
+  PropertyPhotosDialog,
+} from "@/components/properties/property-photos"
 import { UserAvatar } from "@/components/shared/user-avatar"
 import { newPropertyRoute, propertyRoute, routes } from "@/config/routes"
 import {
+  propertyPhotoUrl,
   useProperty,
   type PropertyDetail as Property,
 } from "@/hooks/queries/property"
@@ -63,6 +69,7 @@ export function PropertyDetail({ propertyId }: { propertyId: string }) {
   const { data: property, isPending, isError } = useProperty(propertyId)
   const [deleting, setDeleting] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [managingPhotos, setManagingPhotos] = useState(false)
   const today = localToday()
 
   if (isPending) {
@@ -144,6 +151,10 @@ export function PropertyDetail({ propertyId }: { propertyId: string }) {
                 <Contact className="size-4" />
                 {t("assignCustomer")}
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setManagingPhotos(true)}>
+                <ImageUp className="size-4" />
+                {t("photos.manage")}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
@@ -157,16 +168,32 @@ export function PropertyDetail({ propertyId }: { propertyId: string }) {
         </div>
       </header>
 
-      <PropertyCover
+      <PropertyGallery
+        images={property.photos.map((photo) => propertyPhotoUrl(photo.id))}
+        name={property.name}
         type={property.type}
-        size="lg"
-        className="aspect-[16/9] w-full rounded-2xl sm:aspect-[21/8]"
-      >
-        <OccupancyPill
-          occupied={current !== null}
-          className="absolute top-4 left-4 bg-background/90 shadow-xs backdrop-blur"
-        />
-      </PropertyCover>
+        overlay={
+          <OccupancyPill
+            occupied={current !== null}
+            className="bg-background/90 shadow-xs backdrop-blur"
+          />
+        }
+        actions={
+          property.photos.length === 0 ? (
+            <AddPhotosButton propertyId={property.id} />
+          ) : (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setManagingPhotos(true)}
+              className="bg-background/90 shadow-xs backdrop-blur hover:bg-background"
+            >
+              <ImageUp className="size-3.5" />
+              {t("photos.manage")}
+            </Button>
+          )
+        }
+      />
 
       <KeyFacts property={property} current={current} past={past} />
 
@@ -264,6 +291,12 @@ export function PropertyDetail({ propertyId }: { propertyId: string }) {
         </aside>
       </div>
 
+      <PropertyPhotosDialog
+        propertyId={property.id}
+        photos={property.photos}
+        open={managingPhotos}
+        onOpenChange={setManagingPhotos}
+      />
       <LeaseDialog
         property={property}
         open={assigning}

@@ -22,7 +22,7 @@ https:// {
 
 	# On a business's domain the browser reaches the API on the same origin,
 	# which keeps the session cookie first-party (see apps/web/lib/server-url.ts).
-	@api path /rpc/* /api/auth/*
+	@api path /rpc/* /api/auth/* /files/*
 	handle @api {
 		reverse_proxy localhost:3001
 	}

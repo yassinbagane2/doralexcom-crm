@@ -118,6 +118,11 @@
     "NO_CUSTOMER_SIGNATURE_FIELD": "Add a signature field for the customer to the contract first.",
     "DOCUMENT_LOCKED": "This contract was sent for signature. Withdraw it before editing.",
     "DOCUMENT_NOT_PENDING": "This document isn't waiting for a signature.",
-    "DOCUMENT_TAMPERED": "This document changed after it was sent. Ask your landlord to send it again."
+    "DOCUMENT_TAMPERED": "This document changed after it was sent. Ask your landlord to send it again.",
+    "PHOTO_TYPE": "Photos must be JPEG, PNG or WebP images",
+    "PHOTO_SIZE": "The photo is empty or larger than 10 MB",
+    "PHOTO_LIMIT": "This property already has 30 photos",
+    "PHOTO_NOT_FOUND": "That photo no longer exists",
+    "PHOTOS_CHANGED": "The photos changed in the meantime. Please try again."
   }
 }

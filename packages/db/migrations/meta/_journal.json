@@ -92,6 +92,13 @@
       "when": 1794396989755,
       "tag": "0012_payment_proofs",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794398139958,
+      "tag": "0013_property_photos",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   index,
+  integer,
   numeric,
   pgTable,
   text,
@@ -52,4 +53,32 @@ export const property = pgTable(
       .notNull(),
   },
   (table) => [index("property_organizationId_idx").on(table.organizationId)]
+)
+
+/**
+ * A photo of a property. The image lives in R2 (see the API's storage.ts),
+ * under a key derived from the row; the row says where it sits among the
+ * property's photos, lowest `position` first. The first one is the cover.
+ * Photos are never changed in place: a new picture is a new row.
+ */
+export const propertyPhoto = pgTable(
+  "property_photo",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    mimeType: text("mime_type").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("property_photo_propertyId_idx").on(table.propertyId, table.position),
+  ]
 )

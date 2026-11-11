@@ -169,7 +169,7 @@ export const dashboardRouter = o.prefix("/dashboard").router({
       const paidOn = db
         .select({
           invoiceId: payment.invoiceId,
-          total: sql<string>`sum(${payment.amount})`.as("total"),
+          paid: sql<string>`sum(${payment.amount})`.as("paid"),
         })
         .from(payment)
         .groupBy(payment.invoiceId)
@@ -225,7 +225,7 @@ export const dashboardRouter = o.prefix("/dashboard").router({
               leaseId: invoice.leaseId,
               total: invoice.total,
               dueOn: invoice.dueOn,
-              paid: paidOn.total,
+              paid: paidOn.paid,
             })
             .from(invoice)
             .leftJoin(paidOn, eq(paidOn.invoiceId, invoice.id))

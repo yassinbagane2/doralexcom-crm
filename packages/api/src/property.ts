@@ -30,3 +30,24 @@ export const PROPERTY_LIMITS = {
   surfaceArea: 99_999_999,
   rent: 9_999_999_999,
 } as const
+
+/**
+ * What a property's photos can be. The web app shrinks pictures before
+ * uploading them, so the size limit only stops the odd original that slips
+ * through unshrunk.
+ */
+export const PROPERTY_PHOTO_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const
+
+export type PropertyPhotoType = (typeof PROPERTY_PHOTO_TYPES)[number]
+
+export const isPropertyPhotoType = (type: string): type is PropertyPhotoType =>
+  (PROPERTY_PHOTO_TYPES as readonly string[]).includes(type)
+
+export const PROPERTY_PHOTO_LIMITS = {
+  perProperty: 30,
+  fileBytes: 10 * 1024 * 1024,
+} as const

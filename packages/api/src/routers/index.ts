@@ -11,6 +11,7 @@ import { invoiceRouter } from "./invoice"
 import { leaseRouter } from "./lease"
 import { portalRouter } from "./portal"
 import { propertyRouter } from "./property"
+import { propertyPhotoRouter } from "./property-photo"
 import { settingsRouter } from "./settings"
 import { signatureRouter } from "./signature"
 import { customerRouter } from "./customer"
@@ -25,6 +26,7 @@ export const appRouter = {
   business: businessRouter,
   dashboard: dashboardRouter,
   property: propertyRouter,
+  propertyPhoto: propertyPhotoRouter,
   customer: customerRouter,
   lease: leaseRouter,
   invoice: invoiceRouter,

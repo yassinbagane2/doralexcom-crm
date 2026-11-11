@@ -11,8 +11,11 @@ import { nextOffsetPage, PAGE_SIZE } from "@workspace/api/pagination"
 import type { PropertyType } from "@workspace/api/property"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import { useTranslations } from "next-intl"
+import { useState } from "react"
 
+import { shrinkImage } from "@/lib/images"
 import { orpc } from "@/lib/orpc"
+import { serverUrl } from "@/lib/server-url"
 
 /*
  * A business's properties, through the API's property router: every call is
@@ -127,6 +130,113 @@ export function useDeleteProperty() {
       // A refused delete usually means a customer moved in since the list
       // loaded: refresh so the row shows who.
       onError: () => void invalidate(),
+    })
+  )
+}
+
+/** One of the property's photos, as returned with it. */
+export type PropertyPhoto = PropertyDetail["photos"][number]
+
+/**
+ * Where an <img> loads a photo from. The API serves it with the session
+ * cookie, like every other call (see apps/server/src/index.ts).
+ */
+export function propertyPhotoUrl(id: string) {
+  return `${serverUrl()}/files/property-photos/${id}`
+}
+
+/**
+ * Shrinks and uploads photos one after another, so they land in the order
+ * picked. `progress` counts them while it runs. Pictures the browser can't
+ * read are skipped and reported; the rest still go up.
+ */
+export function useUploadPropertyPhotos(propertyId: string) {
+  const t = useTranslations("Properties.photos")
+  const invalidate = useInvalidateProperties()
+  const upload = useMutation(orpc.propertyPhoto.upload.mutationOptions())
+  const [progress, setProgress] = useState<{
+    done: number
+    total: number
+  } | null>(null)
+
+  const run = async (files: File[]) => {
+    const images = files.filter((file) => file.type.startsWith("image/"))
+    if (images.length < files.length) toast.error(t("notImages"))
+    if (images.length === 0) return 0
+
+    let sent = 0
+    let unreadable = 0
+    setProgress({ done: 0, total: images.length })
+    try {
+      for (const [index, image] of images.entries()) {
+        let file: File
+        try {
+          file = await shrinkImage(image)
+        } catch {
+          unreadable += 1
+          continue
+        }
+        try {
+          await upload.mutateAsync({ propertyId, file })
+          sent += 1
+        } catch {
+          // Already toasted; a full property won't take the rest either.
+          break
+        } finally {
+          setProgress({ done: index + 1, total: images.length })
+        }
+      }
+    } finally {
+      setProgress(null)
+      if (sent > 0) await invalidate()
+    }
+
+    if (unreadable > 0) toast.error(t("unreadable", { count: unreadable }))
+    if (sent > 0) toast.success(t("uploaded", { count: sent }))
+    return sent
+  }
+
+  return { upload: run, progress, uploading: progress !== null }
+}
+
+export function useDeletePropertyPhoto() {
+  const t = useTranslations("Properties.photos")
+  const invalidate = useInvalidateProperties()
+
+  return useMutation(
+    orpc.propertyPhoto.remove.mutationOptions({
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("deleted"))
+      },
+    })
+  )
+}
+
+/** Saves a new order; the cached property shows it straight away. */
+export function useReorderPropertyPhotos() {
+  const queryClient = useQueryClient()
+  const invalidate = useInvalidateProperties()
+
+  return useMutation(
+    orpc.propertyPhoto.reorder.mutationOptions({
+      onMutate: ({ propertyId, ids }) => {
+        const key = orpc.property.get.queryKey({ input: { id: propertyId } })
+        const previous = queryClient.getQueryData<PropertyDetail>(key)
+        if (previous) {
+          queryClient.setQueryData<PropertyDetail>(key, {
+            ...previous,
+            photos: ids.map((id) => ({ id })),
+          })
+        }
+        return { key, previous }
+      },
+      onError: (_, __, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData(context.key, context.previous)
+        }
+      },
+      onSettled: () => invalidate(),
     })
   )
 }

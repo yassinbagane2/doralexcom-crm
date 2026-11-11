@@ -135,6 +135,37 @@
         "title": "Descriere",
         "description": "Etaj, camere, mobilier, orice merită reținut."
       }
+    },
+    "photos": {
+      "manage": "Fotografii",
+      "add": "Adaugă fotografii",
+      "addOrDrop": "Adaugă fotografii sau trage-le aici",
+      "uploading": "Se încarcă {done} din {total}",
+      "uploaded": "{count, plural, one {Fotografie adăugată} few {# fotografii adăugate} other {# de fotografii adăugate}}",
+      "unreadable": "{count, plural, one {O imagine nu a putut fi citită și a fost omisă} few {# imagini nu au putut fi citite și au fost omise} other {# de imagini nu au putut fi citite și au fost omise}}",
+      "notImages": "Doar imaginile pot fi adăugate ca fotografii",
+      "limit": "O proprietate poate avea cel mult {max} de fotografii",
+      "deleted": "Fotografie ștearsă",
+      "title": "Fotografii",
+      "description": "Prima fotografie este coperta, afișată pe cardul proprietății. Cel mult {max} de fotografii.",
+      "cover": "Copertă",
+      "makeCover": "Setează drept copertă",
+      "moveEarlier": "Mută mai în față",
+      "moveLater": "Mută mai în spate",
+      "delete": "Șterge",
+      "cancel": "Anulează",
+      "deleteConfirm": "Ștergi această fotografie?",
+      "photoActions": "Acțiuni pentru fotografia {number}",
+      "thumbnailAlt": "Fotografia {number}",
+      "photoAlt": "{name}, fotografia {number}",
+      "viewFullSize": "Vezi fotografia {number} a {name} la dimensiune completă",
+      "showPhoto": "Afișează fotografia {number} a {name}",
+      "goToPhoto": "Mergi la fotografia {number}",
+      "showAll": "Vezi toate cele {count} fotografii",
+      "viewerLabel": "Fotografii cu {name}",
+      "close": "Închide",
+      "previousPhoto": "Fotografia anterioară",
+      "nextPhoto": "Fotografia următoare"
     }
   }
 }
