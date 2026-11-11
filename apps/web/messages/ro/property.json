@@ -14,7 +14,6 @@
     "vacant": "Liberă",
     "perMonth": "{amount}/lună",
     "edit": "Editează",
-    "editLabel": "Editează {name}",
     "copy": "Copiază",
     "copyName": "{name} (copie)",
     "delete": "Șterge",
@@ -60,7 +59,20 @@
       "address": "Str. Victoriei 10, București",
       "description": "Etaj, camere, mobilare, orice merită reținut."
     },
-    "sheet": {
+    "validation": {
+      "nameRequired": "Introdu un nume",
+      "addressRequired": "Introdu o adresă",
+      "amountInvalid": "Introdu un număr pozitiv",
+      "phoneInvalid": "Introdu un număr de telefon valid",
+      "tooLong": "Folosește mai puțin de {max} de caractere"
+    },
+    "occupied": "Ocupată",
+    "incoming": "{name} din {date}",
+    "leaving": "Pleacă pe {date}",
+    "viewCustomer": "Vezi clientul {name}",
+    "viewCustomerShort": "Vezi clientul",
+    "assignCustomer": "Atribuie client",
+    "editor": {
       "create": {
         "title": "Adaugă o proprietate",
         "description": "Înregistrează un spațiu pe care îl închiriezi.",
@@ -77,18 +89,52 @@
         "submit": "Adaugă proprietate"
       }
     },
-    "validation": {
-      "nameRequired": "Introdu un nume",
-      "addressRequired": "Introdu o adresă",
-      "amountInvalid": "Introdu un număr pozitiv",
-      "phoneInvalid": "Introdu un număr de telefon valid",
-      "tooLong": "Folosește mai puțin de {max} de caractere"
+    "back": "Toate proprietățile",
+    "notFound": "Proprietatea nu există sau a fost ștearsă.",
+    "notSet": "Nesetat",
+    "perMonthSuffix": "/lună",
+    "detail": {
+      "metaTitle": "Proprietate",
+      "status": "Stare",
+      "since": "Din {date}",
+      "perSquareMetre": "{amount}/m²",
+      "leasesCount": "Contracte",
+      "occupancyTitle": "Client",
+      "vacantTitle": "Nu locuiește nimeni aici acum",
+      "vacantDescription": "Atribuie un client pentru a începe un contract pe această proprietate.",
+      "noDescription": "Nicio descriere încă.",
+      "addDescription": "Adaugă una",
+      "historyTitle": "Clienți anteriori",
+      "historyEmpty": "Nimeni nu a plecat încă din această proprietate.",
+      "period": "{start} – {end}",
+      "accessTitle": "Acces",
+      "accessEmpty": "Niciun cod de interfon sau telefon înregistrat.",
+      "copyDoorCode": "Copiază codul de interfon",
+      "copied": "Copiat în clipboard",
+      "locationTitle": "Locație",
+      "openInMaps": "Deschide în Google Maps",
+      "recordTitle": "Înregistrare",
+      "added": "Adăugată",
+      "updated": "Actualizată",
+      "justNow": "Chiar acum"
     },
-    "occupied": "Ocupată",
-    "incoming": "{name} din {date}",
-    "leaving": "Pleacă pe {date}",
-    "viewCustomer": "Vezi clientul {name}",
-    "viewCustomerShort": "Vezi clientul",
-    "assignCustomer": "Atribuie client"
+    "formSections": {
+      "basics": {
+        "title": "Informații de bază",
+        "description": "Ce este și unde se află."
+      },
+      "rent": {
+        "title": "Chirie și suprafață",
+        "description": "Contractele noi pornesc de la această chirie."
+      },
+      "access": {
+        "title": "Acces",
+        "description": "Cum intri tu și clienții tăi."
+      },
+      "notes": {
+        "title": "Descriere",
+        "description": "Etaj, camere, mobilier, orice merită reținut."
+      }
+    }
   }
 }

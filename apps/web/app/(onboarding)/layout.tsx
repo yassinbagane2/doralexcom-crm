@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 
 import { HeaderControls } from "@/components/header-controls"
+import { LogoMark } from "@/components/logo"
 import { SignOutButton } from "@/components/sign-out-button"
 import { routes } from "@/config/routes"
 
@@ -19,7 +20,11 @@ export default async function OnboardingLayout({
   return (
     <div className="flex min-h-svh flex-col p-6">
       <header className="flex items-center justify-between gap-4">
-        <Link href={routes.home} className="text-sm font-medium">
+        <Link
+          href={routes.home}
+          className="flex items-center gap-2 text-sm font-semibold tracking-tight"
+        >
+          <LogoMark />
           {t("Common.appName")}
         </Link>
         <div className="flex items-center gap-1">

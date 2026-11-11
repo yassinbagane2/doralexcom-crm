@@ -34,7 +34,6 @@ import { useRef, useState } from "react"
 import {
   countMergeFields,
   TemplatePreview,
-  useOnVisible,
 } from "@/components/contracts/template-preview"
 import { routes } from "@/config/routes"
 import {
@@ -44,6 +43,7 @@ import {
   useDeleteContractTemplate,
   type ContractTemplateSummary,
 } from "@/hooks/queries/contract"
+import { useOnVisible } from "@/hooks/use-on-visible"
 import { formatRelative } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
 

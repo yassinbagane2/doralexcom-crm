@@ -83,6 +83,7 @@
   "Customer": {
     "metaTitle": "Client",
     "notFound": "Acest client nu există sau a fost șters.",
+    "since": "Client din {date}",
     "back": "Clienți",
     "noLease": "Fără contract",
     "groups": {
@@ -98,6 +99,7 @@
     "leasesTitle": "Proprietăți",
     "assign": "Atribuie proprietate",
     "leasesEmpty": "Nicio proprietate atribuită încă.",
+    "leasesEmptyHint": "Atribuie o proprietate pentru a urmări chiria, plățile și contractele acestui client.",
     "detailsTitle": "Date de contact",
     "noContactDetails": "Nicio dată de contact înregistrată.",
     "account": "Se conectează cu",
@@ -213,6 +215,9 @@
     "assignCustomerSubmit": "Atribuie clientul",
     "customerPlaceholder": "Alege un client",
     "noCustomers": "Adaugă mai întâi un client din pagina Clienți.",
+    "searchCustomers": "Caută clienți…",
+    "searchProperties": "Caută proprietăți…",
+    "noMatches": "Niciun rezultat.",
     "rentFromProperty": "Preluată de la proprietate. O poți schimba ulterior din contract.",
     "noPropertyRent": "Proprietatea nu are chiria setată, așa că contractul pornește de la 0. Setează mai întâi chiria proprietății sau editează contractul după aceea.",
     "generateContract": "Generează contractul",

@@ -38,6 +38,18 @@ export function inviteRoute(invitationId: string, step?: "create-account") {
   return step ? `${path}/${step}` : path
 }
 
+/** One property's page, or its edit form. */
+export function propertyRoute(propertyId: string, step?: "edit") {
+  const path = `${routes.properties}/${encodeURIComponent(propertyId)}`
+  return step ? `${path}/${step}` : path
+}
+
+/** The form for a new property, started from a copy of `from` if given. */
+export function newPropertyRoute(from?: string) {
+  const path = `${routes.properties}/new`
+  return from ? `${path}?${new URLSearchParams({ from })}` : path
+}
+
 /** Sign-in, coming back to `path` afterwards. */
 export function signInRoute(path: string) {
   return `${routes.signIn}?${new URLSearchParams({ [REDIRECT_PARAM]: path })}`

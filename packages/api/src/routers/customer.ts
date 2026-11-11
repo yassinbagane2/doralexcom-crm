@@ -8,11 +8,17 @@ import {
   property,
   user,
 } from "@workspace/db/schema"
-import { asc, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o, protectedProcedure } from "../index"
-import { NOTE_VISIBILITIES, CUSTOMER_LIMITS } from "../lease"
+import {
+  CUSTOMER_GROUPS,
+  CUSTOMER_LIMITS,
+  localToday,
+  type CustomerGroup,
+  NOTE_VISIBILITIES,
+} from "../lease"
 import {
   addCustomerNote,
   createCustomerAccount,
@@ -24,6 +30,8 @@ import {
   customerMetadataInput,
   customerScope,
 } from "../lib/customer"
+import { containing, customerInGroup } from "../lib/lease"
+import { paginatedOutput, pageOffset, paginationShape } from "../pagination"
 import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
 
 const leaseSummarySchema = z.object({
@@ -97,6 +105,23 @@ function newestFirst<T extends { createdAt: string }>(notes: T[]) {
 
 const customerName = z.string().trim().min(1).max(CUSTOMER_LIMITS.name)
 
+/** The reader's own calendar day; the server's when not given. */
+const readerToday = z.iso
+  .date()
+  .optional()
+  .transform((day) => day ?? localToday())
+
+/** Customers whose name, email, phone or a rented property's name holds `search`. */
+function customerMatches(search: string) {
+  const pattern = containing(search)
+  return or(
+    ilike(user.name, pattern),
+    ilike(user.email, pattern),
+    sql`${user.metadata}->>'phone' ilike ${pattern}`,
+    sql`exists (select 1 from ${lease} inner join ${property} on ${property.id} = ${lease.propertyId} where ${lease.customerId} = ${user.id} and ${property.name} ilike ${pattern})`
+  )
+}
+
 /** Leases of the given customers, with their property and the rent received. */
 async function loadLeases(customerIds: string[]) {
   if (customerIds.length === 0) return []
@@ -153,35 +178,106 @@ async function loadLeases(customerIds: string[]) {
  * their own leases.
  */
 export const customerRouter = o.prefix("/customers").router({
+  /**
+   * A page of customers, by name. `group` keeps those in one of the lists the
+   * web app sorts customers into, as of the reader's `today`; `search` matches
+   * name, email, phone or a rented property's name.
+   */
   list: businessProcedure
     .route({ method: "GET", path: "/", tags: ["customers"] })
-    .output(z.array(customerSummarySchema))
-    .handler(async ({ context }) => {
-      const customers = await db
+    .input(
+      z.object({
+        ...paginationShape,
+        group: z.enum(CUSTOMER_GROUPS).optional(),
+        today: readerToday,
+      })
+    )
+    .output(paginatedOutput(customerSummarySchema))
+    .handler(async ({ input, context }) => {
+      const { page, pageSize, search, group, today } = input
+      const where = and(
+        customerScope(context.organizationId),
+        group ? customerInGroup(group, user.id, today) : undefined,
+        search ? customerMatches(search) : undefined
+      )
+
+      const [customers, [counted]] = await Promise.all([
+        db
+          .select({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            banned: user.banned,
+            metadata: user.metadata,
+            createdAt: user.createdAt,
+          })
+          .from(member)
+          .innerJoin(user, eq(user.id, member.userId))
+          .where(where)
+          .orderBy(asc(user.name), asc(user.id))
+          .limit(pageSize)
+          .offset(pageOffset(page, pageSize)),
+        db
+          .select({ total: count() })
+          .from(member)
+          .innerJoin(user, eq(user.id, member.userId))
+          .where(where),
+      ])
+
+      const leases = await loadLeases(customers.map((t) => t.id))
+      const total = counted?.total ?? 0
+
+      return {
+        data: customers.map((t) => ({
+          id: t.id,
+          name: t.name,
+          email: t.email,
+          phone: readCustomerMetadata(t.metadata).phone,
+          banned: Boolean(t.banned),
+          createdAt: t.createdAt,
+          leases: leases.filter((l) => l.customerId === t.id),
+        })),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      }
+    }),
+
+  /** How many customers each filter of the list holds, as of `today`. */
+  groupCounts: businessProcedure
+    .route({ method: "GET", path: "/group-counts", tags: ["customers"] })
+    .input(z.object({ today: readerToday }))
+    .output(
+      z.object({
+        all: z.number(),
+        current: z.number(),
+        incoming: z.number(),
+        outgoing: z.number(),
+        previous: z.number(),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const inGroup = (group: CustomerGroup) =>
+        sql<number>`count(*) filter (where ${customerInGroup(group, user.id, input.today)})`.mapWith(
+          Number
+        )
+
+      const [counts] = await db
         .select({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          banned: user.banned,
-          metadata: user.metadata,
-          createdAt: user.createdAt,
+          all: count(),
+          current: inGroup("current"),
+          incoming: inGroup("incoming"),
+          outgoing: inGroup("outgoing"),
+          previous: inGroup("previous"),
         })
         .from(member)
         .innerJoin(user, eq(user.id, member.userId))
         .where(customerScope(context.organizationId))
-        .orderBy(asc(user.name))
 
-      const leases = await loadLeases(customers.map((t) => t.id))
-
-      return customers.map((t) => ({
-        id: t.id,
-        name: t.name,
-        email: t.email,
-        phone: readCustomerMetadata(t.metadata).phone,
-        banned: Boolean(t.banned),
-        createdAt: t.createdAt,
-        leases: leases.filter((l) => l.customerId === t.id),
-      }))
+      return (
+        counts ?? { all: 0, current: 0, incoming: 0, outgoing: 0, previous: 0 }
+      )
     }),
 
   get: businessProcedure

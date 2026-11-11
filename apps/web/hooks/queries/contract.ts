@@ -143,16 +143,13 @@ function useInvalidateDocuments() {
     queryClient.invalidateQueries({ queryKey: orpc.document.list.key() })
 }
 
+/** One file per call; the caller says when a batch is done. */
 export function useUploadDocument() {
-  const t = useTranslations("Documents")
   const invalidate = useInvalidateDocuments()
 
   return useMutation(
     orpc.document.upload.mutationOptions({
-      onSuccess: async () => {
-        await invalidate()
-        toast.success(t("uploaded"))
-      },
+      onSuccess: () => invalidate(),
     })
   )
 }

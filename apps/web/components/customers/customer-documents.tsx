@@ -5,7 +5,6 @@ import {
   DOCUMENT_FILE_TYPES,
   DOCUMENT_LIMITS,
   isDocumentFileType,
-  PREVIEWABLE_FILE_TYPES,
 } from "@workspace/api/contract"
 import { Button } from "@workspace/ui/components/ui/button"
 import {
@@ -33,29 +32,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/ui/select"
+import {
+  createFileUploadItem,
+  FileUpload,
+  type FileUploadItem,
+} from "@workspace/ui/components/motion/file-upload"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import {
   DotsHorizontal,
   Download,
-  ExternalLink,
+  Eye,
   FilePen,
   FileText,
   Loader2,
-  Paperclip,
-  PdfDocument,
   Trash,
-  Upload,
-  WordDocument,
 } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 import {
   fillContract,
   useMergeValues,
 } from "@/components/contracts/contract-content"
+import { DocumentViewer } from "@/components/customers/document-viewer"
+import { Section } from "@/components/customers/section"
 import { routes } from "@/config/routes"
 import {
   useContractTemplates,
@@ -67,7 +69,8 @@ import {
   type CustomerDocument,
 } from "@/hooks/queries/contract"
 import type { CustomerDetail, CustomerLease } from "@/hooks/queries/customer"
-import { openFile, saveFile } from "@/lib/download"
+import { saveFile } from "@/lib/download"
+import { fileKind, FileTypeIcon } from "@/lib/file-icon"
 import { formatDate } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
 
@@ -79,139 +82,151 @@ function formatSize(bytes: number, locale: string) {
   return format(Math.max(1, bytes / 1024), "KB")
 }
 
-function DocumentIcon({ document }: { document: CustomerDocument }) {
-  if (document.kind === "contract") return <FilePen className="size-4" />
-  if (document.mimeType === "application/pdf")
-    return <PdfDocument className="size-4" />
-  if (document.mimeType?.includes("word")) {
-    return <WordDocument className="size-4" />
+/** The type a file reads as: "PDF", "DOCX", "JPG". */
+function extensionLabel(document: CustomerDocument) {
+  if (document.mimeType && isDocumentFileType(document.mimeType)) {
+    return DOCUMENT_FILE_TYPES[document.mimeType].toUpperCase()
   }
-  return <FileText className="size-4" />
+  return document.name.split(".").pop()?.toUpperCase() ?? null
+}
+
+/** Kind, lease, size and date: the line under a document's name. */
+function useDocumentMeta(customer: CustomerDetail) {
+  const t = useTranslations("Documents")
+  const locale = useLocale()
+  return (document: CustomerDocument) => {
+    const lease = customer.leases.find((l) => l.id === document.leaseId)
+    return [
+      document.kind === "contract" ? t("contract") : extensionLabel(document),
+      lease ? t("lease", { property: lease.property.name }) : null,
+      document.size !== null ? formatSize(document.size, locale) : null,
+      formatDate(document.createdAt, locale),
+    ]
+      .filter(Boolean)
+      .join(" · ")
+  }
 }
 
 /**
  * Everything kept about a customer: files uploaded as they are (a signed lease,
- * an ID) and contracts generated from a template, which open in the editor.
+ * an ID) and contracts generated from a template. Any of them opens straight
+ * into a viewer on the page; contracts can go on to the editor from there.
  */
 export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
   const t = useTranslations("Documents")
   const { data: documents, isPending } = useCustomerDocuments(customer.id)
-  const [uploading, setUploading] = useState(false)
+  // The dialog is open while this is set; files dropped on the page come along.
+  const [uploading, setUploading] = useState<File[] | null>(null)
   const [deleting, setDeleting] = useState<CustomerDocument | null>(null)
+  const [viewing, setViewing] = useState<CustomerDocument | null>(null)
+  const meta = useDocumentMeta(customer)
+  const contractHref = (document: CustomerDocument) =>
+    `${routes.customers}/${customer.id}/contracts/${document.id}`
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium">{t("title")}</h2>
-        <Button size="sm" variant="outline" onClick={() => setUploading(true)}>
-          <Upload className="size-3.5" />
-          {t("upload")}
-        </Button>
-      </div>
-
+    <Section
+      title={t("title")}
+      count={documents?.length}
+    >
+      <FileUpload
+        value={NO_ITEMS}
+        accept={ACCEPTED_FILES}
+        title={t("dropTitle")}
+        description={t("uploadDescription")}
+        browseLabel={t("browse")}
+        onFilesAdded={(_, files) => setUploading(files)}
+        classNames={{
+          root: "space-y-0",
+          dropzone:
+            "rounded-xl border-transparent bg-muted/40 p-4 hover:border-transparent hover:bg-muted/60 active:scale-100 data-[dragging=true]:border-foreground/30 data-[dragging=true]:bg-muted/60",
+        }}
+      />
       {isPending ? (
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
-      ) : !documents || documents.length === 0 ? (
-        <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-          {t("empty")}
-        </p>
-      ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
+        <div className="flex flex-col gap-1">
+          {[0, 1].map((row) => (
+            <div key={row} className="flex items-center gap-3 py-2.5">
+              <div className="size-8 animate-pulse rounded-md bg-muted" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <div className="h-3 w-40 animate-pulse rounded bg-muted" />
+                <div className="h-2.5 w-24 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : documents && documents.length > 0 ? (
+        <ul className="-mx-2 flex flex-col">
           {documents.map((document) => (
             <DocumentRow
               key={document.id}
-              customer={customer}
               document={document}
+              meta={meta(document)}
+              editHref={
+                document.kind === "contract" ? contractHref(document) : null
+              }
+              onView={() => setViewing(document)}
               onDelete={() => setDeleting(document)}
             />
           ))}
         </ul>
-      )}
+      ) : null}
 
+      <DocumentViewer
+        document={viewing}
+        meta={viewing ? meta(viewing) : ""}
+        editHref={viewing?.kind === "contract" ? contractHref(viewing) : null}
+        onClose={() => setViewing(null)}
+      />
       <UploadDocumentDialog
         customer={customer}
-        open={uploading}
-        onOpenChange={setUploading}
+        files={uploading ?? undefined}
+        open={uploading !== null}
+        onOpenChange={(open) => !open && setUploading(null)}
       />
       <DeleteDocumentDialog
         document={deleting}
         onClose={() => setDeleting(null)}
       />
-    </section>
+    </Section>
   )
 }
 
 function DocumentRow({
-  customer,
   document,
+  meta,
+  editHref,
+  onView,
   onDelete,
 }: {
-  customer: CustomerDetail
   document: CustomerDocument
+  meta: string
+  editHref: string | null
+  onView: () => void
   onDelete: () => void
 }) {
   const t = useTranslations("Documents")
-  const locale = useLocale()
   const download = useDownloadDocument()
-  const lease = customer.leases.find((l) => l.id === document.leaseId)
-  const contractHref = `${routes.customers}/${customer.id}/contracts/${document.id}`
-  const previewable =
-    document.mimeType !== null &&
-    isDocumentFileType(document.mimeType) &&
-    PREVIEWABLE_FILE_TYPES.includes(document.mimeType)
-
-  const fetchFile = (then: (file: File) => void) =>
-    download.mutate({ id: document.id }, { onSuccess: then })
-
-  const meta = [
-    document.kind === "contract" ? t("contract") : null,
-    lease ? t("lease", { property: lease.property.name }) : null,
-    document.size !== null ? formatSize(document.size, locale) : null,
-    formatDate(document.createdAt, locale),
-  ].filter(Boolean)
-
-  const icon = (
-    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
-      {download.isPending ? (
-        <Loader2 className="size-4 animate-spin" />
-      ) : (
-        <DocumentIcon document={document} />
-      )}
-    </span>
-  )
-  const label = (
-    <span className="flex min-w-0 flex-1 flex-col">
-      <span className="truncate text-sm font-medium">{document.name}</span>
-      <span className="truncate text-xs text-muted-foreground">
-        {meta.join(" · ")}
-      </span>
-    </span>
-  )
-  const rowClass =
-    "flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 
   return (
-    <li className="flex items-center gap-2 px-3 py-2">
-      {document.kind === "contract" ? (
-        <Link href={contractHref} className={rowClass}>
-          {icon}
-          {label}
-        </Link>
-      ) : (
-        <button
-          type="button"
-          className={rowClass}
-          disabled={download.isPending}
-          onClick={() =>
-            fetchFile((file) =>
-              previewable ? openFile(file) : saveFile(file, document.name)
-            )
+    <li className="group flex items-center gap-2 rounded-lg pr-1 transition-colors hover:bg-muted/50">
+      <button
+        type="button"
+        onClick={onView}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2.5 pl-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+      >
+        <FileTypeIcon
+          kind={
+            document.kind === "contract" ? "word" : fileKind(document.mimeType)
           }
-        >
-          {icon}
-          {label}
-        </button>
-      )}
+        />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-sm font-medium">{document.name}</span>
+          <span className="truncate text-xs text-muted-foreground">{meta}</span>
+        </span>
+        <span className="hidden items-center gap-1 text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
+          <Eye size={14} />
+          {t("view")}
+        </span>
+      </button>
 
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -223,31 +238,34 @@ function DocumentRow({
             />
           }
         >
-          <DotsHorizontal size={16} />
+          {download.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <DotsHorizontal size={16} />
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {document.kind === "contract" ? (
-            <DropdownMenuItem render={<Link href={contractHref} />}>
+          <DropdownMenuItem onClick={onView}>
+            <Eye size={16} />
+            {t("view")}
+          </DropdownMenuItem>
+          {editHref ? (
+            <DropdownMenuItem render={<Link href={editHref} />}>
               <FilePen className="size-4" />
-              {t("open")}
+              {t("edit")}
             </DropdownMenuItem>
           ) : (
-            <>
-              {previewable ? (
-                <DropdownMenuItem onClick={() => fetchFile(openFile)}>
-                  <ExternalLink className="size-4" />
-                  {t("open")}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem
-                onClick={() =>
-                  fetchFile((file) => saveFile(file, document.name))
-                }
-              >
-                <Download className="size-4" />
-                {t("download")}
-              </DropdownMenuItem>
-            </>
+            <DropdownMenuItem
+              onClick={() =>
+                download.mutate(
+                  { id: document.id },
+                  { onSuccess: (file) => saveFile(file, document.name) }
+                )
+              }
+            >
+              <Download className="size-4" />
+              {t("download")}
+            </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
@@ -265,60 +283,139 @@ const ACCEPTED_FILES = Object.keys(DOCUMENT_FILE_TYPES)
   .join(",")
 
 const NO_LEASE = "none"
+const NO_ITEMS: FileUploadItem[] = []
 
-/** Attaches a file to the customer, optionally to one of their leases. */
+/** How far the bar creeps while a file is in flight; the request has no progress events. */
+const PROGRESS_CEILING = 90
+
+/**
+ * Attaches files to the customer, optionally to one of their leases. Files are
+ * checked as they're added and sent together on submit, each with its own row.
+ */
 export function UploadDocumentDialog({
   customer,
   leaseId,
+  files,
   open,
   onOpenChange,
 }: {
   customer: CustomerDetail
-  /** The lease to attach it to, preselected. */
+  /** The lease to attach them to, preselected. */
   leaseId?: string
+  /** Files already picked, e.g. dropped on the page. */
+  files?: File[]
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
   const t = useTranslations("Documents")
   const tc = useTranslations("Common")
   const upload = useUploadDocument()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
+  const [items, setItems] = useState<FileUploadItem[]>(NO_ITEMS)
   const [error, setError] = useState<string | null>(null)
   const [lease, setLease] = useState(leaseId ?? NO_LEASE)
+  const [sending, setSending] = useState(false)
+
+  const stage = (file: File, index: number): FileUploadItem => {
+    const problem = !isDocumentFileType(file.type)
+      ? t("wrongType")
+      : file.size === 0 || file.size > DOCUMENT_LIMITS.fileBytes
+        ? t("tooLarge")
+        : undefined
+    return {
+      ...createFileUploadItem(file, index),
+      status: problem ? "error" : "queued",
+      error: problem,
+    }
+  }
+
+  // Files handed over from the page are staged as the dialog opens.
+  const [handed, setHanded] = useState<File[] | undefined>(undefined)
+  if (files !== handed) {
+    setHanded(files)
+    if (files && files.length > 0) setItems(files.map(stage))
+  }
+
+  const patch = (id: string, change: Partial<FileUploadItem>) =>
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, ...change } : item))
+    )
+
+  // Ease each bar towards the ceiling until its request settles.
+  const inFlight = items.some((item) => item.status === "uploading")
+  useEffect(() => {
+    if (!inFlight) return
+    const timer = window.setInterval(() => {
+      setItems((current) =>
+        current.map((item) => {
+          if (item.status !== "uploading") return item
+          const progress = item.progress ?? 0
+          return {
+            ...item,
+            progress: progress + (PROGRESS_CEILING - progress) * 0.08,
+          }
+        })
+      )
+    }, 120)
+    return () => window.clearInterval(timer)
+  }, [inFlight])
 
   const reset = () => {
-    setFile(null)
+    setItems(NO_ITEMS)
     setError(null)
     setLease(leaseId ?? NO_LEASE)
-    upload.reset()
+  }
+
+  const close = () => {
+    onOpenChange(false)
+    reset()
+  }
+
+  const send = async (item: FileUploadItem) => {
+    if (!item.file) return false
+    patch(item.id, { status: "uploading", progress: 0, error: undefined })
+    try {
+      await upload.mutateAsync({
+        customerId: customer.id,
+        leaseId: lease === NO_LEASE ? null : lease,
+        file: item.file,
+      })
+      patch(item.id, { status: "success", progress: 100 })
+      return true
+    } catch {
+      patch(item.id, { status: "error", error: t("uploadFailed") })
+      return false
+    }
+  }
+
+  const submit = async () => {
+    const queued = items.filter((item) => item.status === "queued")
+    if (queued.length === 0) {
+      if (items.length === 0) setError(t("chooseFile"))
+      return
+    }
+    setSending(true)
+    const results = await Promise.all(queued.map(send))
+    setSending(false)
+
+    const sent = results.filter(Boolean).length
+    if (sent > 0) toast.success(t("uploaded", { count: sent }))
+    // Anything that didn't make it stays listed so it can be retried or removed.
+    const rejected = items.some((item) => item.status === "error")
+    if (sent === queued.length && !rejected) close()
   }
 
   const leaseItems = [
     { value: NO_LEASE, label: t("noLease") },
     ...customer.leases.map((l) => ({ value: l.id, label: l.property.name })),
   ]
-
-  const choose = (picked: File | undefined) => {
-    if (!picked) return
-    if (!isDocumentFileType(picked.type)) {
-      setFile(null)
-      setError(t("wrongType"))
-    } else if (picked.size === 0 || picked.size > DOCUMENT_LIMITS.fileBytes) {
-      setFile(null)
-      setError(t("tooLarge"))
-    } else {
-      setFile(picked)
-      setError(null)
-    }
-  }
+  const queuedCount = items.filter((item) => item.status === "queued").length
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        onOpenChange(next)
-        if (!next) reset()
+        if (next) onOpenChange(true)
+        else if (!sending) close()
       }}
     >
       <DialogContent>
@@ -331,67 +428,16 @@ export function UploadDocumentDialog({
           className="mt-5 flex flex-col gap-5"
           onSubmit={(event) => {
             event.preventDefault()
-            if (!file) {
-              setError(error ?? t("chooseFile"))
-              return
-            }
-            upload.mutate(
-              {
-                customerId: customer.id,
-                leaseId: lease === NO_LEASE ? null : lease,
-                file,
-              },
-              {
-                onSuccess: () => {
-                  onOpenChange(false)
-                  reset()
-                },
-              }
-            )
+            void submit()
           }}
         >
-          <Field>
-            <Label htmlFor="document-file">{t("file")}</Label>
-            <input
-              ref={inputRef}
-              id="document-file"
-              type="file"
-              accept={ACCEPTED_FILES}
-              className="sr-only"
-              onChange={(event) => {
-                choose(event.target.files?.[0])
-                event.target.value = ""
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              aria-invalid={Boolean(error)}
-              className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-3 text-left text-sm transition-colors hover:bg-muted/60 aria-invalid:border-destructive"
-            >
-              <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
-                <Paperclip className="size-4" />
-              </span>
-              {file ? (
-                <>
-                  <span className="min-w-0 flex-1 truncate">{file.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("changeFile")}
-                  </span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">{t("chooseFile")}</span>
-              )}
-            </button>
-            <FieldError>{error}</FieldError>
-          </Field>
-
           {customer.leases.length > 0 ? (
             <Field>
               <Label htmlFor="document-lease">{t("leaseField")}</Label>
               <Select
                 items={leaseItems}
                 value={lease}
+                disabled={sending}
                 onValueChange={(value) => value && setLease(value)}
               >
                 <SelectTrigger id="document-lease">
@@ -408,17 +454,58 @@ export function UploadDocumentDialog({
             </Field>
           ) : null}
 
+          <Field>
+            <FileUpload
+              value={items}
+              accept={ACCEPTED_FILES}
+              disabled={sending}
+              title={t("dropTitle")}
+              description={t("dropDescription")}
+              browseLabel={t("browse")}
+              // Adding and retrying are handled below; only removals come through here.
+              onValueChange={(next) =>
+                setItems((current) =>
+                  current.filter((item) =>
+                    next.some((entry) => entry.id === item.id)
+                  )
+                )
+              }
+              onFilesAdded={(_, added) => {
+                setError(null)
+                setItems((current) => [...current, ...added.map(stage)])
+              }}
+              onRetry={(item) => {
+                const restaged = item.file ? stage(item.file, 0) : null
+                if (restaged?.status === "error") {
+                  patch(item.id, { status: "error", error: restaged.error })
+                } else {
+                  void send(item)
+                }
+              }}
+              classNames={{
+                dropzone: "rounded-xl p-4 hover:bg-muted/30 active:scale-100",
+                queue: "max-h-72 space-y-1.5 overflow-y-auto",
+                item: "rounded-lg border-transparent bg-muted/40 p-2.5",
+                leading: "h-9 w-9 rounded-md bg-background",
+              }}
+            />
+            <FieldError>{error}</FieldError>
+          </Field>
+
           <DialogFooter className="flex-row justify-end">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              disabled={sending}
+              onClick={close}
             >
               {tc("cancel")}
             </Button>
-            <Button type="submit" disabled={upload.isPending}>
-              {upload.isPending ? <Loader2 className="animate-spin" /> : null}
-              {t("uploadSubmit")}
+            <Button type="submit" disabled={sending}>
+              {sending ? <Loader2 className="animate-spin" /> : null}
+              {queuedCount > 1
+                ? t("uploadSubmitCount", { count: queuedCount })
+                : t("uploadSubmit")}
             </Button>
           </DialogFooter>
         </form>

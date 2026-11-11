@@ -30,7 +30,7 @@ export function useCreateBusinessUser() {
           }),
           queryClient.invalidateQueries({ queryKey: orpc.customer.key() }),
           queryClient.invalidateQueries({
-            queryKey: orpc.property.list.key(),
+            queryKey: orpc.property.key(),
           }),
         ])
         toast.success(t("created", { email: input.email }))
@@ -54,7 +54,7 @@ export function useRemoveBusinessUser() {
           }),
           queryClient.invalidateQueries({ queryKey: orpc.customer.key() }),
           queryClient.invalidateQueries({
-            queryKey: orpc.property.list.key(),
+            queryKey: orpc.property.key(),
           }),
         ])
         toast.success(t("removed"))

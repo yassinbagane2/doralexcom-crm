@@ -1,17 +1,8 @@
 "use client"
 
-import { leaseStatus, localToday } from "@workspace/api/lease"
-import { PROPERTY_TYPES, type PropertyType } from "@workspace/api/property"
-import { Badge } from "@workspace/ui/components/ui/badge"
+import { localToday } from "@workspace/api/lease"
+import type { PropertyType } from "@workspace/api/property"
 import { Button } from "@workspace/ui/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +12,9 @@ import {
 } from "@workspace/ui/components/ui/dropdown-menu"
 import { Input } from "@workspace/ui/components/ui/input"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/ui/sheet"
-import {
   Building2,
-  Contact,
   Copy,
   DotsHorizontal,
-  Loader2,
-  MapPin,
   Pencil,
   Plus,
   SearchIcon,
@@ -42,124 +23,75 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
-import { useDeferredValue, useMemo, useState } from "react"
+import { useState } from "react"
 
+import { SectionEmpty } from "@/components/customers/section"
+import { PropertyCover } from "@/components/properties/property-cover"
 import {
-  EMPTY_PROPERTY,
-  PropertyForm,
-  toFormValues,
-} from "@/components/properties/property-form"
-import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
-import { LeaseDialog } from "@/components/customers/lease-dialogs"
+  DeletePropertyDialog,
+  OccupancyPill,
+  occupancy,
+} from "@/components/properties/property-dialogs"
+import { InfiniteScrollTrigger } from "@/components/shared/infinite-scroll-trigger"
 import { UserAvatar } from "@/components/user-avatar"
-import { routes } from "@/config/routes"
+import { newPropertyRoute, propertyRoute, routes } from "@/config/routes"
 import {
-  useCreateProperty,
-  useDeleteProperty,
-  useProperties,
-  useUpdateProperty,
+  usePropertyPages,
+  usePropertySummary,
   type Property,
 } from "@/hooks/queries/property"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatArea, formatDate, formatMoney } from "@/lib/format"
 
-type PropertyLease = Property["leases"][number]
-
-/** Who's in the property today, and who moves in next. */
-function occupancy(property: Property, today: string) {
-  let current: PropertyLease | null = null
-  let next: PropertyLease | null = null
-  for (const lease of property.leases) {
-    const status = leaseStatus(lease, today)
-    if (status === "active" || status === "ending") current = lease
-    else if (status === "upcoming") next ??= lease
-  }
-  return { current, next }
-}
-
-type Editor =
-  | { mode: "create" }
-  | { mode: "edit"; property: Property }
-  | { mode: "copy"; property: Property }
-
 type TypeFilter = "all" | PropertyType
+
+const GRID =
+  "grid gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
 
 /** A business's properties: what it rents out, and who lives or works there. */
 export function BusinessProperties() {
   const t = useTranslations("Properties")
-  const locale = useLocale()
-  const { data: properties, isPending } = useProperties()
-  const [editor, setEditor] = useState<Editor | null>(null)
   const [deleting, setDeleting] = useState<Property | null>(null)
-  const [assigning, setAssigning] = useState<Property | null>(null)
-  // The dialog keeps its property while it animates closed.
-  const [assignTarget, setAssignTarget] = useState<Property | null>(null)
-  if (assigning && assigning !== assignTarget) setAssignTarget(assigning)
   const [search, setSearch] = useState("")
   const [type, setType] = useState<TypeFilter>("all")
-  const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase())
+  const searched = useDebouncedValue(search.trim())
   const today = localToday()
-
-  // "Apt. 2" before "Apt. 10".
-  const sorted = useMemo(() => {
-    const collator = new Intl.Collator(locale, {
-      numeric: true,
-      sensitivity: "base",
-    })
-    return [...(properties ?? [])].sort((a, b) =>
-      collator.compare(a.name, b.name)
-    )
-  }, [properties, locale])
-
-  const visible = sorted.filter(
-    (property) =>
-      (type === "all" || property.type === type) &&
-      (!deferredSearch ||
-        [
-          property.name,
-          property.address,
-          ...property.leases.map((lease) => lease.customer.name),
-        ]
-          .filter(Boolean)
-          .some((value) => value!.toLocaleLowerCase().includes(deferredSearch)))
-  )
-
+  const summary = usePropertySummary(today)
+  const pages = usePropertyPages({
+    search: searched,
+    type: type === "all" ? undefined : type,
+  })
+  const properties = pages.data?.pages.flatMap((page) => page.data) ?? []
+  const total = summary.data?.total ?? 0
+  const occupied = summary.data?.occupied ?? 0
   // Only offer filters for kinds the business actually has.
-  const presentTypes = PROPERTY_TYPES.filter((value) =>
-    sorted.some((property) => property.type === value)
-  )
-  const occupied = sorted.filter(
-    (property) => occupancy(property, today).current
-  ).length
+  const presentTypes = summary.data?.types ?? []
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-medium tracking-[-0.02em]">
             {t("title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {sorted.length > 0
-              ? t("summary", {
-                  total: sorted.length,
-                  occupied,
-                  vacant: sorted.length - occupied,
-                })
+            {total > 0
+              ? t("summary", { total, occupied, vacant: total - occupied })
               : t("description")}
           </p>
         </div>
         <Button
           className="self-start sm:self-auto"
-          onClick={() => setEditor({ mode: "create" })}
+          render={<Link href={newPropertyRoute()} />}
         >
           <Plus size={16} />
           {t("add")}
         </Button>
       </div>
 
-      {sorted.length > 0 ? (
+      {total > 0 ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 rounded-md border px-2.5 sm:w-72">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 transition-colors focus-within:bg-muted sm:w-80">
             <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
             <Input
               type="search"
@@ -167,7 +99,7 @@ export function BusinessProperties() {
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("search")}
               aria-label={t("search")}
-              className="h-8 border-none bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+              className="h-9 border-none bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
             />
           </div>
           {presentTypes.length > 1 ? (
@@ -184,7 +116,7 @@ export function BusinessProperties() {
                   aria-checked={type === value}
                   onClick={() => setType(value)}
                   className={cn(
-                    "rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors",
+                    "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                     type === value
                       ? "bg-foreground text-background"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -198,159 +130,195 @@ export function BusinessProperties() {
         </div>
       ) : null}
 
-      {isPending ? (
-        <div className="flex flex-col gap-2">
+      {pages.isPending || summary.isPending ? (
+        <ul className={GRID} aria-hidden>
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-18 animate-pulse rounded-lg bg-muted" />
+            <CardSkeleton key={i} />
           ))}
-        </div>
-      ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-14 text-center">
-          <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
-            <Building2 className="size-4.5" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium">{t("emptyTitle")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("emptyDescription")}
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-1"
-            onClick={() => setEditor({ mode: "create" })}
-          >
-            <Plus size={14} />
-            {t("add")}
-          </Button>
-        </div>
-      ) : visible.length === 0 ? (
-        <p className="rounded-lg border px-4 py-10 text-center text-sm text-muted-foreground">
+        </ul>
+      ) : total === 0 ? (
+        <SectionEmpty
+          icon={<Building2 />}
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          className="py-16"
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={newPropertyRoute()} />}
+            >
+              <Plus size={14} />
+              {t("add")}
+            </Button>
+          }
+        />
+      ) : properties.length === 0 ? (
+        <p className="py-16 text-center text-sm text-muted-foreground">
           {t("noResults")}
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border">
-          {visible.map((property) => (
-            <PropertyRow
-              key={property.id}
-              property={property}
-              today={today}
-              onEdit={() => setEditor({ mode: "edit", property })}
-              onCopy={() => setEditor({ mode: "copy", property })}
-              onAssign={() => setAssigning(property)}
-              onDelete={() => setDeleting(property)}
-            />
-          ))}
-        </ul>
+        <div
+          className={cn(
+            "flex flex-col transition-opacity",
+            pages.isPlaceholderData && "opacity-60"
+          )}
+        >
+          <ul className={GRID}>
+            {properties.map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                today={today}
+                onDelete={() => setDeleting(property)}
+              />
+            ))}
+            {pages.isFetchingNextPage
+              ? [0, 1, 2].map((i) => <CardSkeleton key={`loading-${i}`} />)
+              : null}
+          </ul>
+          <InfiniteScrollTrigger query={pages} />
+        </div>
       )}
 
-      <PropertySheet editor={editor} onClose={() => setEditor(null)} />
       <DeletePropertyDialog
         property={deleting}
         today={today}
         onClose={() => setDeleting(null)}
       />
-      {assignTarget ? (
-        <LeaseDialog
-          property={assignTarget}
-          open={assigning !== null}
-          onOpenChange={(open) => !open && setAssigning(null)}
-        />
-      ) : null}
     </div>
   )
 }
 
-function PropertyRow({
+function CardSkeleton() {
+  return (
+    <li className="flex flex-col gap-3">
+      <div className="aspect-[16/10] animate-pulse rounded-xl bg-muted" />
+      <div className="flex flex-col gap-2 px-0.5">
+        <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+        <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+      </div>
+    </li>
+  )
+}
+
+function PropertyCard({
   property,
   today,
-  onEdit,
-  onCopy,
-  onAssign,
   onDelete,
 }: {
   property: Property
   today: string
-  onEdit: () => void
-  onCopy: () => void
-  onAssign: () => void
   onDelete: () => void
 }) {
   const t = useTranslations("Properties")
   const locale = useLocale()
-  const facts = [
+  const { current, next } = occupancy(property.leases, today)
+  const href = propertyRoute(property.id)
+  const details = [
+    t(`types.${property.type}`),
     property.surfaceArea !== null
       ? formatArea(property.surfaceArea, locale)
       : null,
-    property.rent !== null
-      ? t("perMonth", {
-          amount: formatMoney(property.rent, property.currency, locale),
-        })
-      : null,
   ].filter(Boolean)
-  const { current, next } = occupancy(property, today)
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3">
-      <button
-        type="button"
-        onClick={onEdit}
-        aria-label={t("editLabel", { name: property.name })}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    <li className="group/card relative flex min-w-0 flex-col gap-3">
+      <Link
+        href={href}
+        aria-label={property.name}
+        className="flex flex-col gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-          <PropertyTypeIcon type={property.type} />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex items-center gap-2 text-sm font-medium">
-            <span className="truncate">{property.name}</span>
-            <span className="shrink-0 text-xs font-normal text-muted-foreground">
-              {t(`types.${property.type}`)}
-            </span>
+        <PropertyCover
+          type={property.type}
+          className="aspect-[16/10] rounded-xl transition-[filter] group-hover/card:brightness-[0.97] dark:group-hover/card:brightness-110"
+        >
+          <OccupancyPill
+            occupied={current !== null}
+            className="absolute top-3 left-3 bg-background/90 shadow-xs backdrop-blur"
+          />
+        </PropertyCover>
+
+        <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
+          <div className="flex min-w-0 items-baseline justify-between gap-3">
+            <span className="truncate font-medium">{property.name}</span>
+            {property.rent !== null ? (
+              <span className="shrink-0 text-sm font-medium tabular-nums">
+                {formatMoney(property.rent, property.currency, locale)}
+                <span className="font-normal text-muted-foreground">
+                  {t("perMonthSuffix")}
+                </span>
+              </span>
+            ) : null}
+          </div>
+          <span className="truncate text-sm text-muted-foreground">
+            {property.address}
           </span>
-          <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-3 shrink-0" />
-            <span className="truncate">{property.address}</span>
+          <span className="text-xs text-muted-foreground">
+            {details.join(" · ")}
           </span>
-          {facts.length > 0 ? (
-            <span className="text-xs text-muted-foreground sm:hidden">
-              {facts.join(" · ")}
-            </span>
+        </div>
+      </Link>
+
+      {current || next ? (
+        <div className="flex min-h-6 items-center px-0.5 text-xs">
+          {current ? (
+            <Link
+              href={`${routes.customers}/${current.customer.id}`}
+              aria-label={t("viewCustomer", { name: current.customer.name })}
+              className="flex min-w-0 items-center gap-2 rounded-md text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <UserAvatar
+                name={current.customer.name}
+                className="size-5 text-[9px]"
+              />
+              <span className="truncate">{current.customer.name}</span>
+              {current.endDate ? (
+                <span className="shrink-0 text-muted-foreground">
+                  ·{" "}
+                  {t("leaving", { date: formatDate(current.endDate, locale) })}
+                </span>
+              ) : null}
+            </Link>
+          ) : next ? (
+            <Link
+              href={`${routes.customers}/${next.customer.id}`}
+              className="truncate text-muted-foreground hover:text-foreground hover:underline"
+            >
+              {t("incoming", {
+                name: next.customer.name,
+                date: formatDate(next.startDate, locale),
+              })}
+            </Link>
           ) : null}
-        </span>
-        <span className="hidden w-32 shrink-0 flex-col items-end text-xs text-muted-foreground tabular-nums sm:flex">
-          {facts.map((fact) => (
-            <span key={fact}>{fact}</span>
-          ))}
-        </span>
-      </button>
-      <OccupantCell current={current} next={next} onAssign={onAssign} />
+        </div>
+      ) : null}
 
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon-sm"
               aria-label={t("actionsLabel", { name: property.name })}
+              className="absolute top-2.5 right-2.5 bg-background/90 shadow-xs backdrop-blur transition-opacity hover:bg-background focus-visible:opacity-100 aria-expanded:opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100"
             />
           }
         >
           <DotsHorizontal size={16} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={onEdit}>
+          <DropdownMenuItem
+            render={<Link href={propertyRoute(property.id, "edit")} />}
+          >
             <Pencil className="size-4" />
             {t("edit")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onCopy}>
+          <DropdownMenuItem
+            render={<Link href={newPropertyRoute(property.id)} />}
+          >
             <Copy className="size-4" />
             {t("copy")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onAssign}>
-            <Contact className="size-4" />
-            {t("assignCustomer")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={onDelete}>
@@ -360,210 +328,5 @@ function PropertyRow({
         </DropdownMenuContent>
       </DropdownMenu>
     </li>
-  )
-}
-
-function OccupantCell({
-  current,
-  next,
-  onAssign,
-}: {
-  current: PropertyLease | null
-  next: PropertyLease | null
-  onAssign: () => void
-}) {
-  const t = useTranslations("Properties")
-  const locale = useLocale()
-
-  if (!current) {
-    return (
-      <span className="flex shrink-0 flex-col items-end gap-1 md:w-44">
-        <Badge variant="outline">{t("vacant")}</Badge>
-        {next ? null : (
-          <button
-            type="button"
-            onClick={onAssign}
-            className="hidden text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
-          >
-            {t("assignCustomer")}
-          </button>
-        )}
-        {next ? (
-          <Link
-            href={`${routes.customers}/${next.customer.id}`}
-            className="hidden max-w-44 truncate text-xs text-muted-foreground hover:text-foreground hover:underline md:block"
-          >
-            {t("incoming", {
-              name: next.customer.name,
-              date: formatDate(next.startDate, locale),
-            })}
-          </Link>
-        ) : null}
-      </span>
-    )
-  }
-
-  return (
-    <Link
-      href={`${routes.customers}/${current.customer.id}`}
-      aria-label={t("viewCustomer", { name: current.customer.name })}
-      className="flex min-w-0 shrink-0 items-center gap-2 rounded-md outline-none hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring/50 md:w-44"
-    >
-      <UserAvatar name={current.customer.name} className="size-7" />
-      <span className="hidden min-w-0 flex-col md:flex">
-        <span className="truncate text-sm">{current.customer.name}</span>
-        <span className="truncate text-xs text-muted-foreground">
-          {current.endDate
-            ? t("leaving", { date: formatDate(current.endDate, locale) })
-            : (current.customer.email ?? t("occupied"))}
-        </span>
-      </span>
-    </Link>
-  )
-}
-
-function PropertySheet({
-  editor,
-  onClose,
-}: {
-  editor: Editor | null
-  onClose: () => void
-}) {
-  const t = useTranslations("Properties")
-  const create = useCreateProperty()
-  const update = useUpdateProperty()
-  // Keep showing the last editor while the sheet animates closed.
-  const [shown, setShown] = useState(editor)
-  if (editor && editor !== shown) setShown(editor)
-
-  const mode = shown?.mode ?? "create"
-  const source = shown && shown.mode !== "create" ? shown.property : null
-  const defaultValues = !source
-    ? EMPTY_PROPERTY
-    : mode === "copy"
-      ? {
-          ...toFormValues(source),
-          name: t("copyName", { name: source.name }),
-        }
-      : toFormValues(source)
-
-  return (
-    <Sheet
-      open={editor !== null}
-      onOpenChange={(open) => {
-        if (open) return
-        onClose()
-        create.reset()
-        update.reset()
-      }}
-    >
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{t(`sheet.${mode}.title`)}</SheetTitle>
-          <SheetDescription>
-            {source
-              ? t(`sheet.${mode}.description`, { name: source.name })
-              : t("sheet.create.description")}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="px-4 pb-6">
-          <PropertyForm
-            // A fresh form for each property, so the last one's values never leak in.
-            key={`${mode}-${source?.id ?? "new"}`}
-            defaultValues={defaultValues}
-            submitLabel={t(`sheet.${mode}.submit`)}
-            isPending={create.isPending || update.isPending}
-            onSubmit={(input) => {
-              if (mode === "edit" && source) {
-                update.mutate(
-                  { ...input, id: source.id },
-                  { onSuccess: onClose }
-                )
-              } else {
-                create.mutate(input, { onSuccess: onClose })
-              }
-            }}
-          />
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-/**
- * Deleting is refused while a lease holds the property, now or later. The
- * server makes the same check (and refuses once rent has been paid on it);
- * this just says so up front and points to the customer.
- */
-function DeletePropertyDialog({
-  property,
-  today,
-  onClose,
-}: {
-  property: Property | null
-  today: string
-  onClose: () => void
-}) {
-  const t = useTranslations("Properties")
-  const tCommon = useTranslations("Common")
-  const remove = useDeleteProperty()
-  const [shown, setShown] = useState(property)
-  if (property && property !== shown) setShown(property)
-
-  const holder = shown
-    ? (() => {
-        const { current, next } = occupancy(shown, today)
-        return current ?? next
-      })()
-    : null
-  const customer = holder?.customer
-
-  return (
-    <Dialog
-      open={property !== null}
-      onOpenChange={(open) => {
-        if (open) return
-        onClose()
-        remove.reset()
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {customer
-              ? t("inUseTitle", { name: shown?.name ?? "" })
-              : t("deleteTitle", { name: shown?.name ?? "" })}
-          </DialogTitle>
-          <DialogDescription>
-            {customer
-              ? t("inUseDescription", { customer: customer.name })
-              : t("deleteDescription")}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="mt-5 flex-row justify-end">
-          <Button variant="outline" onClick={onClose}>
-            {tCommon("cancel")}
-          </Button>
-          {customer ? (
-            <Button
-              render={<Link href={`${routes.customers}/${customer.id}`} />}
-            >
-              {t("viewCustomerShort")}
-            </Button>
-          ) : (
-            <Button
-              variant="destructive"
-              disabled={remove.isPending || !shown}
-              onClick={() =>
-                shown && remove.mutate({ id: shown.id }, { onSuccess: onClose })
-              }
-            >
-              {remove.isPending ? <Loader2 className="animate-spin" /> : null}
-              {t("deleteSubmit")}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }

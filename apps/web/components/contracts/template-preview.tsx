@@ -36,28 +36,9 @@ export function TemplatePreview({
 }: {
   content: DocumentContent | undefined
 }) {
-  const tf = useTranslations("MergeFields")
   const frameRef = useRef<HTMLDivElement>(null)
   const width = useElementWidth(frameRef)
-
-  const fieldLabel = useCallback(
-    (key: string) => (isMergeFieldKey(key) ? tf(`fields.${key}`) : key),
-    [tf]
-  )
-  const html = useMemo(() => {
-    if (!content) return ""
-    try {
-      // A preview is a single page: no pagination.
-      const extensions = createDraftExtensions("", {
-        paginate: false,
-        fieldLabel,
-      })
-      return generateHTML(content.body as JSONContent, extensions)
-    } catch {
-      // Content this editor can't read leaves the page blank.
-      return ""
-    }
-  }, [content, fieldLabel])
+  const html = useContentHtml(content?.body)
 
   const dims = getPageDimensions(
     content ? toPageSetup(content.pageSetup) : DEFAULT_PAGE_SETUP
@@ -98,6 +79,32 @@ export function TemplatePreview({
   )
 }
 
+/**
+ * A document part (body, header or footer) as HTML, drawn by the editor's own
+ * extensions without pagination. Empty until `node` loads, or if it can't be
+ * read.
+ */
+export function useContentHtml(node: ContentNode | null | undefined) {
+  const tf = useTranslations("MergeFields")
+  const fieldLabel = useCallback(
+    (key: string) => (isMergeFieldKey(key) ? tf(`fields.${key}`) : key),
+    [tf]
+  )
+  return useMemo(() => {
+    if (!node) return ""
+    try {
+      const extensions = createDraftExtensions("", {
+        paginate: false,
+        fieldLabel,
+      })
+      return generateHTML(node as JSONContent, extensions)
+    } catch {
+      // Content this editor can't read stays blank.
+      return ""
+    }
+  }, [node, fieldLabel])
+}
+
 /** How many different fields a template fills in, header and footer included. */
 export function countMergeFields(content: DocumentContent) {
   const keys = new Set<string>()
@@ -114,30 +121,8 @@ export function countMergeFields(content: DocumentContent) {
   return keys.size
 }
 
-/** Calls `onVisible` when `ref`'s element scrolls into view, while `enabled`. */
-export function useOnVisible(
-  ref: RefObject<Element | null>,
-  onVisible: () => void,
-  enabled: boolean
-) {
-  const onVisibleRef = useRef(onVisible)
-  useEffect(() => {
-    onVisibleRef.current = onVisible
-  })
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element || !enabled) return
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) onVisibleRef.current()
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [ref, enabled])
-}
-
 /** Width of `ref`'s content box in CSS pixels, kept current (0 until measured). */
-function useElementWidth(ref: RefObject<Element | null>) {
+export function useElementWidth(ref: RefObject<Element | null>) {
   const [width, setWidth] = useState(0)
 
   useEffect(() => {

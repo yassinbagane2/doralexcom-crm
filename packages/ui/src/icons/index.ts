@@ -107,6 +107,7 @@ export {
   ExternalLink,
   EyeOff,
   Feather,
+  FileImage,
   FilePen,
   FileText,
   Flower2,

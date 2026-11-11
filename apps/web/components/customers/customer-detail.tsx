@@ -10,7 +10,6 @@ import {
   renewsAutomatically,
   NOTE_VISIBILITIES,
   CUSTOMER_LIMITS,
-  customerGroups,
   type NoteVisibility,
 } from "@workspace/api/lease"
 import { Badge } from "@workspace/ui/components/ui/badge"
@@ -33,6 +32,7 @@ import {
 import { Textarea } from "@workspace/ui/components/ui/textarea"
 import {
   ArrowLeftIcon,
+  Building2,
   CalendarX,
   Copy,
   DotsHorizontal,
@@ -52,7 +52,6 @@ import {
   Receipt,
   Trash,
   UserCircle,
-  Users,
 } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
@@ -77,6 +76,7 @@ import {
   CustomerSheet,
   type CustomerEditor,
 } from "@/components/customers/customer-sheet"
+import { Section, SectionEmpty } from "@/components/customers/section"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
 import {
@@ -94,6 +94,7 @@ import { formatDate, formatMoney } from "@/lib/format"
 /** One customer: who they are, what they rent, what they owe, and notes. */
 export function CustomerDetail({ customerId }: { customerId: string }) {
   const t = useTranslations("Customer")
+  const locale = useLocale()
   const { data: customer, isPending, isError } = useCustomer(customerId)
   const [editor, setEditor] = useState<CustomerEditor | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -120,10 +121,8 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
     )
   }
 
-  const groups = customerGroups(customer.leases, today)
-
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <Link
         href={routes.customers}
         className="flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
@@ -132,86 +131,81 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
         {t("back")}
       </Link>
 
-      <div className="flex items-start gap-4">
+      <header className="flex flex-wrap items-center gap-4">
         <UserAvatar name={customer.name} className="size-12 text-sm" />
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h1 className="truncate font-heading text-2xl font-medium tracking-[-0.02em]">
-            {customer.name}
-          </h1>
-          <div className="flex flex-wrap gap-1.5">
-            {groups.size === 0 ? (
-              <Badge variant="outline">{t("noLease")}</Badge>
-            ) : (
-              [...groups].map((group) => (
-                <Badge
-                  key={group}
-                  variant={group === "current" ? "default" : "outline"}
-                >
-                  {t(`groups.${group}`)}
-                </Badge>
-              ))
-            )}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate font-heading text-2xl font-medium tracking-[-0.02em]">
+              {customer.name}
+            </h1>
+            {customer.banned ? (
+              <Badge variant="destructive">{t("suspended")}</Badge>
+            ) : null}
           </div>
+          <p className="text-sm text-muted-foreground">
+            {t("since", { date: formatDate(customer.createdAt, locale) })}
+          </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="secondary"
-                size="icon"
-                aria-label={t("actions")}
-              />
-            }
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setEditor({ mode: "edit", customerId: customer.id })}
           >
-            <DotsHorizontal size={16} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              onClick={() =>
-                setEditor({ mode: "edit", customerId: customer.id })
+            <Pencil className="size-3.5" />
+            {t("edit")}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon" aria-label={t("actions")} />
               }
             >
-              <Pencil className="size-4" />
-              {t("edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                setEditor({ mode: "copy", customerId: customer.id })
-              }
-            >
-              <Copy className="size-4" />
-              {t("copy")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => setDeleting(true)}
-            >
-              <Trash size={16} />
-              {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              <DotsHorizontal size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() =>
+                  setEditor({ mode: "copy", customerId: customer.id })
+                }
+              >
+                <Copy className="size-4" />
+                {t("copy")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleting(true)}
+              >
+                <Trash size={16} />
+                {t("delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <section className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-medium">{t("leasesTitle")}</h2>
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-12">
+        <div className="flex min-w-0 flex-col gap-10">
+          <Section
+            title={t("leasesTitle")}
+            count={customer.leases.length}
+            action={
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setAssigning(true)}
               >
                 <Plus size={14} />
                 {t("assign")}
               </Button>
-            </div>
+            }
+          >
             {customer.leases.length === 0 ? (
-              <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                {t("leasesEmpty")}
-              </p>
+              <SectionEmpty
+                icon={<Building2 />}
+                title={t("leasesEmpty")}
+                description={t("leasesEmptyHint")}
+              />
             ) : (
               <ul className="flex flex-col gap-3">
                 {customer.leases.map((lease) => (
@@ -224,14 +218,14 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
                 ))}
               </ul>
             )}
-          </section>
+          </Section>
 
           <CustomerDocuments customer={customer} />
 
           <Notes customer={customer} />
         </div>
 
-        <aside className="flex flex-col gap-6">
+        <aside className="flex flex-col gap-8 lg:sticky lg:top-6">
           <ContactDetails customer={customer} />
           <Contacts customer={customer} />
         </aside>
@@ -281,17 +275,19 @@ function ContactDetails({ customer }: { customer: Customer }) {
   ].filter((row) => row.value)
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="text-sm font-medium">{t("detailsTitle")}</h2>
+    <Section title={t("detailsTitle")}>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noContactDetails")}</p>
       ) : (
-        <ul className="flex flex-col gap-2 text-sm">
+        <ul className="flex flex-col gap-2.5 text-sm">
           {rows.map(({ icon: Icon, value, href }) => (
-            <li key={value} className="flex items-start gap-2">
+            <li key={value} className="flex items-start gap-2.5">
               <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               {href ? (
-                <a href={href} className="min-w-0 break-words hover:underline">
+                <a
+                  href={href}
+                  className="min-w-0 break-words underline-offset-4 hover:underline"
+                >
                   {value}
                 </a>
               ) : (
@@ -301,24 +297,17 @@ function ContactDetails({ customer }: { customer: Customer }) {
           ))}
         </ul>
       )}
-      <div className="flex items-start gap-2 border-t pt-3 text-sm">
+      <div className="flex items-start gap-2.5 rounded-lg bg-muted/40 px-3 py-2.5 text-sm">
         <UserCircle
           size={16}
           className="mt-0.5 shrink-0 text-muted-foreground"
         />
-        <span className="min-w-0">
-          <span className="flex items-center gap-2">
-            {t("account")}
-            {customer.banned ? (
-              <Badge variant="destructive">{t("suspended")}</Badge>
-            ) : null}
-          </span>
-          <span className="block truncate text-xs text-muted-foreground">
-            {customer.email}
-          </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="text-xs text-muted-foreground">{t("account")}</span>
+          <span className="truncate">{customer.email}</span>
         </span>
       </div>
-    </section>
+    </Section>
   )
 }
 
@@ -326,47 +315,43 @@ function Contacts({ customer }: { customer: Customer }) {
   const t = useTranslations("Customer")
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="flex items-center gap-2 text-sm font-medium">
-        <Users size={16} className="text-muted-foreground" />
-        {t("contactsTitle")}
-      </h2>
+    <Section title={t("contactsTitle")} count={customer.contacts.length}>
       {customer.contacts.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("contactsEmpty")}</p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-4">
           {customer.contacts.map((contact, index) => (
-            <li key={index} className="flex flex-col text-sm">
-              <span className="font-medium">
-                {contact.name}
+            <li key={index} className="flex items-start gap-3">
+              <UserAvatar name={contact.name} className="size-7 text-[10px]" />
+              <span className="flex min-w-0 flex-col text-sm">
+                <span className="truncate font-medium">{contact.name}</span>
                 {contact.relation ? (
-                  <span className="font-normal text-muted-foreground">
-                    {" "}
-                    · {contact.relation}
+                  <span className="text-xs text-muted-foreground">
+                    {contact.relation}
                   </span>
                 ) : null}
+                {contact.email ? (
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="mt-1 truncate text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {contact.email}
+                  </a>
+                ) : null}
+                {contact.phone ? (
+                  <a
+                    href={`tel:${contact.phone}`}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {contact.phone}
+                  </a>
+                ) : null}
               </span>
-              {contact.email ? (
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="truncate text-xs text-muted-foreground hover:underline"
-                >
-                  {contact.email}
-                </a>
-              ) : null}
-              {contact.phone ? (
-                <a
-                  href={`tel:${contact.phone}`}
-                  className="text-xs text-muted-foreground hover:underline"
-                >
-                  {contact.phone}
-                </a>
-              ) : null}
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </Section>
   )
 }
 
@@ -403,9 +388,9 @@ function LeaseCard({
   const extras = lease.charges + lease.additionalCosts
 
   return (
-    <li className="flex flex-col gap-4 rounded-lg border p-4">
+    <li className="flex flex-col gap-4 rounded-xl bg-muted/40 p-4">
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-background text-muted-foreground shadow-xs">
           <PropertyTypeIcon type={lease.property.type} />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -520,6 +505,7 @@ function LeaseCard({
           balance={balance}
           currency={lease.currency}
           final={terminated}
+          compact
         />
       )}
 
@@ -528,11 +514,11 @@ function LeaseCard({
           <h3 className="text-xs font-medium text-muted-foreground">
             {t("paymentsTitle")}
           </h3>
-          <ul className="flex flex-col divide-y rounded-md border text-sm">
+          <ul className="-mx-2 flex flex-col text-sm">
             {lease.payments.map((payment) => (
               <li
                 key={payment.id}
-                className="flex items-center gap-3 px-3 py-1.5"
+                className="flex items-center gap-3 rounded-md px-2 py-1 transition-colors hover:bg-background/70"
               >
                 <span className="w-28 shrink-0 text-muted-foreground tabular-nums">
                   {formatDate(payment.paidOn, locale)}
@@ -660,11 +646,8 @@ function Notes({ customer }: { customer: Customer }) {
   const trimmed = body.trim()
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-medium">{t("notesTitle")}</h2>
-
+    <Section title={t("notesTitle")} count={customer.notes.length}>
       <form
-        className="flex flex-col gap-2 rounded-lg border p-3"
         onSubmit={(event) => {
           event.preventDefault()
           if (!trimmed) return
@@ -674,86 +657,90 @@ function Notes({ customer }: { customer: Customer }) {
           )
         }}
       >
-        <Textarea
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          maxLength={CUSTOMER_LIMITS.note}
-          rows={2}
-          placeholder={t("notePlaceholder")}
-          aria-label={t("notesTitle")}
-          className="border-none px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
-        />
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div
-            role="radiogroup"
-            aria-label={t("visibilityLabel")}
-            className="flex gap-1"
-          >
-            {NOTE_VISIBILITIES.map((value) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={visibility === value}
-                onClick={() => setVisibility(value)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors",
-                  visibility === value
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {value === "private" ? (
-                  <Lock isHovered size={12} />
-                ) : (
-                  <UserCircle size={12} />
-                )}
-                {t(`visibility.${value}`)}
-              </button>
-            ))}
+        <div className="flex flex-col gap-2 rounded-xl bg-muted/40 p-2 transition-[background-color,box-shadow] focus-within:bg-background focus-within:shadow-sm focus-within:ring-1 focus-within:ring-border">
+          <Textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            maxLength={CUSTOMER_LIMITS.note}
+            rows={2}
+            placeholder={t("notePlaceholder")}
+            aria-label={t("notesTitle")}
+            className="min-h-14 resize-none border-none px-1.5 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div
+              role="radiogroup"
+              aria-label={t("visibilityLabel")}
+              className="flex gap-0.5 rounded-lg bg-muted/80 p-0.5"
+            >
+              {NOTE_VISIBILITIES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={visibility === value}
+                  onClick={() => setVisibility(value)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors",
+                    visibility === value
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {value === "private" ? (
+                    <Lock isHovered size={12} />
+                  ) : (
+                    <UserCircle size={12} />
+                  )}
+                  {t(`visibility.${value}`)}
+                </button>
+              ))}
+            </div>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!trimmed || addNote.isPending}
+            >
+              {addNote.isPending ? <Loader2 className="animate-spin" /> : null}
+              {t("addNote")}
+            </Button>
           </div>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!trimmed || addNote.isPending}
-          >
-            {addNote.isPending ? <Loader2 className="animate-spin" /> : null}
-            {t("addNote")}
-          </Button>
         </div>
       </form>
 
       {customer.notes.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("notesEmpty")}</p>
+        <p className="py-2 text-sm text-muted-foreground">{t("notesEmpty")}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="-mx-3 flex flex-col">
           {customer.notes.map((note) => (
             <li
               key={note.id}
-              className={cn(
-                "flex flex-col gap-1.5 rounded-lg border px-3 py-2.5",
-                note.visibility === "shared" &&
-                  "border-brand/30 bg-brand-subtle/40"
-              )}
+              className="group flex flex-col gap-1.5 rounded-lg px-3 py-3 transition-colors hover:bg-muted/40"
             >
-              <p className="text-sm whitespace-pre-wrap">{note.body}</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {note.visibility === "private" ? (
-                  <EyeOff className="size-3" />
-                ) : (
-                  <UserCircle size={12} />
-                )}
-                <span>{t(`visibilityBadge.${note.visibility}`)}</span>
-                <span>·</span>
-                <span className="truncate">
-                  {[note.authorName, formatDate(note.createdAt, locale)]
-                    .filter(Boolean)
-                    .join(" · ")}
+                <span className="truncate font-medium text-foreground">
+                  {note.authorName}
+                </span>
+                <span>{formatDate(note.createdAt, locale)}</span>
+                <span
+                  className={cn(
+                    "flex items-center gap-1 rounded-md px-1.5 py-px",
+                    note.visibility === "shared"
+                      ? "bg-brand-subtle text-brand"
+                      : "bg-muted"
+                  )}
+                >
+                  {note.visibility === "private" ? (
+                    <EyeOff className="size-3" />
+                  ) : (
+                    <UserCircle size={12} />
+                  )}
+                  {t(`visibilityBadge.${note.visibility}`)}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  className="ml-auto"
+                  className="ml-auto opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                   aria-label={t("removeNote")}
                   disabled={removeNote.isPending}
                   onClick={() =>
@@ -763,11 +750,12 @@ function Notes({ customer }: { customer: Customer }) {
                   <Trash size={12} />
                 </Button>
               </div>
+              <p className="text-sm whitespace-pre-wrap">{note.body}</p>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </Section>
   )
 }
 

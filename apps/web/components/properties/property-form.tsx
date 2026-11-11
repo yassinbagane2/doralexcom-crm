@@ -22,7 +22,7 @@ import {
 import { Textarea } from "@workspace/ui/components/ui/textarea"
 import { Loader2 } from "@workspace/ui/icons"
 import { useTranslations } from "next-intl"
-import { useMemo } from "react"
+import { useMemo, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -115,11 +115,13 @@ export function PropertyForm({
   submitLabel,
   isPending,
   onSubmit,
+  onCancel,
 }: {
   defaultValues: PropertyFormValues
   submitLabel: string
   isPending: boolean
   onSubmit: (input: PropertyInput) => void
+  onCancel?: () => void
 }) {
   const t = useTranslations("Properties")
   const tc = useTranslations("Common")
@@ -153,131 +155,36 @@ export function PropertyForm({
     <form
       noValidate
       onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-5"
+      className="flex flex-col gap-10"
     >
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field>
-          <Label htmlFor="property-type">{t("fields.type")}</Label>
-          <Controller
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <Select
-                items={typeItems}
-                value={field.value}
-                onValueChange={(value) =>
-                  value && field.onChange(value as PropertyType)
-                }
-              >
-                <SelectTrigger id="property-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {typeItems.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      <PropertyTypeIcon
-                        type={value}
-                        className="text-muted-foreground"
-                      />
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </Field>
-
-        <Field>
-          <Label htmlFor="property-name">{t("fields.name")}</Label>
-          <Input
-            id="property-name"
-            autoComplete="off"
-            placeholder={t("placeholders.name")}
-            aria-invalid={Boolean(errors.name)}
-            aria-describedby="property-name-error"
-            {...form.register("name")}
-          />
-          <FieldError id="property-name-error">
-            {errors.name?.message}
-          </FieldError>
-        </Field>
-      </div>
-
-      <Field>
-        <Label htmlFor="property-address">{t("fields.address")}</Label>
-        <Input
-          id="property-address"
-          autoComplete="off"
-          placeholder={t("placeholders.address")}
-          aria-invalid={Boolean(errors.address)}
-          aria-describedby="property-address-error"
-          {...form.register("address")}
-        />
-        <FieldError id="property-address-error">
-          {errors.address?.message}
-        </FieldError>
-      </Field>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field>
-          <Label htmlFor="property-surface">
-            {t("fields.surfaceArea")} {optional}
-          </Label>
-          <div className="relative">
-            <Input
-              id="property-surface"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="65"
-              className="pr-10"
-              aria-invalid={Boolean(errors.surfaceArea)}
-              aria-describedby="property-surface-error"
-              {...form.register("surfaceArea")}
-            />
-            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-              m²
-            </span>
-          </div>
-          <FieldError id="property-surface-error">
-            {errors.surfaceArea?.message}
-          </FieldError>
-        </Field>
-
-        <Field>
-          <Label htmlFor="property-rent">
-            {t("fields.rent")} {optional}
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="property-rent"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="2500"
-              aria-invalid={Boolean(errors.rent)}
-              aria-describedby="property-rent-error property-rent-hint"
-              {...form.register("rent")}
-            />
+      <FormSection
+        title={t("formSections.basics.title")}
+        description={t("formSections.basics.description")}
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field>
+            <Label htmlFor="property-type">{t("fields.type")}</Label>
             <Controller
               control={form.control}
-              name="currency"
+              name="type"
               render={({ field }) => (
                 <Select
-                  items={currencyItems}
+                  items={typeItems}
                   value={field.value}
                   onValueChange={(value) =>
-                    value && field.onChange(value as RentCurrency)
+                    value && field.onChange(value as PropertyType)
                   }
                 >
-                  <SelectTrigger
-                    aria-label={t("fields.currency")}
-                    className="w-24 shrink-0"
-                  >
+                  <SelectTrigger id="property-type" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {currencyItems.map(({ value, label }) => (
+                    {typeItems.map(({ value, label }) => (
                       <SelectItem key={value} value={value}>
+                        <PropertyTypeIcon
+                          type={value}
+                          className="text-muted-foreground"
+                        />
                         {label}
                       </SelectItem>
                     ))}
@@ -285,75 +192,224 @@ export function PropertyForm({
                 </Select>
               )}
             />
-          </div>
-          <p id="property-rent-hint" className="text-xs text-muted-foreground">
-            {t("rentHint")}
-          </p>
-          <FieldError id="property-rent-error">
-            {errors.rent?.message}
-          </FieldError>
-        </Field>
-      </div>
+          </Field>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field>
-          <Label htmlFor="property-phone">
-            {t("fields.phone")} {optional}
-          </Label>
-          <Input
-            id="property-phone"
-            type="tel"
-            autoComplete="off"
-            placeholder="+40 721 234 567"
-            aria-invalid={Boolean(errors.phone)}
-            aria-describedby="property-phone-error"
-            {...form.register("phone")}
-          />
-          <FieldError id="property-phone-error">
-            {errors.phone?.message}
-          </FieldError>
-        </Field>
+          <Field>
+            <Label htmlFor="property-name">{t("fields.name")}</Label>
+            <Input
+              id="property-name"
+              autoComplete="off"
+              autoFocus={!defaultValues.name}
+              placeholder={t("placeholders.name")}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby="property-name-error"
+              {...form.register("name")}
+            />
+            <FieldError id="property-name-error">
+              {errors.name?.message}
+            </FieldError>
+          </Field>
+        </div>
 
         <Field>
-          <Label htmlFor="property-door-code">
-            {t("fields.doorCode")} {optional}
-          </Label>
+          <Label htmlFor="property-address">{t("fields.address")}</Label>
           <Input
-            id="property-door-code"
+            id="property-address"
             autoComplete="off"
-            spellCheck={false}
-            placeholder="1234#"
-            aria-invalid={Boolean(errors.doorCode)}
-            aria-describedby="property-door-code-error"
-            {...form.register("doorCode")}
+            placeholder={t("placeholders.address")}
+            aria-invalid={Boolean(errors.address)}
+            aria-describedby="property-address-error"
+            {...form.register("address")}
           />
-          <FieldError id="property-door-code-error">
-            {errors.doorCode?.message}
+          <FieldError id="property-address-error">
+            {errors.address?.message}
           </FieldError>
         </Field>
+      </FormSection>
+
+      <FormSection
+        title={t("formSections.rent.title")}
+        description={t("formSections.rent.description")}
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field>
+            <Label htmlFor="property-rent">
+              {t("fields.rent")} {optional}
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="property-rent"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="2500"
+                aria-invalid={Boolean(errors.rent)}
+                aria-describedby="property-rent-error property-rent-hint"
+                {...form.register("rent")}
+              />
+              <Controller
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <Select
+                    items={currencyItems}
+                    value={field.value}
+                    onValueChange={(value) =>
+                      value && field.onChange(value as RentCurrency)
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={t("fields.currency")}
+                      className="w-24 shrink-0"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencyItems.map(({ value, label }) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <p
+              id="property-rent-hint"
+              className="text-xs text-muted-foreground"
+            >
+              {t("rentHint")}
+            </p>
+            <FieldError id="property-rent-error">
+              {errors.rent?.message}
+            </FieldError>
+          </Field>
+
+          <Field>
+            <Label htmlFor="property-surface">
+              {t("fields.surfaceArea")} {optional}
+            </Label>
+            <div className="relative">
+              <Input
+                id="property-surface"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="65"
+                className="pr-10"
+                aria-invalid={Boolean(errors.surfaceArea)}
+                aria-describedby="property-surface-error"
+                {...form.register("surfaceArea")}
+              />
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                m²
+              </span>
+            </div>
+            <FieldError id="property-surface-error">
+              {errors.surfaceArea?.message}
+            </FieldError>
+          </Field>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title={t("formSections.access.title")}
+        description={t("formSections.access.description")}
+      >
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field>
+            <Label htmlFor="property-door-code">
+              {t("fields.doorCode")} {optional}
+            </Label>
+            <Input
+              id="property-door-code"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="1234#"
+              aria-invalid={Boolean(errors.doorCode)}
+              aria-describedby="property-door-code-error"
+              {...form.register("doorCode")}
+            />
+            <FieldError id="property-door-code-error">
+              {errors.doorCode?.message}
+            </FieldError>
+          </Field>
+
+          <Field>
+            <Label htmlFor="property-phone">
+              {t("fields.phone")} {optional}
+            </Label>
+            <Input
+              id="property-phone"
+              type="tel"
+              autoComplete="off"
+              placeholder="+40 721 234 567"
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby="property-phone-error"
+              {...form.register("phone")}
+            />
+            <FieldError id="property-phone-error">
+              {errors.phone?.message}
+            </FieldError>
+          </Field>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title={t("formSections.notes.title")}
+        description={t("formSections.notes.description")}
+      >
+        <Field>
+          <Label htmlFor="property-description" className="sr-only">
+            {t("fields.description")}
+          </Label>
+          <Textarea
+            id="property-description"
+            rows={5}
+            placeholder={t("placeholders.description")}
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby="property-description-error"
+            {...form.register("description")}
+          />
+          <FieldError id="property-description-error">
+            {errors.description?.message}
+          </FieldError>
+        </Field>
+      </FormSection>
+
+      <div className="flex justify-end gap-2">
+        {onCancel ? (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            {tc("cancel")}
+          </Button>
+        ) : null}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? <Loader2 className="animate-spin" /> : null}
+          {submitLabel}
+        </Button>
       </div>
-
-      <Field>
-        <Label htmlFor="property-description">
-          {t("fields.description")} {optional}
-        </Label>
-        <Textarea
-          id="property-description"
-          rows={3}
-          placeholder={t("placeholders.description")}
-          aria-invalid={Boolean(errors.description)}
-          aria-describedby="property-description-error"
-          {...form.register("description")}
-        />
-        <FieldError id="property-description-error">
-          {errors.description?.message}
-        </FieldError>
-      </Field>
-
-      <Button type="submit" className="self-start" disabled={isPending}>
-        {isPending ? <Loader2 className="animate-spin" /> : null}
-        {submitLabel}
-      </Button>
     </form>
+  )
+}
+
+/** A titled group of fields: what it's about on the left, the fields on the right. */
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <section className="grid gap-4 md:grid-cols-[14rem_minmax(0,1fr)] md:gap-10">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm font-medium">{title}</h2>
+        <p className="text-sm text-pretty text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <div className="flex min-w-0 flex-col gap-5">{children}</div>
+    </section>
   )
 }

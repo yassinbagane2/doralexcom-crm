@@ -32,6 +32,7 @@ import { findLandlord, landlordSchema } from "../lib/landlord"
 import { holdsPropertyOn } from "../lib/lease"
 import { buildMergeData, mergeDataSchema } from "../lib/merge-data"
 import { findCustomer, readCustomerMetadata } from "../lib/customer"
+import { discardDocumentContent, saveContractContent } from "../lib/storage"
 import { PROPERTY_LIMITS, RENT_CURRENCIES } from "../property"
 import { assertContentSize, contractName } from "./contract"
 
@@ -262,6 +263,15 @@ export const leaseRouter = o.prefix("/leases").router({
       assertContentSize(contract.content)
       await findCustomer(context.organizationId, input.customerId)
 
+      // The contract's content goes to R2 before the lease is written, and is
+      // removed again if the lease can't be.
+      const document = {
+        id: crypto.randomUUID(),
+        organizationId: context.organizationId,
+        customerId: input.customerId,
+      }
+      await saveContractContent(document, contract.content)
+
       return db.transaction(async (tx) => {
         const rented = await assertPropertyFree(
           tx,
@@ -281,19 +291,17 @@ export const leaseRouter = o.prefix("/leases").router({
           })
           .returning({ id: lease.id })
 
-        const [document] = await tx
-          .insert(customerDocument)
-          .values({
-            organizationId: context.organizationId,
-            customerId: input.customerId,
-            leaseId: created!.id,
-            kind: "contract",
-            name: contract.name,
-            content: contract.content,
-          })
-          .returning({ id: customerDocument.id })
+        await tx.insert(customerDocument).values({
+          ...document,
+          leaseId: created!.id,
+          kind: "contract",
+          name: contract.name,
+        })
 
-        return { id: created!.id, documentId: document!.id }
+        return { id: created!.id, documentId: document.id }
+      }).catch(async (error: unknown) => {
+        await discardDocumentContent({ ...document, kind: "contract" })
+        throw error
       })
     }),
 

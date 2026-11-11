@@ -8,7 +8,8 @@
     "back": "Înapoi",
     "optional": "Opțional",
     "dismiss": "Închide",
-    "retry": "Reîncearcă"
+    "retry": "Reîncearcă",
+    "loadMoreFailed": "Nu s-au putut încărca mai multe."
   },
   "Theme": {
     "label": "Temă",

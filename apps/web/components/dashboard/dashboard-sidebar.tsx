@@ -23,6 +23,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
+import { LogoMark } from "@/components/logo"
 import { UserAvatar } from "@/components/user-avatar"
 import { homeRouteFor } from "@/config/routes"
 
@@ -56,12 +57,21 @@ export function DashboardSidebar({
       >
         <Link
           href={homeRouteFor(role)}
-          className="min-w-0 truncate px-2 text-sm font-semibold"
+          aria-label={tCommon("appName")}
+          className={cn(
+            "flex min-w-0 items-center gap-2 text-sm font-semibold tracking-tight",
+            collapsed ? "justify-center" : "px-2"
+          )}
         >
-          {collapsed ? tCommon("appName").slice(0, 1) : tCommon("appName")}
-          {collapsed || !subtitle ? null : (
-            <span className="ml-1.5 font-normal text-muted-foreground">
-              {subtitle}
+          <LogoMark size={collapsed ? 22 : 24} />
+          {collapsed ? null : (
+            <span className="truncate">
+              {tCommon("appName")}
+              {subtitle ? (
+                <span className="ml-1.5 font-normal text-muted-foreground">
+                  {subtitle}
+                </span>
+              ) : null}
             </span>
           )}
         </Link>

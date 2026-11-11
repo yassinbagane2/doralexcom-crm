@@ -83,6 +83,7 @@
   "Customer": {
     "metaTitle": "Customer",
     "notFound": "This customer doesn't exist or was deleted.",
+    "since": "Customer since {date}",
     "back": "Customers",
     "noLease": "No lease",
     "groups": {
@@ -98,6 +99,7 @@
     "leasesTitle": "Properties",
     "assign": "Assign property",
     "leasesEmpty": "No properties assigned yet.",
+    "leasesEmptyHint": "Assign a property to start tracking rent, payments and contracts for this customer.",
     "detailsTitle": "Contact details",
     "noContactDetails": "No contact details recorded.",
     "account": "Signs in with",
@@ -213,6 +215,9 @@
     "assignCustomerSubmit": "Assign customer",
     "customerPlaceholder": "Choose a customer",
     "noCustomers": "Add a customer on the Customers page first.",
+    "searchCustomers": "Search customers…",
+    "searchProperties": "Search properties…",
+    "noMatches": "Nothing matches.",
     "rentFromProperty": "Taken from the property. You can change it later from the lease.",
     "noPropertyRent": "This property has no rent set, so the lease starts at 0. Set the rent on the property first, or edit the lease afterwards.",
     "generateContract": "Generate contract",

@@ -1,6 +1,14 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import type { CustomerGroup } from "@workspace/api/lease"
+import { nextOffsetPage, PAGE_SIZE } from "@workspace/api/pagination"
 import { toast } from "@workspace/ui/components/motion/toaster"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -16,7 +24,7 @@ import { orpc } from "@/lib/orpc"
 
 export type CustomerSummary = Awaited<
   ReturnType<typeof orpc.customer.list.call>
->[number]
+>["data"][number]
 export type CustomerDetail = Awaited<ReturnType<typeof orpc.customer.get.call>>
 export type CustomerLease = CustomerDetail["leases"][number]
 export type CustomerInput = Parameters<typeof orpc.customer.create.call>[0]
@@ -26,8 +34,43 @@ export type LeaseTerms = Omit<
 >
 export type LeaseBalance = Awaited<ReturnType<typeof orpc.lease.terminate.call>>
 
-export function useCustomers() {
-  return useQuery(orpc.customer.list.queryOptions())
+/**
+ * The business's customers, a page at a time (`fetchNextPage`) for infinite
+ * scrolling. `group` and `search` are applied by the server; `today` is the
+ * reader's, so a group means the same as the badges on each row.
+ */
+export function useCustomerPages({
+  search,
+  group,
+  today,
+  enabled = true,
+}: {
+  search?: string
+  group?: CustomerGroup
+  today: string
+  enabled?: boolean
+}) {
+  return useInfiniteQuery({
+    ...orpc.customer.list.infiniteOptions({
+      input: (page: number) => ({
+        page,
+        pageSize: PAGE_SIZE,
+        search: search || undefined,
+        group,
+        today,
+      }),
+      initialPageParam: 1,
+      getNextPageParam: nextOffsetPage,
+    }),
+    enabled,
+    // Typing a search keeps the last results up until the new ones arrive.
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** How many customers each list filter holds, as of the reader's `today`. */
+export function useCustomerGroupCounts(today: string) {
+  return useQuery(orpc.customer.groupCounts.queryOptions({ input: { today } }))
 }
 
 export function useCustomer(id: string) {
@@ -47,7 +90,7 @@ function useInvalidateCustomers() {
   return () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: orpc.customer.key() }),
-      queryClient.invalidateQueries({ queryKey: orpc.property.list.key() }),
+      queryClient.invalidateQueries({ queryKey: orpc.property.key() }),
       // Customers are the business's users: the users page lists them too.
       queryClient.invalidateQueries({
         queryKey: orpc.business.listUsers.key(),
@@ -95,13 +138,16 @@ export function useDeleteCustomer() {
           queryKey: orpc.customer.get.key({ input: { id: input.id } }),
         })
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: orpc.customer.list.key() }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.customer.list.key(),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: orpc.customer.groupCounts.key(),
+          }),
           queryClient.invalidateQueries({
             queryKey: orpc.business.listUsers.key(),
           }),
-          queryClient.invalidateQueries({
-            queryKey: orpc.property.list.key(),
-          }),
+          queryClient.invalidateQueries({ queryKey: orpc.property.key() }),
         ])
         toast.success(t("deleted"))
       },

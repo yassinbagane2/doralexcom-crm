@@ -14,7 +14,6 @@
     "vacant": "Vacant",
     "perMonth": "{amount}/mo",
     "edit": "Edit",
-    "editLabel": "Edit {name}",
     "copy": "Copy",
     "copyName": "{name} (copy)",
     "delete": "Delete",
@@ -60,7 +59,20 @@
       "address": "Str. Victoriei 10, Bucharest",
       "description": "Floor, rooms, furnishing, anything worth remembering."
     },
-    "sheet": {
+    "validation": {
+      "nameRequired": "Enter a name",
+      "addressRequired": "Enter an address",
+      "amountInvalid": "Enter a positive number",
+      "phoneInvalid": "Enter a valid phone number",
+      "tooLong": "Keep it under {max} characters"
+    },
+    "occupied": "Occupied",
+    "incoming": "{name} from {date}",
+    "leaving": "Leaving {date}",
+    "viewCustomer": "View customer {name}",
+    "viewCustomerShort": "View customer",
+    "assignCustomer": "Assign customer",
+    "editor": {
       "create": {
         "title": "Add a property",
         "description": "Record a place you rent out.",
@@ -77,18 +89,52 @@
         "submit": "Add property"
       }
     },
-    "validation": {
-      "nameRequired": "Enter a name",
-      "addressRequired": "Enter an address",
-      "amountInvalid": "Enter a positive number",
-      "phoneInvalid": "Enter a valid phone number",
-      "tooLong": "Keep it under {max} characters"
+    "back": "All properties",
+    "notFound": "This property doesn't exist or was deleted.",
+    "notSet": "Not set",
+    "perMonthSuffix": "/mo",
+    "detail": {
+      "metaTitle": "Property",
+      "status": "Status",
+      "since": "Since {date}",
+      "perSquareMetre": "{amount}/m²",
+      "leasesCount": "Leases",
+      "occupancyTitle": "Customer",
+      "vacantTitle": "No one here right now",
+      "vacantDescription": "Assign a customer to start a lease on this property.",
+      "noDescription": "No description yet.",
+      "addDescription": "Add one",
+      "historyTitle": "Past customers",
+      "historyEmpty": "No one has left this property yet.",
+      "period": "{start} – {end}",
+      "accessTitle": "Access",
+      "accessEmpty": "No door code or phone recorded.",
+      "copyDoorCode": "Copy door code",
+      "copied": "Copied to clipboard",
+      "locationTitle": "Location",
+      "openInMaps": "Open in Google Maps",
+      "recordTitle": "Record",
+      "added": "Added",
+      "updated": "Last updated",
+      "justNow": "Just now"
     },
-    "occupied": "Occupied",
-    "incoming": "{name} from {date}",
-    "leaving": "Leaving {date}",
-    "viewCustomer": "View customer {name}",
-    "viewCustomerShort": "View customer",
-    "assignCustomer": "Assign customer"
+    "formSections": {
+      "basics": {
+        "title": "Basics",
+        "description": "What it is and where to find it."
+      },
+      "rent": {
+        "title": "Rent & size",
+        "description": "New leases start from this rent."
+      },
+      "access": {
+        "title": "Access",
+        "description": "How you and your customers get in."
+      },
+      "notes": {
+        "title": "Description",
+        "description": "Floor, rooms, furnishing, anything worth remembering."
+      }
+    }
   }
 }

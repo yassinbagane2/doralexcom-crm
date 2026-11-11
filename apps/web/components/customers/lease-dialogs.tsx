@@ -49,17 +49,21 @@ import {
   useMergeValues,
 } from "@/components/contracts/contract-content"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
+import { InfinitePicker } from "@/components/shared/infinite-picker"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
-import { useProperties, type Property } from "@/hooks/queries/property"
+import { usePropertyPages, type Property } from "@/hooks/queries/property"
 import {
   useAddPayment,
   useCreateLease,
   useTerminateLease,
   useUpdateLease,
+  useCustomerPages,
+  type CustomerSummary,
   type LeaseBalance,
   type CustomerLease,
 } from "@/hooks/queries/customer"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatDate, formatMoney } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
 
@@ -213,14 +217,33 @@ function LeaseDialogBody({
   const queryClient = useQueryClient()
   const mergeValues = useMergeValues()
   const [generating, setGenerating] = useState(false)
-  const { data: properties } = useProperties()
+  const [propertySearch, setPropertySearch] = useState("")
+  const [customerSearch, setCustomerSearch] = useState("")
+  const [pickedProperty, setPickedProperty] = useState<Property | null>(null)
+  const [pickedCustomer, setPickedCustomer] = useState<CustomerSummary | null>(
+    null
+  )
+  const propertyQuery = useDebouncedValue(propertySearch.trim())
+  const customerQuery = useDebouncedValue(customerSearch.trim())
+  const propertyPages = usePropertyPages({
+    search: propertyQuery,
+    enabled: pickProperty,
+  })
+  const customerPages = useCustomerPages({
+    search: customerQuery,
+    today: localToday(),
+    enabled: pickCustomer,
+  })
+  const properties = propertyPages.data?.pages.flatMap((page) => page.data)
+  const customers = customerPages.data?.pages.flatMap((page) => page.data)
+  // Whether the business has none at all, not just none matching a search.
+  const noProperties =
+    !propertyQuery && propertyPages.data?.pages[0]?.total === 0
+  const noCustomers =
+    !customerQuery && customerPages.data?.pages[0]?.total === 0
   const { data: templates } = useQuery({
     ...orpc.contract.listTemplates.queryOptions(),
     enabled: !lease,
-  })
-  const { data: customers } = useQuery({
-    ...orpc.customer.list.queryOptions(),
-    enabled: pickCustomer,
   })
   const amount = useAmount()
   const tv = useTranslations("Leases.validation")
@@ -344,8 +367,7 @@ function LeaseDialogBody({
     }
   }, [form, onlyTemplate])
 
-  const chosenProperty =
-    property ?? properties?.find((p) => p.id === form.watch("propertyId"))
+  const chosenProperty = property ?? pickedProperty ?? undefined
   // What the lease is billed in: its own currency, or a new one's property's.
   const currency = lease ? form.watch("currency") : chosenProperty?.currency
   const lengthMode = form.watch("lengthMode")
@@ -364,16 +386,6 @@ function LeaseDialogBody({
     discount: parseAmount(form.watch("discount")) ?? 0,
   })
 
-  const propertyItems = (properties ?? []).map((item) => ({
-    value: item.id,
-    label: item.name,
-    property: item,
-  }))
-  const customerItems = (customers ?? []).map((customer) => ({
-    value: customer.id,
-    label: customer.name,
-    email: customer.email,
-  }))
   const templateItems = (templates ?? []).map((template) => ({
     value: template.id,
     label: template.name,
@@ -515,35 +527,38 @@ function LeaseDialogBody({
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <Select
-                    items={customerItems}
-                    value={field.value || null}
-                    onValueChange={(value) => value && field.onChange(value)}
-                  >
-                    <SelectTrigger
-                      id="lease-customer"
-                      aria-invalid={Boolean(errors.customerId)}
-                    >
-                      <SelectValue placeholder={t("customerPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customerItems.map(({ value, label, email }) => (
-                        <SelectItem key={value} value={value}>
-                          <UserAvatar
-                            name={label}
-                            className="size-5 text-[10px]"
-                          />
-                          {label}
-                          <span className="truncate text-xs text-muted-foreground">
-                            {email}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <InfinitePicker
+                    id="lease-customer"
+                    items={customers ?? []}
+                    query={customerPages}
+                    value={pickedCustomer}
+                    onValueChange={(customer) => {
+                      setPickedCustomer(customer)
+                      field.onChange(customer.id)
+                    }}
+                    search={customerSearch}
+                    onSearchChange={setCustomerSearch}
+                    itemLabel={(customer) => customer.name}
+                    renderItem={(customer) => (
+                      <>
+                        <UserAvatar
+                          name={customer.name}
+                          className="size-5 text-[10px]"
+                        />
+                        <span className="truncate">{customer.name}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {customer.email}
+                        </span>
+                      </>
+                    )}
+                    placeholder={t("customerPlaceholder")}
+                    searchPlaceholder={t("searchCustomers")}
+                    emptyText={t("noMatches")}
+                    invalid={Boolean(errors.customerId)}
+                  />
                 )}
               />
-              {customers && customers.length === 0 ? (
+              {noCustomers ? (
                 <p className="text-xs text-muted-foreground">
                   {t("noCustomers")}
                 </p>
@@ -559,32 +574,38 @@ function LeaseDialogBody({
                 control={form.control}
                 name="propertyId"
                 render={({ field }) => (
-                  <Select
-                    items={propertyItems}
-                    value={field.value || null}
-                    onValueChange={(value) => value && field.onChange(value)}
-                  >
-                    <SelectTrigger
-                      id="lease-property"
-                      aria-invalid={Boolean(errors.propertyId)}
-                    >
-                      <SelectValue placeholder={t("propertyPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {propertyItems.map(({ value, label, property }) => (
-                        <SelectItem key={value} value={value}>
-                          <PropertyTypeIcon
-                            type={property.type}
-                            className="text-muted-foreground"
-                          />
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <InfinitePicker
+                    id="lease-property"
+                    items={properties ?? []}
+                    query={propertyPages}
+                    value={pickedProperty}
+                    onValueChange={(picked) => {
+                      setPickedProperty(picked)
+                      field.onChange(picked.id)
+                    }}
+                    search={propertySearch}
+                    onSearchChange={setPropertySearch}
+                    itemLabel={(picked) => picked.name}
+                    renderItem={(picked) => (
+                      <>
+                        <PropertyTypeIcon
+                          type={picked.type}
+                          className="text-muted-foreground"
+                        />
+                        <span className="truncate">{picked.name}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {picked.address}
+                        </span>
+                      </>
+                    )}
+                    placeholder={t("propertyPlaceholder")}
+                    searchPlaceholder={t("searchProperties")}
+                    emptyText={t("noMatches")}
+                    invalid={Boolean(errors.propertyId)}
+                  />
                 )}
               />
-              {properties && properties.length === 0 ? (
+              {noProperties ? (
                 <p className="text-xs text-muted-foreground">
                   {t("noProperties")}
                 </p>
@@ -1122,14 +1143,58 @@ export function BalanceSummary({
   balance,
   currency,
   final,
+  compact,
 }: {
   balance: LeaseBalance
   currency: string
   final?: boolean
+  /** One row of three figures, for a lease card. */
+  compact?: boolean
 }) {
   const t = useTranslations("Leases")
   const locale = useLocale()
   const money = (amount: number) => formatMoney(amount, currency, locale)
+  const outcome =
+    balance.balance > 0
+      ? t("balance.owes", { amount: money(balance.balance) })
+      : balance.balance < 0
+        ? t("balance.refund", { amount: money(-balance.balance) })
+        : t("balance.settled")
+
+  if (compact) {
+    return (
+      <dl className="grid grid-cols-3 gap-2 text-sm">
+        <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-background/70 px-3 py-2">
+          <dt className="truncate text-xs text-muted-foreground">
+            {t("balance.due")}
+          </dt>
+          <dd className="truncate tabular-nums">{money(balance.due)}</dd>
+        </div>
+        <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-background/70 px-3 py-2">
+          <dt className="truncate text-xs text-muted-foreground">
+            {t("balance.paid")}
+          </dt>
+          <dd className="truncate tabular-nums">{money(balance.paid)}</dd>
+        </div>
+        <div className="flex min-w-0 flex-col gap-0.5 rounded-lg bg-background/70 px-3 py-2">
+          <dt className="truncate text-xs text-muted-foreground">
+            {final ? t("balance.final") : t("balance.projected")}
+          </dt>
+          <dd
+            className={cn(
+              "truncate font-medium tabular-nums",
+              balance.balance > 0
+                ? "text-destructive"
+                : balance.balance === 0 &&
+                    "text-emerald-700 dark:text-emerald-400"
+            )}
+          >
+            {outcome}
+          </dd>
+        </div>
+      </dl>
+    )
+  }
 
   return (
     <dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1.5 rounded-lg border bg-muted/40 p-4 text-sm">
@@ -1146,11 +1211,7 @@ export function BalanceSummary({
           balance.balance > 0 && "text-destructive"
         )}
       >
-        {balance.balance > 0
-          ? t("balance.owes", { amount: money(balance.balance) })
-          : balance.balance < 0
-            ? t("balance.refund", { amount: money(-balance.balance) })
-            : t("balance.settled")}
+        {outcome}
       </dd>
     </dl>
   )

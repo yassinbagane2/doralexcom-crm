@@ -1,6 +1,5 @@
 import { relations, sql } from "drizzle-orm"
 import {
-  customType,
   index,
   integer,
   jsonb,
@@ -18,10 +17,6 @@ import { lease } from "./leasing"
  * (`content` columns) is validated by the API (packages/api/src/contract.ts),
  * which owns it; here it is opaque JSON.
  */
-
-const bytea = customType<{ data: Buffer; driverData: Buffer }>({
-  dataType: () => "bytea",
-})
 
 /**
  * A document a business writes once and reuses: rich text with merge fields
@@ -52,6 +47,10 @@ export const template = pgTable(
  * either a file uploaded as is (`kind` "file": a signed lease, an ID scan…)
  * or a contract generated from a template and still editable (`kind`
  * "contract"). Deleting the lease keeps the document on the customer.
+ *
+ * The content itself (the file, or the contract's editor JSON) is kept in
+ * Cloudflare R2 under a key derived from this row: see the API's
+ * lib/storage.ts.
  */
 export const customerDocument = pgTable(
   "customer_document",
@@ -73,9 +72,6 @@ export const customerDocument = pgTable(
     /** Files only: what was uploaded. */
     mimeType: text("mime_type"),
     size: integer("size"),
-    data: bytea("data"),
-    /** Contracts only: the editor content. */
-    content: jsonb("content").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

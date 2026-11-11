@@ -8,14 +8,17 @@
     "./context": "./src/context.ts",
     "./routers": "./src/routers/index.ts",
     "./property": "./src/property.ts",
+    "./pagination": "./src/pagination.ts",
     "./lease": "./src/lease.ts",
     "./contract": "./src/contract.ts",
-    "./settings": "./src/settings.ts"
+    "./settings": "./src/settings.ts",
+    "./storage": "./src/lib/storage.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
     "@orpc/server": "^1.16.2",
     "@t3-oss/env-core": "^0.13.11",
     "@workspace/auth": "workspace:*",

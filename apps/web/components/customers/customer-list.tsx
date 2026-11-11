@@ -5,7 +5,6 @@ import {
   leaseStatus,
   localToday,
   CUSTOMER_GROUPS,
-  customerGroups,
   type LeaseDates,
   type CustomerGroup,
 } from "@workspace/api/lease"
@@ -28,15 +27,21 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
-import { useDeferredValue, useMemo, useState } from "react"
+import { useState } from "react"
 
 import {
   CustomerSheet,
   type CustomerEditor,
 } from "@/components/customers/customer-sheet"
+import { InfiniteScrollTrigger } from "@/components/shared/infinite-scroll-trigger"
 import { UserAvatar } from "@/components/user-avatar"
 import { routes } from "@/config/routes"
-import { useCustomers, type CustomerSummary } from "@/hooks/queries/customer"
+import {
+  useCustomerGroupCounts,
+  useCustomerPages,
+  type CustomerSummary,
+} from "@/hooks/queries/customer"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatDate, formatMoney } from "@/lib/format"
 
 type Filter = "all" | CustomerGroup
@@ -65,40 +70,19 @@ export function outstanding(
  */
 export function CustomerList() {
   const t = useTranslations("Customers")
-  const { data: customers, isPending } = useCustomers()
   const [editor, setEditor] = useState<CustomerEditor | null>(null)
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
-  const deferredSearch = useDeferredValue(search.trim().toLocaleLowerCase())
+  const searched = useDebouncedValue(search.trim())
   const today = localToday()
-
-  const grouped = useMemo(
-    () =>
-      (customers ?? []).map((customer) => ({
-        customer,
-        groups: customerGroups(customer.leases, today),
-      })),
-    [customers, today]
-  )
-
-  const counts = Object.fromEntries(
-    CUSTOMER_GROUPS.map((group) => [
-      group,
-      grouped.filter(({ groups }) => groups.has(group)).length,
-    ])
-  ) as Record<CustomerGroup, number>
-
-  const visible = grouped.filter(
-    ({ customer, groups }) =>
-      (filter === "all" || groups.has(filter)) &&
-      (!deferredSearch ||
-        [
-          customer.name,
-          customer.email,
-          customer.phone,
-          ...customer.leases.map((lease) => lease.property.name),
-        ].some((value) => value?.toLocaleLowerCase().includes(deferredSearch)))
-  )
+  const counts = useCustomerGroupCounts(today)
+  const pages = useCustomerPages({
+    search: searched,
+    group: filter === "all" ? undefined : filter,
+    today,
+  })
+  const customers = pages.data?.pages.flatMap((page) => page.data) ?? []
+  const total = counts.data?.all ?? 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -118,7 +102,7 @@ export function CustomerList() {
         </Button>
       </div>
 
-      {grouped.length > 0 ? (
+      {total > 0 ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div
             role="radiogroup"
@@ -141,7 +125,7 @@ export function CustomerList() {
               >
                 {t(`groups.${value}`)}
                 <span className="tabular-nums opacity-60">
-                  {value === "all" ? grouped.length : counts[value]}
+                  {counts.data?.[value] ?? 0}
                 </span>
               </button>
             ))}
@@ -160,13 +144,13 @@ export function CustomerList() {
         </div>
       ) : null}
 
-      {isPending ? (
+      {pages.isPending || counts.isPending ? (
         <div className="flex flex-col gap-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
-      ) : grouped.length === 0 ? (
+      ) : total === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-14 text-center">
           <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
             <Contact className="size-4.5" />
@@ -187,25 +171,40 @@ export function CustomerList() {
             {t("add")}
           </Button>
         </div>
-      ) : visible.length === 0 ? (
+      ) : customers.length === 0 ? (
         <p className="rounded-lg border px-4 py-10 text-center text-sm text-muted-foreground">
-          {filter !== "all" && !deferredSearch
+          {filter !== "all" && !searched
             ? t(`groupsEmpty.${filter}`)
             : t("noResults")}
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border">
-          {visible.map(({ customer }) => (
-            <CustomerRow
-              key={customer.id}
-              customer={customer}
-              today={today}
-              onCopy={() =>
-                setEditor({ mode: "copy", customerId: customer.id })
-              }
-            />
-          ))}
-        </ul>
+        <div
+          className={cn(
+            "flex flex-col transition-opacity",
+            pages.isPlaceholderData && "opacity-60"
+          )}
+        >
+          <ul className="divide-y rounded-lg border">
+            {customers.map((customer) => (
+              <CustomerRow
+                key={customer.id}
+                customer={customer}
+                today={today}
+                onCopy={() =>
+                  setEditor({ mode: "copy", customerId: customer.id })
+                }
+              />
+            ))}
+            {pages.isFetchingNextPage
+              ? [0, 1, 2].map((i) => (
+                  <li key={`loading-${i}`} className="px-4 py-3">
+                    <div className="h-9 animate-pulse rounded-md bg-muted" />
+                  </li>
+                ))
+              : null}
+          </ul>
+          <InfiniteScrollTrigger query={pages} />
+        </div>
       )}
 
       <CustomerSheet editor={editor} onClose={() => setEditor(null)} />

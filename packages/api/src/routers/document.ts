@@ -13,6 +13,11 @@ import {
   isDocumentFileType,
 } from "../contract"
 import { findCustomer } from "../lib/customer"
+import {
+  discardDocumentContent,
+  documentStorage,
+  saveContractContent,
+} from "../lib/storage"
 import { assertContentSize, contractName } from "./contract"
 
 function documentNotFound() {
@@ -149,21 +154,34 @@ export const documentRouter = o.prefix("/documents").router({
         file.name.trim().slice(0, DOCUMENT_LIMITS.name) ||
         withExtension("document", DOCUMENT_FILE_TYPES[file.type])
 
-      const [created] = await db
-        .insert(customerDocument)
-        .values({
-          organizationId: context.organizationId,
-          customerId: input.customerId,
+      // The file goes to R2 first: a row never points at missing content.
+      const document = {
+        id: crypto.randomUUID(),
+        organizationId: context.organizationId,
+        customerId: input.customerId,
+        kind: "file" as const,
+      }
+      const { storage, key } = documentStorage(document)
+      await storage.upload({
+        key,
+        body: new Uint8Array(await file.arrayBuffer()),
+        contentType: file.type,
+      })
+
+      try {
+        await db.insert(customerDocument).values({
+          ...document,
           leaseId: input.leaseId,
-          kind: "file",
           name,
           mimeType: file.type,
           size: file.size,
-          data: Buffer.from(await file.arrayBuffer()),
         })
-        .returning({ id: customerDocument.id })
+      } catch (error) {
+        await discardDocumentContent(document)
+        throw error
+      }
 
-      return { id: created!.id }
+      return { id: document.id }
     }),
 
   download: businessProcedure
@@ -172,11 +190,7 @@ export const documentRouter = o.prefix("/documents").router({
     .output(z.file())
     .handler(async ({ input, context }) => {
       const [found] = await db
-        .select({
-          name: customerDocument.name,
-          mimeType: customerDocument.mimeType,
-          data: customerDocument.data,
-        })
+        .select()
         .from(customerDocument)
         .where(
           and(
@@ -186,8 +200,11 @@ export const documentRouter = o.prefix("/documents").router({
         )
         .limit(1)
 
-      if (!found?.data) throw documentNotFound()
-      return new File([new Uint8Array(found.data)], found.name, {
+      if (!found) throw documentNotFound()
+      const { storage, key } = documentStorage(found)
+      const bytes = await storage.getObjectBytes(key)
+      if (!bytes) throw documentNotFound()
+      return new File([new Uint8Array(bytes)], found.name, {
         type: found.mimeType ?? "application/octet-stream",
       })
     }),
@@ -212,16 +229,24 @@ export const documentRouter = o.prefix("/documents").router({
         input.leaseId
       )
 
-      const [created] = await db
-        .insert(customerDocument)
-        .values({
-          ...input,
-          organizationId: context.organizationId,
-          kind: "contract",
-        })
-        .returning({ id: customerDocument.id })
+      const { content, ...values } = input
+      const document = {
+        id: crypto.randomUUID(),
+        organizationId: context.organizationId,
+        customerId: input.customerId,
+      }
+      await saveContractContent(document, content)
 
-      return { id: created!.id }
+      try {
+        await db
+          .insert(customerDocument)
+          .values({ ...values, ...document, kind: "contract" })
+      } catch (error) {
+        await discardDocumentContent({ ...document, kind: "contract" })
+        throw error
+      }
+
+      return { id: document.id }
     }),
 
   getContract: businessProcedure
@@ -249,13 +274,16 @@ export const documentRouter = o.prefix("/documents").router({
         )
         .limit(1)
 
-      if (!found?.content) throw documentNotFound()
+      if (!found) throw documentNotFound()
+      const { storage, key } = documentStorage(found)
+      const content = await storage.getObjectText(key)
+      if (content === null) throw documentNotFound()
       return {
         id: found.id,
         name: found.name,
         customerId: found.customerId,
         leaseId: found.leaseId,
-        content: documentContentSchema.parse(found.content),
+        content: documentContentSchema.parse(JSON.parse(content)),
         updatedAt: found.updatedAt,
       }
     }),
@@ -272,18 +300,24 @@ export const documentRouter = o.prefix("/documents").router({
     .output(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       assertContentSize(input.content)
-      const updated = await db
-        .update(customerDocument)
-        .set({ name: input.name, content: input.content })
-        .where(
-          and(
-            ownDocument(context.organizationId, input.id),
-            eq(customerDocument.kind, "contract")
-          )
-        )
-        .returning({ id: customerDocument.id })
+      const where = and(
+        ownDocument(context.organizationId, input.id),
+        eq(customerDocument.kind, "contract")
+      )
+      const [found] = await db
+        .select({
+          id: customerDocument.id,
+          organizationId: customerDocument.organizationId,
+          customerId: customerDocument.customerId,
+        })
+        .from(customerDocument)
+        .where(where)
+        .limit(1)
 
-      if (updated.length === 0) throw documentNotFound()
+      if (!found) throw documentNotFound()
+      await saveContractContent(found, input.content)
+      // Also bumps updatedAt, which the content in R2 doesn't carry.
+      await db.update(customerDocument).set({ name: input.name }).where(where)
       return { id: input.id }
     }),
 
@@ -292,12 +326,18 @@ export const documentRouter = o.prefix("/documents").router({
     .input(z.object({ id: z.uuid() }))
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
-      const deleted = await db
+      const [deleted] = await db
         .delete(customerDocument)
         .where(ownDocument(context.organizationId, input.id))
-        .returning({ id: customerDocument.id })
+        .returning({
+          id: customerDocument.id,
+          organizationId: customerDocument.organizationId,
+          customerId: customerDocument.customerId,
+          kind: customerDocument.kind,
+        })
 
-      if (deleted.length === 0) throw documentNotFound()
+      if (!deleted) throw documentNotFound()
+      await discardDocumentContent(deleted)
       return { success: true }
     }),
 })
