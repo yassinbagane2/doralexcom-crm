@@ -3,6 +3,7 @@
 // decoded to learn their size and formats Word cannot embed are re-encoded.
 // Sizes follow Word's units: twips (1/20 pt) for layout, half-points for text.
 
+import { SIGNATURE_FIELD_NODE } from "@workspace/api/contract"
 import type { JSONContent } from "@tiptap/core"
 import {
   AlignmentType,
@@ -648,6 +649,15 @@ class Converter {
     for (const node of nodes ?? []) {
       if (node.type === "hardBreak") {
         children.push(new TextRun({ break: 1 }))
+      } else if (node.type === SIGNATURE_FIELD_NODE) {
+        // On paper, a signature field is a line to sign on.
+        children.push(
+          textRun(
+            "_________________________",
+            runOptions(node.marks, context),
+            false
+          )
+        )
       } else if (node.type === "image") {
         const run = this.image(node, context)
         if (run) children.push(run)

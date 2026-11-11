@@ -32,6 +32,7 @@ import { DraftEditorCanvas } from "./draft-editor-canvas"
 import { DraftEditorStatusBar } from "./draft-editor-status-bar"
 import { DraftEditorToolbar } from "./draft-editor-toolbar"
 import { createDraftExtensions } from "./extensions"
+import { useSignatureLabels } from "./use-signature-labels"
 import { getPageAt, getPageCount } from "./pagination"
 import { useDraftDocument, type DraftDocument } from "./use-draft-document"
 import { useDraftRegions } from "./use-draft-regions"
@@ -105,8 +106,9 @@ export function DocumentEditor({
     footer: (content?.footer as JSONContent | null | undefined) ?? "",
   }))
 
+  const signature = useSignatureLabels()
   const editor = useEditor({
-    extensions: createDraftExtensions(placeholder, { fieldLabel }),
+    extensions: createDraftExtensions(placeholder, { fieldLabel, signature }),
     // Pages render on the server; the editor only exists in the browser.
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,

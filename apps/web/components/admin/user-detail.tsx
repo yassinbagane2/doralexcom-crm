@@ -42,7 +42,7 @@ import {
 } from "@/components/admin/dashboard"
 import { DeleteUserDialog } from "@/components/admin/delete-user-dialog"
 import { RoleBadge } from "@/components/admin/role-badge"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { routes } from "@/config/routes"
 import {
   useAdminUser,

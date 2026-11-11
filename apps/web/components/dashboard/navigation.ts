@@ -6,6 +6,7 @@ import {
   BuildingOffice,
   Compass,
   Contact,
+  FilePen,
   FileText,
   Home,
   LayoutDashboard,
@@ -152,6 +153,25 @@ export const useGeneralRoutes = (
   )
 
   return useResolveRoutes(list, allowAll)
+}
+
+/**
+ * Every page a role reaches from the dock, the customers' navigation: its
+ * pages and the account pages together, since there are only a few.
+ */
+export const useDockRoutes = (role: UserRole, isOwner: boolean) => {
+  const t = useTranslations("Navigation")
+  const list = useMemo(
+    () => ({
+      pages: generalRoutesList(role, t),
+      account: accountRoutesList(role, isOwner, t),
+    }),
+    [role, isOwner, t]
+  )
+  return {
+    pages: useResolveRoutes(list.pages),
+    account: useResolveRoutes(list.account),
+  }
 }
 
 /**
@@ -329,6 +349,13 @@ const accountRoutesList = (
       title: t("collaborators"),
       icon: Users,
       link: routes.accountCollaborators,
+      if: role === "business",
+    },
+    {
+      id: "signature",
+      title: t("signature"),
+      icon: FilePen,
+      link: routes.accountSignature,
       if: role === "business",
     },
     {

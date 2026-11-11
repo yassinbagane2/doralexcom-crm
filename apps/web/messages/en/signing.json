@@ -1,0 +1,159 @@
+{
+  "Invoices": {
+    "title": "Invoices",
+    "unpaidCount": "{count, plural, one {# unpaid} other {# unpaid}}",
+    "showAll": "Show {count} more",
+    "showLess": "Show fewer",
+    "period": "{start} – {end}",
+    "issuedOn": "Issued {date}",
+    "dueOn": "Due {date}",
+    "withDeposit": "includes deposit",
+    "left": "{amount} left",
+    "actionsLabel": "Actions for invoice {number}",
+    "recordPayment": "Record payment",
+    "void": "Void invoice",
+    "voided": "Invoice voided",
+    "receipt": "Receipt",
+    "removePayment": "Delete payment",
+    "status": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "void": "Void"
+    },
+    "lines": {
+      "rent": "Rent",
+      "charges": "Charges",
+      "additionalCosts": "Additional costs",
+      "discount": "Discount",
+      "deposit": "Deposit"
+    },
+    "toReview": "{count, plural, one {# proof to review} other {# proofs to review}}",
+    "viewProof": "View proof of payment",
+    "proof": {
+      "awaiting": "Awaiting confirmation",
+      "summary": "Proof sent {sent}: {amount} paid on {paidOn}",
+      "view": "View proof",
+      "confirm": "Confirm",
+      "reject": "Reject",
+      "confirmed": "Payment confirmed",
+      "rejected": "Proof rejected",
+      "rejectedNote": "Rejected proof of {amount}, sent {sent}: {reason}",
+      "rejectTitle": "Reject proof of payment",
+      "rejectDescription": "The customer gets your reason by email and can send new proof.",
+      "reason": "Reason",
+      "reasonPlaceholder": "The amount doesn't match the transfer we received…",
+      "rejectSubmit": "Reject proof"
+    }
+  },
+  "Signing": {
+    "metaTitle": "Sign document",
+    "insert": "Signature",
+    "insertTitle": "Add a signature field",
+    "insertHint": {
+      "landlord": "Signed for you with your business signature",
+      "customer": "Your customer signs here"
+    },
+    "field": {
+      "landlord": "Landlord signature",
+      "customer": "Customer signature",
+      "caption": "{name} · {date}"
+    },
+    "party": {
+      "landlord": "Landlord",
+      "customer": "Customer"
+    },
+    "status": {
+      "pending": "Awaiting signature",
+      "completed": "Signed"
+    },
+    "withdraw": "Withdraw signature request",
+    "withdrawn": "Signature request withdrawn. The contract can be edited again.",
+    "lockedTitle": "This contract was sent for signature",
+    "lockedPending": "What the customer signs must be what was sent, so it can't be edited. Withdraw the request to change it, then send it again.",
+    "lockedCompleted": "It has been signed by both parties and can no longer change.",
+    "panelTitle": "Signatures",
+    "signedBy": "{name} · {date}",
+    "waiting": "Waiting to sign",
+    "auditTitle": "Audit trail",
+    "events": {
+      "sent": "Sent for signature by {name}",
+      "viewed": "Opened by {name}",
+      "signed": "Signed by {name}",
+      "completed": "Completed: signed by both parties",
+      "withdrawn": "Withdrawn by {name}"
+    },
+    "ip": "IP {ip}",
+    "contentHash": "Document fingerprint (SHA-256)",
+    "notFound": "This document isn't available.",
+    "backHome": "My home",
+    "from": "From {landlord}",
+    "download": "Download",
+    "pdfMissing": "The PDF of this document isn't ready yet. Try again in a moment.",
+    "signTitle": "Sign this document",
+    "signDescription": "Your signature goes in every place marked for you. Draw it, type it, or upload a picture of it.",
+    "fullName": "Full name",
+    "consent": "I have read this document and agree to sign it electronically. My electronic signature is as binding as a handwritten one.",
+    "submit": "Sign document",
+    "signedToast": "Signed. A copy signed by both parties is ready to download.",
+    "completedTitle": "Signed by both parties",
+    "completedDescription": "This document is complete. Download the PDF to keep a copy; it ends with the audit trail.",
+    "certificate": {
+      "title": "Signing certificate",
+      "documentId": "Document ID",
+      "status": "Status",
+      "sent": "Sent",
+      "completed": "Completed",
+      "landlord": "Landlord",
+      "customer": "Customer",
+      "property": "Property",
+      "hash": "Content SHA-256",
+      "signers": "Signers",
+      "note": "Signed electronically. The SHA-256 fingerprint identifies the exact content that was sent and signed; any change to it would change the fingerprint."
+    }
+  },
+  "SignaturePad": {
+    "modeLabel": "How to sign",
+    "modes": {
+      "draw": "Draw",
+      "type": "Type",
+      "upload": "Upload"
+    },
+    "typeLabel": "Your name, as you sign it",
+    "typePlaceholder": "Type your name",
+    "canvasLabel": "Signature",
+    "drawHint": "Sign here with your mouse or finger",
+    "uploadHint": "Click to upload a picture of your signature",
+    "uploadInvalid": "Choose a PNG, JPG or WebP image up to 5 MB.",
+    "clear": "Clear"
+  },
+  "SignatureSettings": {
+    "metaTitle": "Signature",
+    "title": "Business signature",
+    "description": "Contracts you send for signature are signed with it on your business's behalf, wherever a landlord signature field is placed.",
+    "imageAlt": "Signature of {name}",
+    "updated": "Last changed {date}",
+    "emptyTitle": "No signature yet",
+    "emptyOwner": "Add one to send contracts for signature: they're signed for your business as they go out.",
+    "emptyCollaborator": "The owner of the business hasn't set one up yet. Contracts can't be sent for signature until they do.",
+    "create": "Add signature",
+    "change": "Change signature",
+    "remove": "Remove",
+    "removed": "Signature removed",
+    "saved": "Signature saved",
+    "signerName": "Signed by",
+    "signerNameHint": "Printed under the signature, e.g. the business's legal representative.",
+    "cancel": "Cancel",
+    "save": "Save signature"
+  },
+  "PdfViewer": {
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit",
+    "fitToWidth": "Fit to width",
+    "failed": "This PDF couldn't be shown."
+  }
+}

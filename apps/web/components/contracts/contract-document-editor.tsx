@@ -2,6 +2,9 @@
 
 import type { DocumentContent } from "@workspace/api/contract"
 import { toast } from "@workspace/ui/components/motion/toaster"
+import { Button } from "@workspace/ui/components/ui/button"
+import { ArrowLeftIcon, Loader2, Lock } from "@workspace/ui/icons"
+import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { useCallback } from "react"
 
@@ -14,6 +17,7 @@ import { routes } from "@/config/routes"
 import {
   useContractDocument,
   useUpdateContractDocument,
+  useWithdrawSignature,
 } from "@/hooks/queries/contract"
 import { useCustomer } from "@/hooks/queries/customer"
 
@@ -63,6 +67,19 @@ export function ContractDocumentEditor({
     )
   }
 
+  // Sent for signature, the contract is frozen: what the customer signs
+  // must be what was sent.
+  if (contract.data.signing) {
+    return (
+      <LockedContract
+        id={documentId}
+        pending={contract.data.signing.status === "pending"}
+        backHref={customerHref}
+        backLabel={t("back", { customer: customer.data.name })}
+      />
+    )
+  }
+
   const lease = customer.data.leases.find(
     (candidate) => candidate.id === contract.data.leaseId
   )
@@ -78,5 +95,47 @@ export function ContractDocumentEditor({
       placeholder={t("placeholder")}
       aside={lease ? t("lease", { property: lease.property.name }) : null}
     />
+  )
+}
+
+function LockedContract({
+  id,
+  pending,
+  backHref,
+  backLabel,
+}: {
+  id: string
+  pending: boolean
+  backHref: string
+  backLabel: string
+}) {
+  const t = useTranslations("Signing")
+  const withdraw = useWithdrawSignature()
+
+  return (
+    <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
+      <span className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground">
+        <Lock className="size-5" />
+      </span>
+      <h1 className="font-medium">{t("lockedTitle")}</h1>
+      <p className="text-sm text-muted-foreground">
+        {pending ? t("lockedPending") : t("lockedCompleted")}
+      </p>
+      <div className="mt-2 flex flex-wrap justify-center gap-2">
+        <Button variant="outline" render={<Link href={backHref} />}>
+          <ArrowLeftIcon isHovered className="size-4" />
+          {backLabel}
+        </Button>
+        {pending ? (
+          <Button
+            disabled={withdraw.isPending}
+            onClick={() => withdraw.mutate({ id })}
+          >
+            {withdraw.isPending ? <Loader2 className="animate-spin" /> : null}
+            {t("withdraw")}
+          </Button>
+        ) : null}
+      </div>
+    </div>
   )
 }

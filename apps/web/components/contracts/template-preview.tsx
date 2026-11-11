@@ -19,6 +19,7 @@ import {
 
 import { themeById, themeCssVars } from "@/components/editor/document-options"
 import { createDraftExtensions } from "@/components/editor/extensions"
+import { useSignatureLabels } from "@/components/editor/use-signature-labels"
 import {
   DEFAULT_PAGE_SETUP,
   getPageDimensions,
@@ -90,19 +91,21 @@ export function useContentHtml(node: ContentNode | null | undefined) {
     (key: string) => (isMergeFieldKey(key) ? tf(`fields.${key}`) : key),
     [tf]
   )
+  const signature = useSignatureLabels()
   return useMemo(() => {
     if (!node) return ""
     try {
       const extensions = createDraftExtensions("", {
         paginate: false,
         fieldLabel,
+        signature,
       })
       return generateHTML(node as JSONContent, extensions)
     } catch {
       // Content this editor can't read stays blank.
       return ""
     }
-  }, [node, fieldLabel])
+  }, [node, fieldLabel, signature])
 }
 
 /** How many different fields a template fills in, header and footer included. */

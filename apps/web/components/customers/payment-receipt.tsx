@@ -7,9 +7,15 @@ import { ArrowLeftIcon, Info, Printer } from "@workspace/ui/icons"
 import Link from "next/link"
 import { useLocale, useTranslations } from "next-intl"
 
+import type { UseQueryResult } from "@tanstack/react-query"
+
 import { routes } from "@/config/routes"
 import { usePaymentReceipt } from "@/hooks/queries/settings"
-import { formatMoney } from "@/lib/format"
+import { usePortalReceipt } from "@/hooks/queries/portal"
+import { formatDate, formatMoney } from "@/lib/format"
+import type { orpc } from "@/lib/orpc"
+
+type Receipt = Awaited<ReturnType<typeof orpc.invoice.receipt.call>>
 
 /** A calendar day ("2026-11-10") as a long date, without timezone drift. */
 function longDate(day: string, locale: string) {
@@ -19,10 +25,7 @@ function longDate(day: string, locale: string) {
   )
 }
 
-/**
- * A receipt for one rent payment, laid out for printing: the landlord with
- * the details from its settings, the customer, what was paid and when.
- */
+/** A receipt the business prints for its customer, from the customer's page. */
 export function PaymentReceipt({
   customerId,
   paymentId,
@@ -32,11 +35,46 @@ export function PaymentReceipt({
   paymentId: string
   isOwner: boolean
 }) {
+  return (
+    <ReceiptView
+      query={usePaymentReceipt(paymentId)}
+      backHref={`${routes.customers}/${customerId}`}
+      notice={isOwner ? "owner" : "collaborator"}
+    />
+  )
+}
+
+/** The same receipt, as the customer who paid sees it. */
+export function CustomerReceipt({ paymentId }: { paymentId: string }) {
+  return (
+    <ReceiptView
+      query={usePortalReceipt(paymentId)}
+      backHref={routes.myHome}
+      notice={null}
+    />
+  )
+}
+
+/**
+ * A receipt for one rent payment, laid out for printing: the landlord with
+ * the details from its settings, the customer, what was paid, when, and for
+ * which invoice. `notice` says who to tell when the landlord's details are
+ * incomplete: the business's owner can fill them in, a collaborator can only
+ * ask; the customer isn't told.
+ */
+function ReceiptView({
+  query,
+  backHref: back,
+  notice,
+}: {
+  query: UseQueryResult<Receipt>
+  backHref: string
+  notice: "owner" | "collaborator" | null
+}) {
   const t = useTranslations("Receipt")
   const to = useTranslations("Organization")
   const locale = useLocale()
-  const { data: receipt, isPending, isError } = usePaymentReceipt(paymentId)
-  const back = `${routes.customers}/${customerId}`
+  const { data: receipt, isPending, isError } = query
 
   if (isPending) {
     return (
@@ -78,11 +116,11 @@ export function PaymentReceipt({
         </Button>
       </div>
 
-      {missingDetails ? (
+      {missingDetails && notice ? (
         <Alert role="status" className="print:hidden">
           <Info />
           <span>
-            {isOwner
+            {notice === "owner"
               ? t.rich("missingDetails", {
                   link: (chunks) => (
                     <Link
@@ -161,6 +199,21 @@ export function PaymentReceipt({
             <dt className="text-xs text-muted-foreground">{t("amount")}</dt>
             <dd className="text-xl font-semibold tabular-nums">
               {formatMoney(receipt.amount, receipt.currency, locale)}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <dt className="text-xs text-muted-foreground">{t("invoice")}</dt>
+            <dd>
+              {t("invoiceLine", {
+                number: receipt.invoice.number,
+                start: formatDate(receipt.invoice.periodStart, locale),
+                end: formatDate(receipt.invoice.periodEnd, locale),
+                total: formatMoney(
+                  receipt.invoice.total,
+                  receipt.currency,
+                  locale
+                ),
+              })}
             </dd>
           </div>
           {receipt.note ? (

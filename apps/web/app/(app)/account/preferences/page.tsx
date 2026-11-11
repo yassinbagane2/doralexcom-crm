@@ -8,7 +8,7 @@ import {
   SettingsRow,
   SettingsSection,
 } from "@/components/account/settings-section"
-import { LanguageSelect } from "@/components/language-switcher"
+import { LanguageSelect } from "@/components/shared/language-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export async function generateMetadata(): Promise<Metadata> {

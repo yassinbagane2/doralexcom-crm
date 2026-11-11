@@ -176,10 +176,11 @@
       "additionalCosts": "Additional costs",
       "discount": "Discount",
       "deposit": "Deposit",
-      "document": "Lease document"
+      "document": "Lease document",
+      "proof": "Proof of payment"
     },
     "paymentTitle": "Record a payment",
-    "paymentDescription": "Rent received for {property}, in {currency}.",
+    "paymentDescription": "Money received against invoice {number} for {property}. {remaining} is left to pay.",
     "notePlaceholder": "Bank transfer, cash…",
     "paymentSubmit": "Record payment",
     "terminateTitle": "Terminate lease",
@@ -189,10 +190,10 @@
     "terminatedDescription": "{property} is freed after {date}.",
     "done": "Done",
     "deleteTitle": "Remove the lease for {property}?",
-    "deleteDescription": "Use this for a lease entered by mistake. To end a real lease, terminate it instead.",
+    "deleteDescription": "Use this for a lease entered by mistake. Its lease document is deleted with it. To end a real lease, terminate it instead.",
     "deleteSubmit": "Remove lease",
     "balance": {
-      "due": "Billed",
+      "due": "Invoiced",
       "paid": "Paid",
       "projected": "Balance to date",
       "final": "Final balance",
@@ -209,7 +210,9 @@
       "customerRequired": "Choose a customer",
       "monthsInvalid": "Enter a number of months from 1 to 1188",
       "discountTooLarge": "The discount can't be more than the rent, charges and costs together",
-      "templateRequired": "Choose a template for the lease document"
+      "templateRequired": "Choose a template for the lease document",
+      "proofRequired": "Attach the proof of payment.",
+      "proofInvalid": "Use a PDF or an image of up to 10 MB."
     },
     "assignCustomerTitle": "Assign a customer to {property}",
     "assignCustomerSubmit": "Assign customer",
@@ -238,14 +241,17 @@
     "chargesLine": "{rent} rent + {extras} charges and costs",
     "discountLine": "− {amount} discount",
     "receipt": "Receipt",
-    "documentCreated": "Lease document generated and saved on the customer.",
     "openDocument": "Open document",
-    "documentHint": "Filled in from the template with these terms and saved on the customer. You can still edit it afterwards."
+    "documentHint": "Filled in from the template with these terms, signed for your business and sent to the customer to sign. The template needs a customer signature field.",
+    "documentSent": "Lease document generated, signed for your business and sent to the customer to sign.",
+    "templateNotSignable": "This template has no signature field for the customer. Add one to the template first.",
+    "signatureSetup": "Lease documents are signed for your business and sent to the customer right away. <link>Add your business signature</link> to assign a property.",
+    "proofHint": "A PDF, or a photo or screenshot of the transfer, up to 10 MB."
   },
   "MyHome": {
     "metaTitle": "My home",
     "title": "My home",
-    "description": "The places you rent, and notes from your landlord.",
+    "description": "Your rented places, invoices and documents, and notes from your landlord.",
     "empty": "Your landlord hasn't linked a lease to your account yet.",
     "landlord": "Rented from {name}",
     "rent": "{amount}/month",
@@ -253,6 +259,42 @@
     "doorCode": "Door code",
     "notesTitle": "From your landlord",
     "notesEmpty": "No notes yet.",
-    "renews": "renews automatically"
+    "renews": "renews automatically",
+    "invoices": {
+      "title": "Invoices",
+      "tabs": {
+        "pending": "To pay ({count})",
+        "past": "Past ({count})"
+      },
+      "nothingDue": "Nothing to pay right now.",
+      "noPast": "No paid invoices yet.",
+      "number": "Invoice {number}",
+      "period": "{start} – {end}",
+      "dueOn": "Due {date}",
+      "issuedOn": "Issued {date}",
+      "total": "Total",
+      "payments": "Payments",
+      "receipt": "Receipt",
+      "partlyPaid": "{paid} paid so far, {remaining} left to pay.",
+      "proof": {
+        "send": "I've paid: send proof",
+        "title": "Send proof of payment",
+        "description": "For invoice {number}: attach the bank transfer confirmation or a photo of the receipt. Your landlord confirms it, then the payment shows here with its receipt.",
+        "submit": "Send proof",
+        "sent": "Proof sent to your landlord",
+        "cancelled": "Proof withdrawn",
+        "awaiting": "Awaiting confirmation",
+        "pendingNote": "You sent proof of {amount} paid on {date}. Your landlord will confirm it.",
+        "cancel": "Withdraw",
+        "view": "View proof",
+        "rejectedNote": "Your landlord couldn't confirm the {amount} you sent proof of on {date}: {reason}"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "sentOn": "Sent {date}",
+      "signedOn": "Signed {date}",
+      "signNow": "Sign now"
+    }
   }
 }

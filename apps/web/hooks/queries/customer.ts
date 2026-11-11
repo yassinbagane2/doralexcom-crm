@@ -27,6 +27,7 @@ export type CustomerSummary = Awaited<
 >["data"][number]
 export type CustomerDetail = Awaited<ReturnType<typeof orpc.customer.get.call>>
 export type CustomerLease = CustomerDetail["leases"][number]
+export type CustomerInvoice = CustomerLease["invoices"][number]
 export type CustomerInput = Parameters<typeof orpc.customer.create.call>[0]
 export type LeaseTerms = Omit<
   Parameters<typeof orpc.lease.create.call>[0],
@@ -189,7 +190,7 @@ export function useCreateLease() {
           }),
         ])
         toast.success(t("created"), {
-          description: t("documentCreated"),
+          description: t("documentSent"),
           action: {
             label: t("openDocument"),
             onClick: (shown) => {
@@ -240,12 +241,13 @@ export function useDeleteLease() {
   )
 }
 
+/** Records money received against one invoice. */
 export function useAddPayment() {
   const t = useTranslations("Leases")
   const invalidate = useInvalidateCustomers()
 
   return useMutation(
-    orpc.lease.addPayment.mutationOptions({
+    orpc.invoice.addPayment.mutationOptions({
       onSuccess: async () => {
         await invalidate()
         toast.success(t("paymentRecorded"))
@@ -257,6 +259,56 @@ export function useAddPayment() {
 export function useRemovePayment() {
   const invalidate = useInvalidateCustomers()
   return useMutation(
-    orpc.lease.removePayment.mutationOptions({ onSuccess: () => invalidate() })
+    orpc.invoice.removePayment.mutationOptions({
+      onSuccess: () => invalidate(),
+    })
   )
+}
+
+export function useVoidInvoice() {
+  const t = useTranslations("Invoices")
+  const invalidate = useInvalidateCustomers()
+
+  return useMutation(
+    orpc.invoice.void.mutationOptions({
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("voided"))
+      },
+    })
+  )
+}
+
+/** Accepts a customer's proof of payment, recording the payment. */
+export function useConfirmPaymentProof() {
+  const t = useTranslations("Invoices")
+  const invalidate = useInvalidateCustomers()
+
+  return useMutation(
+    orpc.invoice.confirmProof.mutationOptions({
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("proof.confirmed"))
+      },
+    })
+  )
+}
+
+export function useRejectPaymentProof() {
+  const t = useTranslations("Invoices")
+  const invalidate = useInvalidateCustomers()
+
+  return useMutation(
+    orpc.invoice.rejectProof.mutationOptions({
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("proof.rejected"))
+      },
+    })
+  )
+}
+
+/** Fetches a proof of payment's file, to show it. */
+export function usePaymentProofFile() {
+  return useMutation(orpc.invoice.proofFile.mutationOptions())
 }

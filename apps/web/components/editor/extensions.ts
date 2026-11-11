@@ -13,6 +13,7 @@ import { DEFAULT_LINE_SPACING } from "./document-options"
 import { MergeField } from "./merge-field"
 import { Pagination } from "./pagination"
 import { PasteInline } from "./paste"
+import { SignatureField, type SignatureFieldOptions } from "./signature-field"
 import { TableSelection } from "./table-selection"
 
 /** Word's default indent step (1.27 cm). */
@@ -217,11 +218,13 @@ type DraftExtensionOptions = {
   paginate?: boolean
   /** Names a merge field in the reader's language. */
   fieldLabel: (key: string) => string
+  /** How signature fields read (see useSignatureLabels). */
+  signature: SignatureFieldOptions
 }
 
 export function createDraftExtensions(
   placeholder: string,
-  { paginate = true, fieldLabel }: DraftExtensionOptions
+  { paginate = true, fieldLabel, signature }: DraftExtensionOptions
 ) {
   return [
     StarterKit.configure({
@@ -254,6 +257,7 @@ export function createDraftExtensions(
     LineSpacing,
     ListStyle,
     MergeField.configure({ label: fieldLabel }),
+    SignatureField.configure(signature),
     // The canvas supplies the sheet geometry once it knows the page setup.
     ...(paginate ? [Pagination] : []),
   ]

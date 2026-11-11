@@ -61,3 +61,15 @@ export async function findLandlord(organizationId: string): Promise<Landlord> {
     iban: found?.iban ?? null,
   }
 }
+
+/** Where to tell the business about something its customer did: its owners. */
+export async function ownerEmails(organizationId: string) {
+  const owners = await db
+    .select({ email: user.email })
+    .from(member)
+    .innerJoin(user, eq(user.id, member.userId))
+    .where(
+      and(eq(member.organizationId, organizationId), eq(member.role, "owner"))
+    )
+  return owners.map((owner) => owner.email)
+}

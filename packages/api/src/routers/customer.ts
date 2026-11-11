@@ -1,6 +1,7 @@
 import { newPasswordSchema } from "@workspace/auth/password"
 import { db } from "@workspace/db"
 import {
+  invoice,
   lease,
   member,
   organization,
@@ -8,7 +9,18 @@ import {
   property,
   user,
 } from "@workspace/db/schema"
-import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+} from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o, protectedProcedure } from "../index"
@@ -30,6 +42,7 @@ import {
   customerMetadataInput,
   customerScope,
 } from "../lib/customer"
+import { invoiceSchema, loadInvoices } from "../lib/invoice"
 import { containing, customerInGroup } from "../lib/lease"
 import { paginatedOutput, pageOffset, paginationShape } from "../pagination"
 import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
@@ -53,6 +66,8 @@ const leaseSummarySchema = z.object({
   deposit: z.number(),
   currency: z.enum(RENT_CURRENCIES),
   terminatedAt: z.date().nullable(),
+  /** Total of the lease's live invoices, and what was paid on them. */
+  invoiced: z.number(),
   paid: z.number(),
 })
 
@@ -87,14 +102,8 @@ const customerDetailSchema = customerSummarySchema.extend({
   ),
   leases: z.array(
     leaseSummarySchema.extend({
-      payments: z.array(
-        z.object({
-          id: z.string(),
-          amount: z.number(),
-          paidOn: z.string(),
-          note: z.string().nullable(),
-        })
-      ),
+      /** Newest month first, each with the payments made on it. */
+      invoices: z.array(invoiceSchema),
     })
   ),
 })
@@ -135,6 +144,16 @@ async function loadLeases(customerIds: string[]) {
     .groupBy(payment.leaseId)
     .as("paid")
 
+  const invoiced = db
+    .select({
+      leaseId: invoice.leaseId,
+      total: sql<string>`sum(${invoice.total})`.as("invoiced_total"),
+    })
+    .from(invoice)
+    .where(isNull(invoice.voidedAt))
+    .groupBy(invoice.leaseId)
+    .as("invoiced")
+
   const rows = await db
     .select({
       lease,
@@ -145,10 +164,12 @@ async function loadLeases(customerIds: string[]) {
         address: property.address,
       },
       paid: paid.total,
+      invoiced: invoiced.total,
     })
     .from(lease)
     .innerJoin(property, eq(property.id, lease.propertyId))
     .leftJoin(paid, eq(paid.leaseId, lease.id))
+    .leftJoin(invoiced, eq(invoiced.leaseId, lease.id))
     .where(inArray(lease.customerId, customerIds))
     .orderBy(desc(lease.startDate))
 
@@ -167,6 +188,7 @@ async function loadLeases(customerIds: string[]) {
     deposit: row.lease.deposit,
     currency: row.lease.currency,
     terminatedAt: row.lease.terminatedAt,
+    invoiced: Number(row.invoiced ?? 0),
     paid: Number(row.paid ?? 0),
   }))
 }
@@ -294,18 +316,7 @@ export const customerRouter = o.prefix("/customers").router({
 
       const leases = await loadLeases([found.id])
 
-      const payments = leases.length
-        ? await db
-            .select()
-            .from(payment)
-            .where(
-              inArray(
-                payment.leaseId,
-                leases.map((l) => l.id)
-              )
-            )
-            .orderBy(desc(payment.paidOn), desc(payment.createdAt))
-        : []
+      const invoices = await loadInvoices(leases.map((l) => l.id))
 
       const details = readCustomerMetadata(found.metadata)
 
@@ -327,14 +338,7 @@ export const customerRouter = o.prefix("/customers").router({
         })),
         leases: leases.map((l) => ({
           ...l,
-          payments: payments
-            .filter((p) => p.leaseId === l.id)
-            .map((p) => ({
-              id: p.id,
-              amount: p.amount,
-              paidOn: p.paidOn,
-              note: p.note,
-            })),
+          invoices: invoices.filter((invoice) => invoice.leaseId === l.id),
         })),
       }
     }),

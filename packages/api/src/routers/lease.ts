@@ -1,37 +1,40 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
 import {
+  customerDocument,
   lease,
   payment,
+  paymentProof,
   property,
-  customerDocument,
-  user,
 } from "@workspace/db/schema"
 import {
   and,
   eq,
-  exists,
   isNull,
   lte,
   ne,
   notExists,
   sql,
   sum,
+  TransactionRollbackError,
 } from "drizzle-orm"
 import { z } from "zod"
 
 import { documentContentSchema } from "../contract"
+import { invoiceBalance } from "../invoice"
 import { businessProcedure, o } from "../index"
+import { MAX_TERM_MONTHS, termEndDate } from "../lease"
+import { findCustomer } from "../lib/customer"
 import {
-  leaseBalance,
-  MAX_TERM_MONTHS,
-  CUSTOMER_LIMITS,
-  termEndDate,
-} from "../lease"
-import { findLandlord, landlordSchema } from "../lib/landlord"
+  loadInvoices,
+  notifyInvoicesIssued,
+  syncLeaseInvoices,
+} from "../lib/invoice"
 import { holdsPropertyOn } from "../lib/lease"
 import { buildMergeData, mergeDataSchema } from "../lib/merge-data"
-import { findCustomer, readCustomerMetadata } from "../lib/customer"
+import { discardProofFiles, proofOwners } from "../lib/payment-proof"
+import { discardSignedPdf } from "../lib/signing/signed-pdf"
+import { assertReadyToSend, sendForSignature } from "../lib/signing/workflow"
 import { discardDocumentContent, saveContractContent } from "../lib/storage"
 import { PROPERTY_LIMITS, RENT_CURRENCIES } from "../property"
 import { assertContentSize, contractName } from "./contract"
@@ -242,7 +245,8 @@ export const leaseRouter = o.prefix("/leases").router({
   /**
    * Assigns a property to a customer. A lease never starts without its lease
    * document: the contract between the business and the customer, generated
-   * from a template, is saved on the customer in the same transaction.
+   * from a template, is saved on the customer in the same transaction, then
+   * signed for the business and sent to the customer to sign.
    */
   create: businessProcedure
     .route({ method: "POST", path: "/", tags: ["leases"] })
@@ -262,6 +266,9 @@ export const leaseRouter = o.prefix("/leases").router({
       const { contract, ...input } = settleTerm(raw)
       assertContentSize(contract.content)
       await findCustomer(context.organizationId, input.customerId)
+      // Checked before anything is saved: the lease and its contract go
+      // together, signature request included.
+      await assertReadyToSend(context.organizationId, contract.content)
 
       // The contract's content goes to R2 before the lease is written, and is
       // removed again if the lease can't be.
@@ -272,37 +279,53 @@ export const leaseRouter = o.prefix("/leases").router({
       }
       await saveContractContent(document, contract.content)
 
-      return db.transaction(async (tx) => {
-        const rented = await assertPropertyFree(
-          tx,
-          context.organizationId,
-          input.propertyId,
-          occupancy(input)
-        )
-        // The lease starts at the property's rent, copied so a later change
-        // to the property never rewrites what this lease has charged.
-        const [created] = await tx
-          .insert(lease)
-          .values({
-            ...input,
-            rent: rented.rent ?? 0,
-            currency: rented.currency,
-            organizationId: context.organizationId,
-          })
-          .returning({ id: lease.id })
+      const created = await db
+        .transaction(async (tx) => {
+          const rented = await assertPropertyFree(
+            tx,
+            context.organizationId,
+            input.propertyId,
+            occupancy(input)
+          )
+          // The lease starts at the property's rent, copied so a later change
+          // to the property never rewrites what this lease has charged.
+          const [row] = await tx
+            .insert(lease)
+            .values({
+              ...input,
+              rent: rented.rent ?? 0,
+              currency: rented.currency,
+              organizationId: context.organizationId,
+            })
+            .returning()
 
-        await tx.insert(customerDocument).values({
-          ...document,
-          leaseId: created!.id,
-          kind: "contract",
-          name: contract.name,
+          const [saved] = await tx
+            .insert(customerDocument)
+            .values({
+              ...document,
+              leaseId: row!.id,
+              kind: "contract",
+              name: contract.name,
+            })
+            .returning()
+
+          // Its first invoice, and any month already begun, due in a few days.
+          const invoices = await syncLeaseInvoices(tx, row!)
+          return { lease: row!, document: saved!, invoices }
+        })
+        .catch(async (error: unknown) => {
+          await discardDocumentContent({ ...document, kind: "contract" })
+          throw error
         })
 
-        return { id: created!.id, documentId: document.id }
-      }).catch(async (error: unknown) => {
-        await discardDocumentContent({ ...document, kind: "contract" })
-        throw error
-      })
+      await notifyInvoicesIssued(created.invoices)
+      await sendForSignature(
+        created.document,
+        context.session.user,
+        context.headers
+      )
+
+      return { id: created.lease.id, documentId: document.id }
     }),
 
   update: businessProcedure
@@ -314,7 +337,7 @@ export const leaseRouter = o.prefix("/leases").router({
       const current = await findLease(context.organizationId, id)
       assertNotTerminated(current)
 
-      await db.transaction(async (tx) => {
+      const issued = await db.transaction(async (tx) => {
         await assertPropertyFree(
           tx,
           context.organizationId,
@@ -322,11 +345,15 @@ export const leaseRouter = o.prefix("/leases").router({
           occupancy(values),
           id
         )
-        await tx
+        const [updated] = await tx
           .update(lease)
           .set(values)
           .where(and(eq(lease.id, id), isNull(lease.terminatedAt)))
+          .returning()
+        // New dates can move or cut short months not yet paid for.
+        return updated ? syncLeaseInvoices(tx, updated) : []
       })
+      await notifyInvoicesIssued(issued)
 
       return { id }
     }),
@@ -348,7 +375,7 @@ export const leaseRouter = o.prefix("/leases").router({
       }
 
       const terminatedAt = new Date()
-      await db.transaction(async (tx) => {
+      const issued = await db.transaction(async (tx) => {
         // Moving the exit later must not run into the next customer.
         await assertPropertyFree(
           tx,
@@ -357,162 +384,84 @@ export const leaseRouter = o.prefix("/leases").router({
           { startDate: current.startDate, endDate: input.endDate },
           current.id
         )
-        await tx
+        const [updated] = await tx
           .update(lease)
           .set({ endDate: input.endDate, terminatedAt })
           .where(and(eq(lease.id, current.id), isNull(lease.terminatedAt)))
+          .returning()
+        // Unpaid months after the exit are voided, a cut-short last month
+        // billed again for the days lived there.
+        return updated ? syncLeaseInvoices(tx, updated) : []
       })
+      await notifyInvoicesIssued(issued)
 
-      return leaseBalance(
-        { ...current, endDate: input.endDate, terminatedAt },
-        current.paid,
-        input.endDate
-      )
+      return invoiceBalance(await loadInvoices([current.id]))
     }),
 
+  /**
+   * Removes a lease entered by mistake, along with its lease document: the
+   * rows go together, then the document's content and signed PDF leave R2.
+   */
   remove: businessProcedure
     .route({ method: "DELETE", path: "/{id}", tags: ["leases"] })
     .input(z.object({ id: z.uuid() }))
     .output(z.object({ success: z.boolean() }))
     .handler(async ({ input, context }) => {
-      const deleted = await db
-        .delete(lease)
-        .where(
-          and(
-            eq(lease.id, input.id),
-            eq(lease.organizationId, context.organizationId),
-            notExists(paymentsOf(lease.id))
+      // Rolled back, documents included, when payments keep the lease.
+      const removed = await db
+        .transaction(async (tx) => {
+          // Proofs of payment go with the lease; their files after it.
+          const proofs = await proofOwners(
+            tx,
+            eq(paymentProof.leaseId, input.id)
           )
-        )
-        .returning({ id: lease.id })
+          // Before the lease: deleting it sets its documents' leaseId to null.
+          const documents = await tx
+            .delete(customerDocument)
+            .where(
+              and(
+                eq(customerDocument.leaseId, input.id),
+                eq(customerDocument.organizationId, context.organizationId),
+                eq(customerDocument.kind, "contract")
+              )
+            )
+            .returning({
+              id: customerDocument.id,
+              organizationId: customerDocument.organizationId,
+              customerId: customerDocument.customerId,
+              kind: customerDocument.kind,
+            })
+          const deleted = await tx
+            .delete(lease)
+            .where(
+              and(
+                eq(lease.id, input.id),
+                eq(lease.organizationId, context.organizationId),
+                notExists(paymentsOf(lease.id))
+              )
+            )
+            .returning({ id: lease.id })
+          if (deleted.length === 0) tx.rollback()
+          return { documents, proofs }
+        })
+        .catch((error: unknown) => {
+          if (error instanceof TransactionRollbackError) return null
+          throw error
+        })
 
-      if (deleted.length > 0) return { success: true }
+      if (removed) {
+        for (const document of removed.documents) {
+          await discardDocumentContent(document)
+          await discardSignedPdf(document)
+        }
+        await discardProofFiles(removed.proofs)
+        return { success: true }
+      }
 
       await findLease(context.organizationId, input.id)
       throw new ORPCError("CONFLICT", {
         message: "Rent payments are recorded on this lease.",
         data: { code: "LEASE_HAS_PAYMENTS" },
       })
-    }),
-
-  addPayment: businessProcedure
-    .route({ method: "POST", path: "/{leaseId}/payments", tags: ["leases"] })
-    .input(
-      z.object({
-        leaseId: z.uuid(),
-        amount: z.number().finite().positive().max(PROPERTY_LIMITS.rent),
-        paidOn: day,
-        note: z
-          .string()
-          .trim()
-          .max(CUSTOMER_LIMITS.paymentNote)
-          .transform((value) => value || null),
-      })
-    )
-    .output(z.object({ id: z.string() }))
-    .handler(async ({ input, context }) => {
-      await findLease(context.organizationId, input.leaseId)
-
-      const [created] = await db
-        .insert(payment)
-        .values(input)
-        .returning({ id: payment.id })
-
-      return { id: created!.id }
-    }),
-
-  /**
-   * What a receipt for one payment prints: who paid whom, for what, and
-   * where future rent goes (the landlord's bank details from its settings).
-   */
-  receipt: businessProcedure
-    .route({ method: "GET", path: "/payments/{id}/receipt", tags: ["leases"] })
-    .input(z.object({ id: z.uuid() }))
-    .output(
-      z.object({
-        number: z.string(),
-        amount: z.number(),
-        paidOn: z.string(),
-        note: z.string().nullable(),
-        currency: z.enum(RENT_CURRENCIES),
-        landlord: landlordSchema,
-        customer: z.object({
-          id: z.string(),
-          name: z.string(),
-          email: z.string(),
-          address: z.string().nullable(),
-        }),
-        property: z.object({ name: z.string(), address: z.string() }),
-      })
-    )
-    .handler(async ({ input, context }) => {
-      const [row] = await db
-        .select({ payment, lease, property, customer: user })
-        .from(payment)
-        .innerJoin(lease, eq(lease.id, payment.leaseId))
-        .innerJoin(property, eq(property.id, lease.propertyId))
-        .innerJoin(user, eq(user.id, lease.customerId))
-        .where(
-          and(
-            eq(payment.id, input.id),
-            eq(lease.organizationId, context.organizationId)
-          )
-        )
-        .limit(1)
-
-      if (!row) {
-        throw new ORPCError("NOT_FOUND", {
-          message: "Payment not found.",
-          data: { code: "PAYMENT_NOT_FOUND" },
-        })
-      }
-
-      return {
-        // Stable and unique enough to quote: the year, then the payment's id.
-        number: `${row.payment.paidOn.slice(0, 4)}-${row.payment.id.slice(0, 8).toUpperCase()}`,
-        amount: row.payment.amount,
-        paidOn: row.payment.paidOn,
-        note: row.payment.note,
-        currency: row.lease.currency,
-        landlord: await findLandlord(context.organizationId),
-        customer: {
-          id: row.customer.id,
-          name: row.customer.name,
-          email: row.customer.email,
-          address: readCustomerMetadata(row.customer.metadata).address,
-        },
-        property: { name: row.property.name, address: row.property.address },
-      }
-    }),
-
-  removePayment: businessProcedure
-    .route({ method: "DELETE", path: "/payments/{id}", tags: ["leases"] })
-    .input(z.object({ id: z.uuid() }))
-    .output(z.object({ success: z.boolean() }))
-    .handler(async ({ input, context }) => {
-      const deleted = await db
-        .delete(payment)
-        .where(
-          and(
-            eq(payment.id, input.id),
-            exists(
-              db
-                .select({ one: sql`1` })
-                .from(lease)
-                .where(
-                  and(
-                    eq(lease.id, payment.leaseId),
-                    eq(lease.organizationId, context.organizationId)
-                  )
-                )
-            )
-          )
-        )
-        .returning({ id: payment.id })
-
-      if (deleted.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "Payment not found." })
-      }
-      return { success: true }
     }),
 })

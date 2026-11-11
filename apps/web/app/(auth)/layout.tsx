@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 
-import { HeaderControls } from "@/components/header-controls"
-import { LogoMark } from "@/components/logo"
+import { HeaderControls } from "@/components/shared/header-controls"
+import { LogoMark } from "@/components/shared/logo"
 import { routes } from "@/config/routes"
 
 export default async function AuthLayout({

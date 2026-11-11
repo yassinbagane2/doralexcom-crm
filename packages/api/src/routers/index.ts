@@ -7,9 +7,12 @@ import { collaboratorRouter, invitationRouter } from "./collaborator"
 import { contractRouter } from "./contract"
 import { dashboardRouter } from "./dashboard"
 import { documentRouter } from "./document"
+import { invoiceRouter } from "./invoice"
 import { leaseRouter } from "./lease"
+import { portalRouter } from "./portal"
 import { propertyRouter } from "./property"
 import { settingsRouter } from "./settings"
+import { signatureRouter } from "./signature"
 import { customerRouter } from "./customer"
 import { userRouter } from "./user"
 
@@ -24,11 +27,14 @@ export const appRouter = {
   property: propertyRouter,
   customer: customerRouter,
   lease: leaseRouter,
+  invoice: invoiceRouter,
   contract: contractRouter,
   document: documentRouter,
   collaborator: collaboratorRouter,
   invitation: invitationRouter,
   settings: settingsRouter,
+  signature: signatureRouter,
+  portal: portalRouter,
 }
 
 export type AppRouter = typeof appRouter

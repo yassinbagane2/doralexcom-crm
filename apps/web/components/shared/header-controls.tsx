@@ -1,4 +1,4 @@
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { LanguageSwitcher } from "@/components/shared/language-switcher"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 /** Language and theme, on every page header. */

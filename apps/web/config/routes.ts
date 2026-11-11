@@ -18,6 +18,8 @@ export const routes = {
   accountEmail: "/account/email",
   /** Business owners: the business's own web address. */
   accountDomain: "/account/domain",
+  /** Business accounts: the signature the business signs contracts with. */
+  accountSignature: "/account/signature",
   /** Business accounts: where they land after signing in. */
   dashboard: "/dashboard",
   /** Business accounts: the properties they rent out. */
@@ -28,6 +30,8 @@ export const routes = {
   templates: "/templates",
   /** User accounts linked to a customer record: their own leases and notes. */
   myHome: "/my-home",
+  /** The page the API's headless Chrome prints a signed contract from. */
+  print: "/print",
   admin: "/admin",
   adminUsers: "/admin/users",
 } as const
@@ -109,4 +113,14 @@ export function safeRedirectPath(
   }
 
   return value
+}
+
+/** A contract sent to the signed-in customer: to read and sign. */
+export function myDocumentRoute(documentId: string) {
+  return `${routes.myHome}/documents/${encodeURIComponent(documentId)}`
+}
+
+/** The signed-in customer's receipt for one payment. */
+export function myReceiptRoute(paymentId: string) {
+  return `${routes.myHome}/receipts/${encodeURIComponent(paymentId)}`
 }

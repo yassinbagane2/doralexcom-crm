@@ -23,8 +23,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
-import { LogoMark } from "@/components/logo"
-import { UserAvatar } from "@/components/user-avatar"
+import { LogoMark } from "@/components/shared/logo"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { homeRouteFor } from "@/config/routes"
 
 import { DropdownMenuRoutes, NavigationRoutes } from "./dashboard-navigation"

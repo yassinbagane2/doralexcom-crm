@@ -22,7 +22,7 @@ import { useState, type ReactNode } from "react"
 
 import { Section, SectionEmpty } from "@/components/customers/section"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { newPropertyRoute, propertyRoute, routes } from "@/config/routes"
 import {
   useDashboardOverview,

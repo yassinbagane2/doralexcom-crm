@@ -171,3 +171,106 @@ export const documentContentSchema = z.object({
 })
 
 export type DocumentContent = z.infer<typeof documentContentSchema>
+
+// --- Signatures --------------------------------------------------------------
+
+/** The editor node a signature field is stored as (see the web app's signature-field.ts). */
+export const SIGNATURE_FIELD_NODE = "signatureField"
+
+/** Who signs a contract: the business (as landlord) and its customer. */
+export const SIGNER_ROLES = ["landlord", "customer"] as const
+
+export type SignerRole = (typeof SIGNER_ROLES)[number]
+
+export function isSignerRole(role: unknown): role is SignerRole {
+  return (SIGNER_ROLES as readonly unknown[]).includes(role)
+}
+
+export const SIGNATURE_LIMITS = {
+  /** A signature PNG, as a data URL. */
+  imageChars: 400_000,
+  name: 100,
+} as const
+
+/** A signature as drawn, typed or uploaded: always a PNG data URL. */
+export const signatureImageSchema = z
+  .string()
+  .max(SIGNATURE_LIMITS.imageChars)
+  .regex(/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/, {
+    message: "The signature must be a PNG image.",
+  })
+
+export const signerNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(SIGNATURE_LIMITS.name)
+
+export const SIGNATURE_STATUSES = ["pending", "completed"] as const
+
+export type SignatureStatus = (typeof SIGNATURE_STATUSES)[number]
+
+/** A party's signature, as it fills that party's fields. */
+export interface AppliedSignature {
+  image: string
+  name: string
+  /** ISO timestamp. */
+  signedAt: string
+}
+
+/** Which parties a document has signature fields for. */
+export function signatureRoles(
+  ...nodes: (ContentNode | null | undefined)[]
+): Set<SignerRole> {
+  const roles = new Set<SignerRole>()
+  const visit = (node: ContentNode) => {
+    if (node.type === SIGNATURE_FIELD_NODE && isSignerRole(node.attrs?.role)) {
+      roles.add(node.attrs.role)
+    }
+    node.content?.forEach(visit)
+  }
+  for (const node of nodes) if (node) visit(node)
+  return roles
+}
+
+/**
+ * Every signature field under `node` with its party's signature filled in,
+ * or emptied when that party hasn't signed. Saved content always goes
+ * through this with no signatures, so nobody can slip one into a draft.
+ */
+export function fillSignatures<T extends ContentNode>(
+  node: T,
+  signatures: Partial<Record<SignerRole, AppliedSignature>>
+): T {
+  if (node.type === SIGNATURE_FIELD_NODE) {
+    const role = node.attrs?.role
+    const signature = isSignerRole(role) ? signatures[role] : undefined
+    return {
+      ...node,
+      attrs: {
+        role: isSignerRole(role) ? role : "customer",
+        image: signature?.image ?? null,
+        signerName: signature?.name ?? null,
+        signedAt: signature?.signedAt ?? null,
+      },
+    }
+  }
+  if (!node.content) return node
+  return {
+    ...node,
+    content: node.content.map((child) => fillSignatures(child, signatures)),
+  }
+}
+
+/** A document's body, header and footer with `fillSignatures` applied. */
+export function fillDocumentSignatures(
+  content: DocumentContent,
+  signatures: Partial<Record<SignerRole, AppliedSignature>>
+): DocumentContent {
+  return {
+    ...content,
+    body: fillSignatures(content.body, signatures),
+    header: content.header && fillSignatures(content.header, signatures),
+    footer: content.footer && fillSignatures(content.footer, signatures),
+  }
+}

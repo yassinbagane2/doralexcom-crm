@@ -40,7 +40,7 @@ import {
   OccupancyPill,
   occupancy,
 } from "@/components/properties/property-dialogs"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { newPropertyRoute, propertyRoute, routes } from "@/config/routes"
 import {
   useProperty,

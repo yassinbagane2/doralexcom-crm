@@ -12,11 +12,13 @@ import { useLocale, useTranslations } from "next-intl"
 
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
 import { LeaseBadge } from "@/components/customers/customer-list"
+import { MyDocuments, MyInvoices } from "@/components/customers/my-billing"
 import { useMyHome } from "@/hooks/queries/customer"
 import { formatDate, formatMoney } from "@/lib/format"
 
 /**
- * What a customer sees when they sign in: the places they rent and the notes
+ * What a customer sees when they sign in: contracts waiting for their
+ * signature, the places they rent, their invoices and receipts, and the notes
  * their landlord chose to share. Nothing private reaches this page.
  */
 export function MyHome() {
@@ -61,6 +63,8 @@ export function MyHome() {
                 {t("landlord", { name: record.landlord })}
               </h2>
             ) : null}
+
+            <MyDocuments />
 
             <section className="flex flex-col gap-3">
               {[...record.leases]
@@ -132,6 +136,8 @@ export function MyHome() {
                   </article>
                 ))}
             </section>
+
+            <MyInvoices />
 
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-medium">{t("notesTitle")}</h2>

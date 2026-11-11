@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  leaseBalance,
   leaseStatus,
   localToday,
   CUSTOMER_GROUPS,
@@ -34,7 +33,7 @@ import {
   type CustomerEditor,
 } from "@/components/customers/customer-sheet"
 import { InfiniteScrollTrigger } from "@/components/shared/infinite-scroll-trigger"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { routes } from "@/config/routes"
 import {
   useCustomerGroupCounts,
@@ -46,14 +45,16 @@ import { formatDate, formatMoney } from "@/lib/format"
 
 type Filter = "all" | CustomerGroup
 
-/** What each customer owes across its leases, one amount per currency. */
+/**
+ * What each customer owes across its leases, one amount per currency: what
+ * has been invoiced, less what was paid.
+ */
 export function outstanding(
-  leases: CustomerSummary["leases"],
-  today: string
+  leases: CustomerSummary["leases"]
 ): { currency: string; amount: number }[] {
   const totals = new Map<string, number>()
   for (const lease of leases) {
-    const { balance } = leaseBalance(lease, lease.paid, today)
+    const balance = lease.invoiced - lease.paid
     totals.set(lease.currency, (totals.get(lease.currency) ?? 0) + balance)
   }
   return [...totals]
@@ -223,7 +224,7 @@ function CustomerRow({
 }) {
   const t = useTranslations("Customers")
   const locale = useLocale()
-  const owed = outstanding(customer.leases, today).filter((o) => o.amount > 0)
+  const owed = outstanding(customer.leases).filter((o) => o.amount > 0)
 
   // The lease that best says where the customer stands: the one they're in,
   // else the next one, else the last one they left.

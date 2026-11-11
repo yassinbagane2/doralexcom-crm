@@ -42,7 +42,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { SettingsIcon } from "@/components/account/settings-section"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import {
   type Invitation,
   useCancelInvitation,

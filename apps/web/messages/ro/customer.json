@@ -176,10 +176,11 @@
       "additionalCosts": "Costuri suplimentare",
       "discount": "Reducere",
       "deposit": "Garanție",
-      "document": "Contract de închiriere"
+      "document": "Contract de închiriere",
+      "proof": "Dovada plății"
     },
     "paymentTitle": "Înregistrează o plată",
-    "paymentDescription": "Chirie primită pentru {property}, în {currency}.",
+    "paymentDescription": "Bani primiți pentru factura {number}, {property}. Mai sunt de plată {remaining}.",
     "notePlaceholder": "Transfer bancar, numerar…",
     "paymentSubmit": "Înregistrează plata",
     "terminateTitle": "Reziliază contractul",
@@ -189,7 +190,7 @@
     "terminatedDescription": "{property} se eliberează după {date}.",
     "done": "Gata",
     "deleteTitle": "Elimini contractul pentru {property}?",
-    "deleteDescription": "Folosește această opțiune pentru un contract introdus din greșeală. Pentru a încheia un contract real, reziliază-l.",
+    "deleteDescription": "Folosește această opțiune pentru un contract introdus din greșeală. Documentul contractului este șters odată cu el. Pentru a încheia un contract real, reziliază-l.",
     "deleteSubmit": "Elimină contractul",
     "balance": {
       "due": "Facturat",
@@ -209,7 +210,9 @@
       "customerRequired": "Alege un client",
       "monthsInvalid": "Introdu un număr de luni între 1 și 1188",
       "discountTooLarge": "Reducerea nu poate depăși chiria, cheltuielile și costurile la un loc",
-      "templateRequired": "Alege un șablon pentru contractul de închiriere"
+      "templateRequired": "Alege un șablon pentru contractul de închiriere",
+      "proofRequired": "Atașează dovada plății.",
+      "proofInvalid": "Folosește un PDF sau o imagine de maximum 10 MB."
     },
     "assignCustomerTitle": "Atribuie un client pentru {property}",
     "assignCustomerSubmit": "Atribuie clientul",
@@ -238,14 +241,17 @@
     "chargesLine": "{rent} chirie + {extras} cheltuieli și costuri",
     "discountLine": "− {amount} reducere",
     "receipt": "Chitanță",
-    "documentCreated": "Contractul de închiriere a fost generat și salvat la client.",
     "openDocument": "Deschide documentul",
-    "documentHint": "Completat din șablon cu aceste condiții și salvat la client. Îl poți edita și după aceea."
+    "documentHint": "Completat din șablon cu aceste condiții, semnat pentru firmă și trimis clientului spre semnare. Șablonul trebuie să aibă un câmp pentru semnătura clientului.",
+    "documentSent": "Contractul a fost generat, semnat pentru firmă și trimis clientului spre semnare.",
+    "templateNotSignable": "Acest șablon nu are un câmp pentru semnătura clientului. Adaugă unul în șablon mai întâi.",
+    "signatureSetup": "Contractele de închiriere sunt semnate pentru firmă și trimise clientului imediat. <link>Adaugă semnătura firmei</link> pentru a atribui o proprietate.",
+    "proofHint": "Un PDF sau o fotografie ori captură a transferului, de maximum 10 MB."
   },
   "MyHome": {
     "metaTitle": "Locuința mea",
     "title": "Locuința mea",
-    "description": "Spațiile pe care le închiriezi și notițele de la proprietar.",
+    "description": "Spațiile pe care le închiriezi, facturile și documentele tale și notițele de la proprietar.",
     "empty": "Proprietarul nu a asociat încă un contract contului tău.",
     "landlord": "Închiriat de la {name}",
     "rent": "{amount}/lună",
@@ -253,6 +259,42 @@
     "doorCode": "Cod interfon",
     "notesTitle": "De la proprietar",
     "notesEmpty": "Nicio notiță încă.",
-    "renews": "se prelungește automat"
+    "renews": "se prelungește automat",
+    "invoices": {
+      "title": "Facturi",
+      "tabs": {
+        "pending": "De plată ({count})",
+        "past": "Anterioare ({count})"
+      },
+      "nothingDue": "Nimic de plată acum.",
+      "noPast": "Nicio factură achitată încă.",
+      "number": "Factura {number}",
+      "period": "{start} – {end}",
+      "dueOn": "Scadentă pe {date}",
+      "issuedOn": "Emisă pe {date}",
+      "total": "Total",
+      "payments": "Plăți",
+      "receipt": "Chitanță",
+      "partlyPaid": "Plătit până acum {paid}, mai sunt de plată {remaining}.",
+      "proof": {
+        "send": "Am plătit: trimite dovada",
+        "title": "Trimite dovada plății",
+        "description": "Pentru factura {number}: atașează confirmarea transferului bancar sau o fotografie a chitanței. Proprietarul o confirmă, apoi plata apare aici împreună cu chitanța.",
+        "submit": "Trimite dovada",
+        "sent": "Dovada a fost trimisă proprietarului",
+        "cancelled": "Dovada a fost retrasă",
+        "awaiting": "În așteptarea confirmării",
+        "pendingNote": "Ai trimis dovada plății de {amount} din {date}. Proprietarul o va confirma.",
+        "cancel": "Retrage",
+        "view": "Vezi dovada",
+        "rejectedNote": "Proprietarul nu a putut confirma plata de {amount} trimisă pe {date}: {reason}"
+      }
+    },
+    "documents": {
+      "title": "Documente",
+      "sentOn": "Trimis pe {date}",
+      "signedOn": "Semnat pe {date}",
+      "signNow": "Semnează"
+    }
   }
 }

@@ -43,6 +43,7 @@ import {
 } from "@/components/contracts/contract-content"
 import { DocumentViewer } from "@/components/customers/document-viewer"
 import { Section } from "@/components/customers/section"
+import { SignatureStatusBadge } from "@/components/signature/signing-panel"
 import { routes } from "@/config/routes"
 import {
   useContractTemplates,
@@ -101,16 +102,15 @@ export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
   // The dialog is open while this is set; files dropped on the page come along.
   const [uploading, setUploading] = useState<File[] | null>(null)
   const [deleting, setDeleting] = useState<CustomerDocument | null>(null)
-  const [viewing, setViewing] = useState<CustomerDocument | null>(null)
+  // By id, so the viewer follows the document as it changes (sent, signed).
+  const [viewingId, setViewingId] = useState<string | null>(null)
+  const viewing = documents?.find((d) => d.id === viewingId) ?? null
   const meta = useDocumentMeta(customer)
   const contractHref = (document: CustomerDocument) =>
     `${routes.customers}/${customer.id}/contracts/${document.id}`
 
   return (
-    <Section
-      title={t("title")}
-      count={documents?.length}
-    >
+    <Section title={t("title")} count={documents?.length}>
       <FileUpload
         value={NO_ITEMS}
         accept={ACCEPTED_FILES}
@@ -143,7 +143,7 @@ export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
               key={document.id}
               document={document}
               meta={meta(document)}
-              onView={() => setViewing(document)}
+              onView={() => setViewingId(document.id)}
               onDelete={() => setDeleting(document)}
             />
           ))}
@@ -154,7 +154,7 @@ export function CustomerDocuments({ customer }: { customer: CustomerDetail }) {
         document={viewing}
         meta={viewing ? meta(viewing) : ""}
         editHref={viewing?.kind === "contract" ? contractHref(viewing) : null}
-        onClose={() => setViewing(null)}
+        onClose={() => setViewingId(null)}
       />
       <UploadDocumentDialog
         customer={customer}
@@ -199,10 +199,13 @@ function DocumentRow({
           <span className="truncate text-sm font-medium">{document.name}</span>
           <span className="truncate text-xs text-muted-foreground">{meta}</span>
         </span>
+        {document.signatureStatus ? (
+          <SignatureStatusBadge status={document.signatureStatus} />
+        ) : null}
       </button>
 
       {/* Revealed on hover or keyboard focus; always there on touch screens. */}
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100">
         <Button
           variant="ghost"
           size="sm"

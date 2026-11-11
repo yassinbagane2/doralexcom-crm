@@ -198,3 +198,38 @@ export function useUpdateContractDocument() {
 export function useDownloadDocument() {
   return useMutation(orpc.document.download.mutationOptions())
 }
+
+/**
+ * A contract sent for signature, as the PDF kept for it: signed by the
+ * business, and by the customer once they have.
+ */
+export function useContractPdf(id: string, enabled = true) {
+  return useQuery({
+    ...orpc.document.pdf.queryOptions({ input: { id } }),
+    enabled,
+    gcTime: 60_000,
+  })
+}
+
+/** Refreshes everything a change in a contract's signing shows up in. */
+function useInvalidateSigning() {
+  const queryClient = useQueryClient()
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: orpc.document.key() }),
+    ])
+}
+
+export function useWithdrawSignature() {
+  const t = useTranslations("Signing")
+  const invalidate = useInvalidateSigning()
+
+  return useMutation(
+    orpc.document.withdrawSignature.mutationOptions({
+      onSuccess: async () => {
+        await invalidate()
+        toast.success(t("withdrawn"))
+      },
+    })
+  )
+}

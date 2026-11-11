@@ -25,8 +25,11 @@ import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import { ContractPages } from "@/components/contracts/contract-pages"
+import { PdfViewer } from "@/components/documents/pdf-viewer-lazy"
+import { SigningPanel } from "@/components/signature/signing-panel"
 import {
   useContractDocument,
+  useContractPdf,
   type CustomerDocument,
 } from "@/hooks/queries/contract"
 import { saveFile } from "@/lib/download"
@@ -37,9 +40,10 @@ const DOCX =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 /**
- * Shows a customer's document right in the page: contracts as their pages,
- * PDFs in the browser's own viewer, photos, text and .docx files rendered in
- * place. Anything else (old .doc, .odt) offers a download instead.
+ * Shows a customer's document right in the page: draft contracts as their
+ * pages, contracts sent for signature as their signed PDF (with where the
+ * signing stands), PDFs in the PDF viewer, photos, text and .docx files
+ * rendered in place. Anything else (old .doc, .odt) offers a download.
  */
 export function DocumentViewer({
   document,
@@ -60,6 +64,8 @@ export function DocumentViewer({
   if (document && document !== shown) setShown(document)
 
   const isContract = shown?.kind === "contract"
+  const isSent = isContract && shown?.signatureStatus != null
+  const pdf = useContractPdf(shown?.id ?? "", Boolean(shown && isSent))
   const file = useQuery({
     ...orpc.document.download.queryOptions({ input: { id: shown?.id ?? "" } }),
     enabled: Boolean(shown && !isContract),
@@ -90,7 +96,19 @@ export function DocumentViewer({
                   {meta}
                 </DialogDescription>
               </div>
-              {isContract && editHref ? (
+              {isSent ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!pdf.data}
+                  onClick={() =>
+                    pdf.data && saveFile(pdf.data, `${shown.name}.pdf`)
+                  }
+                >
+                  <Download className="size-3.5" />
+                  <span className="hidden sm:inline">{t("download")}</span>
+                </Button>
+              ) : isContract && editHref ? (
                 <Button size="sm" render={<Link href={editHref} />}>
                   <FilePen className="size-3.5" />
                   {t("edit")}
@@ -122,7 +140,9 @@ export function DocumentViewer({
             </header>
 
             <div className="min-h-0 flex-1 overflow-auto bg-muted/50">
-              {isContract ? (
+              {isSent ? (
+                <SentContractBody id={shown.id} pdf={pdf} />
+              ) : isContract ? (
                 <ContractBody id={shown.id} />
               ) : file.isPending ? (
                 <Loading />
@@ -160,6 +180,43 @@ function ContractBody({ id }: { id: string }) {
   return <ContractPages content={contract.data.content} />
 }
 
+/**
+ * A contract sent for signature: its PDF as kept in R2 (signed by the
+ * business, and by the customer once they have), beside where the signing
+ * stands and its audit trail.
+ */
+function SentContractBody({
+  id,
+  pdf,
+}: {
+  id: string
+  pdf: ReturnType<typeof useContractPdf>
+}) {
+  const t = useTranslations("Documents")
+  const contract = useContractDocument(id)
+
+  return (
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="min-h-[60vh] min-w-0 flex-1 lg:min-h-0">
+        {pdf.isPending ? (
+          <Loading />
+        ) : pdf.isError || !pdf.data ? (
+          <Message icon={<AlertCircle className="size-5" />}>
+            {t("pdfMissing")}
+          </Message>
+        ) : (
+          <PdfViewer file={pdf.data} />
+        )}
+      </div>
+      {contract.data?.signing ? (
+        <aside className="shrink-0 overflow-auto border-t bg-background p-4 lg:w-80 lg:border-t-0 lg:border-l">
+          <SigningPanel id={id} signing={contract.data.signing} />
+        </aside>
+      ) : null}
+    </div>
+  )
+}
+
 function FileBody({
   file,
   mimeType,
@@ -176,12 +233,13 @@ function FileBody({
     mimeType !== null &&
     isDocumentFileType(mimeType) &&
     PREVIEWABLE_FILE_TYPES.includes(mimeType)
-  const url = useObjectUrl(previewable ? file : null, mimeType)
+  const url = useObjectUrl(
+    previewable && mimeType !== "application/pdf" ? file : null,
+    mimeType
+  )
 
+  if (mimeType === "application/pdf") return <PdfViewer file={file} />
   if (previewable && url) {
-    if (mimeType === "application/pdf") {
-      return <iframe src={url} title={name} className="size-full bg-white" />
-    }
     return (
       <div className="flex min-h-full items-center justify-center p-6">
         {/* oxlint-disable-next-line nextjs/no-img-element -- a local blob, nothing to optimize */}

@@ -20,7 +20,7 @@ import {
   StatusPill,
 } from "@/components/admin/dashboard"
 import { RoleBadge } from "@/components/admin/role-badge"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { routes } from "@/config/routes"
 import { formatRelative } from "@/lib/format"
 import { client } from "@/lib/orpc"

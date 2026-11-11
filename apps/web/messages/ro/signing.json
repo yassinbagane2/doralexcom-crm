@@ -1,0 +1,159 @@
+{
+  "Invoices": {
+    "title": "Facturi",
+    "unpaidCount": "{count, plural, one {# neachitată} few {# neachitate} other {# de neachitate}}",
+    "showAll": "Arată încă {count}",
+    "showLess": "Arată mai puține",
+    "period": "{start} – {end}",
+    "issuedOn": "Emisă pe {date}",
+    "dueOn": "Scadentă pe {date}",
+    "withDeposit": "include garanția",
+    "left": "rest {amount}",
+    "actionsLabel": "Acțiuni pentru factura {number}",
+    "recordPayment": "Înregistrează plata",
+    "void": "Anulează factura",
+    "voided": "Factură anulată",
+    "receipt": "Chitanță",
+    "removePayment": "Șterge plata",
+    "status": {
+      "open": "De plată",
+      "overdue": "Restantă",
+      "paid": "Achitată",
+      "void": "Anulată"
+    },
+    "lines": {
+      "rent": "Chirie",
+      "charges": "Cheltuieli",
+      "additionalCosts": "Costuri suplimentare",
+      "discount": "Reducere",
+      "deposit": "Garanție"
+    },
+    "toReview": "{count, plural, one {# dovadă de verificat} few {# dovezi de verificat} other {# de dovezi de verificat}}",
+    "viewProof": "Vezi dovada plății",
+    "proof": {
+      "awaiting": "În așteptarea confirmării",
+      "summary": "Dovadă trimisă {sent}: {amount} plătiți pe {paidOn}",
+      "view": "Vezi dovada",
+      "confirm": "Confirmă",
+      "reject": "Respinge",
+      "confirmed": "Plată confirmată",
+      "rejected": "Dovadă respinsă",
+      "rejectedNote": "Dovadă respinsă pentru {amount}, trimisă {sent}: {reason}",
+      "rejectTitle": "Respinge dovada plății",
+      "rejectDescription": "Clientul primește motivul pe email și poate trimite o nouă dovadă.",
+      "reason": "Motiv",
+      "reasonPlaceholder": "Suma nu corespunde transferului primit…",
+      "rejectSubmit": "Respinge dovada"
+    }
+  },
+  "Signing": {
+    "metaTitle": "Semnează documentul",
+    "insert": "Semnătură",
+    "insertTitle": "Adaugă un câmp de semnătură",
+    "insertHint": {
+      "landlord": "Semnat pentru tine cu semnătura firmei",
+      "customer": "Clientul semnează aici"
+    },
+    "field": {
+      "landlord": "Semnătura proprietarului",
+      "customer": "Semnătura clientului",
+      "caption": "{name} · {date}"
+    },
+    "party": {
+      "landlord": "Proprietar",
+      "customer": "Client"
+    },
+    "status": {
+      "pending": "Așteaptă semnătura",
+      "completed": "Semnat"
+    },
+    "withdraw": "Retrage cererea de semnare",
+    "withdrawn": "Cererea de semnare a fost retrasă. Contractul poate fi editat din nou.",
+    "lockedTitle": "Acest contract a fost trimis spre semnare",
+    "lockedPending": "Clientul trebuie să semneze exact ce i s-a trimis, așa că nu mai poate fi editat. Retrage cererea pentru a-l modifica, apoi trimite-l din nou.",
+    "lockedCompleted": "A fost semnat de ambele părți și nu mai poate fi modificat.",
+    "panelTitle": "Semnături",
+    "signedBy": "{name} · {date}",
+    "waiting": "Așteaptă să semneze",
+    "auditTitle": "Istoric de audit",
+    "events": {
+      "sent": "Trimis spre semnare de {name}",
+      "viewed": "Deschis de {name}",
+      "signed": "Semnat de {name}",
+      "completed": "Finalizat: semnat de ambele părți",
+      "withdrawn": "Retras de {name}"
+    },
+    "ip": "IP {ip}",
+    "contentHash": "Amprenta documentului (SHA-256)",
+    "notFound": "Acest document nu este disponibil.",
+    "backHome": "Locuința mea",
+    "from": "De la {landlord}",
+    "download": "Descarcă",
+    "pdfMissing": "PDF-ul acestui document nu este gata încă. Încearcă din nou în câteva momente.",
+    "signTitle": "Semnează documentul",
+    "signDescription": "Semnătura ta apare în fiecare loc marcat pentru tine. Desenează-o, scrie-o sau încarcă o poză cu ea.",
+    "fullName": "Nume complet",
+    "consent": "Am citit acest document și sunt de acord să îl semnez electronic. Semnătura mea electronică are aceeași valoare ca una olografă.",
+    "submit": "Semnează documentul",
+    "signedToast": "Semnat. Un exemplar semnat de ambele părți poate fi descărcat.",
+    "completedTitle": "Semnat de ambele părți",
+    "completedDescription": "Documentul este finalizat. Descarcă PDF-ul pentru a păstra un exemplar; se încheie cu istoricul de audit.",
+    "certificate": {
+      "title": "Certificat de semnare",
+      "documentId": "ID document",
+      "status": "Stare",
+      "sent": "Trimis",
+      "completed": "Finalizat",
+      "landlord": "Proprietar",
+      "customer": "Client",
+      "property": "Proprietate",
+      "hash": "SHA-256 conținut",
+      "signers": "Semnatari",
+      "note": "Semnat electronic. Amprenta SHA-256 identifică exact conținutul trimis și semnat; orice modificare a acestuia ar schimba amprenta."
+    }
+  },
+  "SignaturePad": {
+    "modeLabel": "Cum semnezi",
+    "modes": {
+      "draw": "Desenează",
+      "type": "Scrie",
+      "upload": "Încarcă"
+    },
+    "typeLabel": "Numele tău, așa cum semnezi",
+    "typePlaceholder": "Scrie-ți numele",
+    "canvasLabel": "Semnătură",
+    "drawHint": "Semnează aici cu mouse-ul sau cu degetul",
+    "uploadHint": "Apasă pentru a încărca o poză cu semnătura ta",
+    "uploadInvalid": "Alege o imagine PNG, JPG sau WebP de cel mult 5 MB.",
+    "clear": "Șterge"
+  },
+  "SignatureSettings": {
+    "metaTitle": "Semnătură",
+    "title": "Semnătura firmei",
+    "description": "Contractele trimise spre semnare sunt semnate cu ea în numele firmei, oriunde este plasat un câmp pentru semnătura proprietarului.",
+    "imageAlt": "Semnătura lui {name}",
+    "updated": "Modificată ultima dată pe {date}",
+    "emptyTitle": "Nicio semnătură încă",
+    "emptyOwner": "Adaug-o pentru a trimite contracte spre semnare: sunt semnate pentru firmă la trimitere.",
+    "emptyCollaborator": "Proprietarul firmei nu a configurat-o încă. Contractele nu pot fi trimise spre semnare până atunci.",
+    "create": "Adaugă semnătura",
+    "change": "Schimbă semnătura",
+    "remove": "Elimină",
+    "removed": "Semnătură eliminată",
+    "saved": "Semnătură salvată",
+    "signerName": "Semnat de",
+    "signerNameHint": "Apare sub semnătură, de exemplu reprezentantul legal al firmei.",
+    "cancel": "Anulează",
+    "save": "Salvează semnătura"
+  },
+  "PdfViewer": {
+    "previousPage": "Pagina anterioară",
+    "nextPage": "Pagina următoare",
+    "page": "Pagina",
+    "zoomIn": "Mărește",
+    "zoomOut": "Micșorează",
+    "fit": "Potrivit",
+    "fitToWidth": "Potrivește pe lățime",
+    "failed": "Acest PDF nu a putut fi afișat."
+  }
+}

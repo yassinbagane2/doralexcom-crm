@@ -5,16 +5,19 @@ import { useEditor, type Content, type Editor } from "@tiptap/react"
 import { useTranslations } from "next-intl"
 import { createDraftExtensions } from "./extensions"
 import type { PageRegion } from "./draft-page-regions"
+import { useSignatureLabels } from "./use-signature-labels"
 
 function useRegionEditor(
   placeholder: string,
   content: Content,
   fieldLabel: (key: string) => string
 ) {
+  const signature = useSignatureLabels()
   return useEditor({
     extensions: createDraftExtensions(placeholder, {
       paginate: false,
       fieldLabel,
+      signature,
     }),
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,

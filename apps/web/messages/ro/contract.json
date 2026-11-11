@@ -315,7 +315,8 @@
     "dropTitle": "Trage fișierele aici",
     "dropDescription": "Sau alege un PDF, un document Word, un fișier text sau o fotografie",
     "uploadFailed": "Încărcarea a eșuat",
-    "uploadSubmitCount": "Încarcă {count, plural, few {# fișiere} other {# de fișiere}}"
+    "uploadSubmitCount": "Încarcă {count, plural, few {# fișiere} other {# de fișiere}}",
+    "pdfMissing": "PDF-ul acestui contract nu este gata încă. Încearcă din nou în câteva momente."
   },
   "StarterContract": {
     "title": "Contract de închiriere a locuinței",

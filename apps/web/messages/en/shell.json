@@ -21,7 +21,8 @@
     "collaborators": "Collaborators",
     "email": "Email",
     "domain": "Web address",
-    "settings": "Settings"
+    "settings": "Settings",
+    "signature": "Signature"
   },
   "Preferences": {
     "metaTitle": "Preferences",

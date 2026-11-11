@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { HeaderControls } from "@/components/header-controls"
+import { HeaderControls } from "@/components/shared/header-controls"
 import { homeRouteFor, routes } from "@/config/routes"
 import { getSession } from "@/lib/auth"
 

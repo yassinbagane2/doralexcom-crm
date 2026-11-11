@@ -2,13 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { CONTRACT_LIMITS } from "@workspace/api/contract"
+import { CONTRACT_LIMITS, signatureRoles } from "@workspace/api/contract"
+import { invoiceRemaining, reconciledBalance } from "@workspace/api/invoice"
 import {
-  leaseBalance,
   localToday,
   MAX_TERM_MONTHS,
   monthlyDue,
-  CUSTOMER_LIMITS,
   termEndDate,
 } from "@workspace/api/lease"
 import {
@@ -48,11 +47,13 @@ import {
   fillContract,
   useMergeValues,
 } from "@/components/contracts/contract-content"
+import { PaymentForm } from "@/components/invoices/payment-form"
 import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
 import { InfinitePicker } from "@/components/shared/infinite-picker"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { routes } from "@/config/routes"
 import { usePropertyPages, type Property } from "@/hooks/queries/property"
+import { useBusinessSignature } from "@/hooks/queries/signature"
 import {
   useAddPayment,
   useCreateLease,
@@ -61,45 +62,13 @@ import {
   useCustomerPages,
   type CustomerSummary,
   type LeaseBalance,
+  type CustomerInvoice,
   type CustomerLease,
 } from "@/hooks/queries/customer"
+import { parseAmount, useAmount } from "@/hooks/use-amount"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatDate, formatMoney } from "@/lib/format"
 import { orpc } from "@/lib/orpc"
-
-/** "1250,50" and "1250.50" both read as 1250.5; blank reads as null. */
-function parseAmount(value: string): number | null | typeof Number.NaN {
-  const trimmed = value.replace(/\s/g, "")
-  if (!trimmed) return null
-  const number = Number(trimmed.replace(",", "."))
-  return Number.isFinite(number) ? Math.round(number * 100) / 100 : Number.NaN
-}
-
-function useAmount() {
-  const t = useTranslations("Leases.validation")
-  return useMemo(
-    () =>
-      ({ required, max }: { required: boolean; max: number }) =>
-        z.string().transform((value, ctx) => {
-          const amount = parseAmount(value)
-          if (amount === null) {
-            if (!required) return 0
-            ctx.addIssue({ code: "custom", message: t("amountRequired") })
-            return z.NEVER
-          }
-          if (Number.isNaN(amount) || amount < 0 || amount > max) {
-            ctx.addIssue({ code: "custom", message: t("amountInvalid") })
-            return z.NEVER
-          }
-          if (required && amount === 0) {
-            ctx.addIssue({ code: "custom", message: t("amountRequired") })
-            return z.NEVER
-          }
-          return amount
-        }),
-    [t]
-  )
-}
 
 /**
  * Counts how many times `open` has turned true. Keying a dialog on it gives
@@ -217,6 +186,11 @@ function LeaseDialogBody({
   const queryClient = useQueryClient()
   const mergeValues = useMergeValues()
   const [generating, setGenerating] = useState(false)
+  // A new lease's contract is signed for the business and sent to the
+  // customer right away, so it can't be created without that signature.
+  const businessSignature = useBusinessSignature()
+  const needsSignature =
+    !lease && businessSignature.isSuccess && !businessSignature.data
   const [propertySearch, setPropertySearch] = useState("")
   const [customerSearch, setCustomerSearch] = useState("")
   const [pickedProperty, setPickedProperty] = useState<Property | null>(null)
@@ -501,6 +475,19 @@ function LeaseDialogBody({
                   })
                 ),
               ])
+              const content = fillContract(template.content, mergeValues(data))
+              // The customer signs it straight away, so it needs a place to.
+              const signable = signatureRoles(
+                content.body,
+                content.header,
+                content.footer
+              ).has("customer")
+              if (!signable) {
+                form.setError("templateId", {
+                  message: t("templateNotSignable"),
+                })
+                return
+              }
               await create.mutateAsync({
                 ...agreement,
                 ...parties,
@@ -509,7 +496,7 @@ function LeaseDialogBody({
                     template: template.name,
                     customer: data.customer.name,
                   }).slice(0, CONTRACT_LIMITS.name),
-                  content: fillContract(template.content, mergeValues(data)),
+                  content,
                 },
               })
               onOpenChange(false)
@@ -797,6 +784,21 @@ function LeaseDialogBody({
             </Field>
           )}
 
+          {needsSignature ? (
+            <p className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+              {t.rich("signatureSetup", {
+                link: (chunks) => (
+                  <Link
+                    href={routes.accountSignature}
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </p>
+          ) : null}
+
           <DialogFooter className="flex-row justify-end">
             <Button
               type="button"
@@ -805,7 +807,7 @@ function LeaseDialogBody({
             >
               {tc("cancel")}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || needsSignature}>
               {isPending ? <Loader2 className="animate-spin" /> : null}
               {lease
                 ? tc("saveChanges")
@@ -890,46 +892,31 @@ function CurrencySelect({
 // --- Record a payment --------------------------------------------------------
 
 /** A dialog about one existing lease. */
-type PaymentDialogProps = {
+type ExistingLeaseDialogProps = {
   lease: CustomerLease
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+type PaymentDialogProps = ExistingLeaseDialogProps & {
+  /** The invoice the payment settles, in whole or in part. */
+  invoice: CustomerInvoice
 }
 
 export function PaymentDialog(props: PaymentDialogProps) {
   return <PaymentDialogBody key={useOpenSession(props.open)} {...props} />
 }
 
-function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
+function PaymentDialogBody({
+  lease,
+  invoice,
+  open,
+  onOpenChange,
+}: PaymentDialogProps) {
   const t = useTranslations("Leases")
-  const tc = useTranslations("Common")
-  const tv = useTranslations("Leases.validation")
-  const amount = useAmount()
+  const locale = useLocale()
   const addPayment = useAddPayment()
-
-  const schema = useMemo(
-    () =>
-      z.object({
-        amount: amount({ required: true, max: PROPERTY_LIMITS.rent }),
-        paidOn: z.iso.date(tv("dateRequired")),
-        note: z.string().trim().max(CUSTOMER_LIMITS.paymentNote),
-      }),
-    [amount, tv]
-  )
-
-  const form = useForm<
-    z.input<typeof schema>,
-    unknown,
-    z.output<typeof schema>
-  >({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      amount: monthlyDue(lease) > 0 ? String(monthlyDue(lease)) : "",
-      paidOn: localToday(),
-      note: "",
-    },
-  })
-  const { errors } = form.formState
+  const remaining = invoiceRemaining(invoice)
 
   return (
     <Dialog
@@ -944,76 +931,27 @@ function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
           <DialogTitle>{t("paymentTitle")}</DialogTitle>
           <DialogDescription>
             {t("paymentDescription", {
+              number: invoice.number,
               property: lease.property.name,
-              currency: lease.currency,
+              remaining: formatMoney(remaining, lease.currency, locale),
             })}
           </DialogDescription>
         </DialogHeader>
-        <form
-          noValidate
-          className="mt-5 flex flex-col gap-5"
-          onSubmit={form.handleSubmit((values) =>
+        <PaymentForm
+          id="payment"
+          remaining={remaining}
+          currency={lease.currency}
+          proof="optional"
+          submitLabel={t("paymentSubmit")}
+          pending={addPayment.isPending}
+          onCancel={() => onOpenChange(false)}
+          onSubmit={(values) =>
             addPayment.mutate(
-              { ...values, leaseId: lease.id },
+              { ...values, invoiceId: invoice.id },
               { onSuccess: () => onOpenChange(false) }
             )
-          )}
-        >
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field>
-              <Label htmlFor="payment-amount">
-                {t("fields.amount", { currency: lease.currency })}
-              </Label>
-              <Input
-                id="payment-amount"
-                inputMode="decimal"
-                autoComplete="off"
-                aria-invalid={Boolean(errors.amount)}
-                {...form.register("amount")}
-              />
-              <FieldError>{errors.amount?.message}</FieldError>
-            </Field>
-            <Field>
-              <Label htmlFor="payment-date">{t("fields.paidOn")}</Label>
-              <Input
-                id="payment-date"
-                type="date"
-                aria-invalid={Boolean(errors.paidOn)}
-                {...form.register("paidOn")}
-              />
-              <FieldError>{errors.paidOn?.message}</FieldError>
-            </Field>
-          </div>
-          <Field>
-            <Label htmlFor="payment-note">
-              {t("fields.note")}{" "}
-              <span className="font-normal text-muted-foreground">
-                ({tc("optional").toLowerCase()})
-              </span>
-            </Label>
-            <Input
-              id="payment-note"
-              autoComplete="off"
-              placeholder={t("notePlaceholder")}
-              {...form.register("note")}
-            />
-          </Field>
-          <DialogFooter className="flex-row justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {tc("cancel")}
-            </Button>
-            <Button type="submit" disabled={addPayment.isPending}>
-              {addPayment.isPending ? (
-                <Loader2 className="animate-spin" />
-              ) : null}
-              {t("paymentSubmit")}
-            </Button>
-          </DialogFooter>
-        </form>
+          }
+        />
       </DialogContent>
     </Dialog>
   )
@@ -1025,7 +963,7 @@ function PaymentDialogBody({ lease, open, onOpenChange }: PaymentDialogProps) {
  * Ends the lease on an exit date, previewing what the customer will owe (or be
  * owed) before confirming, then showing the final balance.
  */
-export function TerminateLeaseDialog(props: PaymentDialogProps) {
+export function TerminateLeaseDialog(props: ExistingLeaseDialogProps) {
   return (
     <TerminateLeaseDialogBody key={useOpenSession(props.open)} {...props} />
   )
@@ -1035,7 +973,7 @@ function TerminateLeaseDialogBody({
   lease,
   open,
   onOpenChange,
-}: PaymentDialogProps) {
+}: ExistingLeaseDialogProps) {
   const t = useTranslations("Leases")
   const tc = useTranslations("Common")
   const locale = useLocale()
@@ -1045,11 +983,13 @@ function TerminateLeaseDialogBody({
 
   const valid =
     /^\d{4}-\d{2}-\d{2}$/.test(endDate) && endDate >= lease.startDate
+  // Unpaid months after the exit are voided, a cut-short last one billed
+  // again for the days lived there: what the server will do on confirming.
   const preview = valid
-    ? leaseBalance(
+    ? reconciledBalance(
+        lease.invoices,
         { ...lease, endDate, terminatedAt: new Date() },
-        lease.paid,
-        endDate
+        localToday()
       )
     : null
 

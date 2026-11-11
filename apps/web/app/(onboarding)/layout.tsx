@@ -1,9 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 
-import { HeaderControls } from "@/components/header-controls"
-import { LogoMark } from "@/components/logo"
-import { SignOutButton } from "@/components/sign-out-button"
+import { HeaderControls } from "@/components/shared/header-controls"
+import { LogoMark } from "@/components/shared/logo"
 import { routes } from "@/config/routes"
 
 /**
@@ -27,10 +26,7 @@ export default async function OnboardingLayout({
           <LogoMark />
           {t("Common.appName")}
         </Link>
-        <div className="flex items-center gap-1">
-          <HeaderControls />
-          <SignOutButton label={t("Onboarding.signOut")} />
-        </div>
+        <HeaderControls />
       </header>
       <main className="flex flex-1 items-center justify-center py-10">
         <div className="w-full max-w-2xl">{children}</div>

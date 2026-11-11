@@ -1,31 +1,39 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
-import { lease, customerDocument } from "@workspace/db/schema"
-import { and, desc, eq } from "drizzle-orm"
+import {
+  customerDocument,
+  lease,
+  organization,
+  user,
+} from "@workspace/db/schema"
+import { and, desc, eq, isNotNull } from "drizzle-orm"
 import { z } from "zod"
 
-import { businessProcedure, o } from "../index"
+import { businessProcedure, o, publicProcedure } from "../index"
 import {
   DOCUMENT_FILE_TYPES,
   DOCUMENT_KINDS,
   DOCUMENT_LIMITS,
   documentContentSchema,
   isDocumentFileType,
+  SIGNATURE_STATUSES,
 } from "../contract"
 import { findCustomer } from "../lib/customer"
+import { documentNotFound, documentProperty } from "../lib/document"
+import { verifyPrintToken } from "../lib/signing/print-token"
+import { signedContent, signingRecordSchema } from "../lib/signing/record"
+import { discardSignedPdf, readSignedPdf } from "../lib/signing/signed-pdf"
+import {
+  assertEditable,
+  sendForSignature,
+  withdrawSignatureRequest,
+} from "../lib/signing/workflow"
 import {
   discardDocumentContent,
   documentStorage,
   saveContractContent,
 } from "../lib/storage"
 import { assertContentSize, contractName } from "./contract"
-
-function documentNotFound() {
-  return new ORPCError("NOT_FOUND", {
-    message: "Document not found.",
-    data: { code: "DOCUMENT_NOT_FOUND" },
-  })
-}
 
 const ownDocument = (organizationId: string, id: string) =>
   and(
@@ -69,10 +77,27 @@ function withExtension(name: string, extension: string) {
     : `${name}.${extension}`
 }
 
+/** One of the business's contracts, or not found. */
+async function findContract(organizationId: string, id: string) {
+  const [found] = await db
+    .select()
+    .from(customerDocument)
+    .where(
+      and(
+        ownDocument(organizationId, id),
+        eq(customerDocument.kind, "contract")
+      )
+    )
+    .limit(1)
+  if (!found) throw documentNotFound()
+  return found
+}
+
 /**
  * Files kept about a customer (a signed lease, an ID scan…) and the contracts
  * generated for their leases. Scoped to `context.organizationId` like every
- * business procedure; customers don't see these.
+ * business procedure. Customers only see the contracts sent to them for
+ * signature (see the portal router).
  */
 export const documentRouter = o.prefix("/documents").router({
   list: businessProcedure
@@ -91,6 +116,9 @@ export const documentRouter = o.prefix("/documents").router({
           leaseId: z.string().nullable(),
           mimeType: z.string().nullable(),
           size: z.number().nullable(),
+          signatureStatus: z.enum(SIGNATURE_STATUSES).nullable(),
+          sentAt: z.date().nullable(),
+          completedAt: z.date().nullable(),
           createdAt: z.date(),
           updatedAt: z.date(),
         })
@@ -107,6 +135,9 @@ export const documentRouter = o.prefix("/documents").router({
           leaseId: customerDocument.leaseId,
           mimeType: customerDocument.mimeType,
           size: customerDocument.size,
+          signatureStatus: customerDocument.signatureStatus,
+          sentAt: customerDocument.sentAt,
+          completedAt: customerDocument.completedAt,
           createdAt: customerDocument.createdAt,
           updatedAt: customerDocument.updatedAt,
         })
@@ -249,6 +280,10 @@ export const documentRouter = o.prefix("/documents").router({
       return { id: document.id }
     }),
 
+  /**
+   * A contract and, once sent for signature, the signatures it has (filled
+   * into its fields) and its audit trail.
+   */
   getContract: businessProcedure
     .route({ method: "GET", path: "/contracts/{id}", tags: ["documents"] })
     .input(z.object({ id: z.uuid() }))
@@ -260,31 +295,20 @@ export const documentRouter = o.prefix("/documents").router({
         leaseId: z.string().nullable(),
         content: documentContentSchema,
         updatedAt: z.date(),
+        signing: signingRecordSchema.nullable(),
       })
     )
     .handler(async ({ input, context }) => {
-      const [found] = await db
-        .select()
-        .from(customerDocument)
-        .where(
-          and(
-            ownDocument(context.organizationId, input.id),
-            eq(customerDocument.kind, "contract")
-          )
-        )
-        .limit(1)
-
-      if (!found) throw documentNotFound()
-      const { storage, key } = documentStorage(found)
-      const content = await storage.getObjectText(key)
-      if (content === null) throw documentNotFound()
+      const found = await findContract(context.organizationId, input.id)
+      const { content, signing } = await signedContent(found)
       return {
         id: found.id,
         name: found.name,
         customerId: found.customerId,
         leaseId: found.leaseId,
-        content: documentContentSchema.parse(JSON.parse(content)),
+        content,
         updatedAt: found.updatedAt,
+        signing,
       }
     }),
 
@@ -309,12 +333,14 @@ export const documentRouter = o.prefix("/documents").router({
           id: customerDocument.id,
           organizationId: customerDocument.organizationId,
           customerId: customerDocument.customerId,
+          signatureStatus: customerDocument.signatureStatus,
         })
         .from(customerDocument)
         .where(where)
         .limit(1)
 
       if (!found) throw documentNotFound()
+      assertEditable(found)
       await saveContractContent(found, input.content)
       // Also bumps updatedAt, which the content in R2 doesn't carry.
       await db.update(customerDocument).set({ name: input.name }).where(where)
@@ -338,6 +364,122 @@ export const documentRouter = o.prefix("/documents").router({
 
       if (!deleted) throw documentNotFound()
       await discardDocumentContent(deleted)
+      if (deleted.kind === "contract") await discardSignedPdf(deleted)
       return { success: true }
+    }),
+
+  /**
+   * Signs the contract with the business's signature and asks the customer
+   * to sign it too. The contract can't be edited from then on.
+   */
+  sendForSignature: businessProcedure
+    .route({
+      method: "POST",
+      path: "/contracts/{id}/send",
+      tags: ["documents"],
+    })
+    .input(z.object({ id: z.uuid() }))
+    .output(z.object({ success: z.boolean() }))
+    .handler(async ({ input, context }) => {
+      const found = await findContract(context.organizationId, input.id)
+      await sendForSignature(found, context.session.user, context.headers)
+      return { success: true }
+    }),
+
+  /** Takes back a contract the customer hasn't signed yet, to edit it. */
+  withdrawSignature: businessProcedure
+    .route({
+      method: "POST",
+      path: "/contracts/{id}/withdraw",
+      tags: ["documents"],
+    })
+    .input(z.object({ id: z.uuid() }))
+    .output(z.object({ success: z.boolean() }))
+    .handler(async ({ input, context }) => {
+      const found = await findContract(context.organizationId, input.id)
+      await withdrawSignatureRequest(
+        found,
+        context.session.user,
+        context.headers
+      )
+      return { success: true }
+    }),
+
+  /**
+   * What the signed PDF prints, for the web app's print page that the API's
+   * headless Chrome opens. No session there: the token, minted by the API
+   * for this one document and valid a few minutes, is the permission.
+   */
+  printable: publicProcedure
+    .route({
+      method: "GET",
+      path: "/contracts/{id}/printable",
+      tags: ["documents"],
+    })
+    .input(z.object({ id: z.uuid(), token: z.string().max(200) }))
+    .output(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        landlord: z.string(),
+        customer: z.object({ name: z.string(), email: z.string() }),
+        property: z.string().nullable(),
+        content: documentContentSchema,
+        signing: signingRecordSchema,
+      })
+    )
+    .handler(async ({ input }) => {
+      if (!verifyPrintToken(input.id, input.token)) throw documentNotFound()
+      const [found] = await db
+        .select({
+          document: customerDocument,
+          landlord: organization.name,
+          customer: { name: user.name, email: user.email },
+        })
+        .from(customerDocument)
+        .innerJoin(
+          organization,
+          eq(organization.id, customerDocument.organizationId)
+        )
+        .innerJoin(user, eq(user.id, customerDocument.customerId))
+        .where(
+          and(
+            eq(customerDocument.id, input.id),
+            isNotNull(customerDocument.signatureStatus)
+          )
+        )
+      if (!found) throw documentNotFound()
+
+      const [{ content, signing }, place] = await Promise.all([
+        signedContent(found.document),
+        documentProperty(found.document),
+      ])
+      if (!signing) throw documentNotFound()
+      return {
+        id: found.document.id,
+        name: found.document.name,
+        landlord: found.landlord,
+        customer: found.customer,
+        property: place?.name ?? null,
+        content,
+        signing,
+      }
+    }),
+
+  /**
+   * A contract sent for signature, as the PDF kept in R2: signed by the
+   * business, and by the customer too once they have.
+   */
+  pdf: businessProcedure
+    .route({ method: "GET", path: "/contracts/{id}/pdf", tags: ["documents"] })
+    .input(z.object({ id: z.uuid() }))
+    .output(z.file())
+    .handler(async ({ input, context }) => {
+      const found = await findContract(context.organizationId, input.id)
+      const pdf = found.signatureStatus ? await readSignedPdf(found) : null
+      if (!pdf) throw documentNotFound()
+      return new File([new Uint8Array(pdf)], `${found.name}.pdf`, {
+        type: "application/pdf",
+      })
     }),
 })

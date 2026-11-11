@@ -1,6 +1,6 @@
 "use client"
 
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 
 /** Who is signed in. */
 export function AccountOverview({

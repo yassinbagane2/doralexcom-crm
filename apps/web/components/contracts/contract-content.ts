@@ -5,7 +5,9 @@ import { formatIban } from "@workspace/auth/organization"
 import {
   fillMergeFields,
   isMergeFieldKey,
+  isSignerRole,
   MERGE_FIELD_NODE,
+  SIGNATURE_FIELD_NODE,
   type DocumentContent,
   type MergeFieldKey,
 } from "@workspace/api/contract"
@@ -26,9 +28,15 @@ type Doc = DocumentContent["body"]
 
 /**
  * Text with `[lease.rent]`-style merge fields and `**bold**` runs, as the
- * starter contract's messages write them, turned into editor nodes.
+ * starter contract's messages write them, turned into editor nodes; a cell
+ * holding just `[sign:landlord]` or `[sign:customer]` is a signature field.
  */
 function inline(text: string): JSONContent[] {
+  // `[sign:customer]` alone is a signature field.
+  const sign = /^\[sign:([a-z]+)\]$/.exec(text)
+  if (sign && isSignerRole(sign[1])) {
+    return [{ type: SIGNATURE_FIELD_NODE, attrs: { role: sign[1] } }]
+  }
   const nodes: JSONContent[] = []
   for (const part of text.split(/(\*\*[^*]+\*\*)/)) {
     if (!part) continue
@@ -111,7 +119,7 @@ export function useStarterContract() {
           table([
             [t("landlordSignature"), t("customerSignature")],
             ["[landlord.representative]", "[customer.name]"],
-            ["", ""],
+            ["[sign:landlord]", "[sign:customer]"],
           ]),
         ],
       } as Doc,

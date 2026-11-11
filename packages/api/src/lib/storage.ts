@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto"
-
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -7,7 +5,13 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3"
 
+import {
+  documentContentSchema,
+  fillDocumentSignatures,
+  type DocumentContent,
+} from "../contract"
 import { env } from "../env"
+import { sha256 } from "./hash"
 
 /*
  * Customer documents live in Cloudflare R2, not the database: uploaded files
@@ -27,7 +31,7 @@ const isNotFound = (error: unknown) =>
  */
 const r2CredentialsFromApiToken = (tokenId: string, token: string) => ({
   accessKeyId: tokenId,
-  secretAccessKey: createHash("sha256").update(token).digest("hex"),
+  secretAccessKey: sha256(token),
 })
 
 const client = new S3Client({
@@ -98,25 +102,60 @@ type StoredDocument = {
   kind: "file" | "contract"
 }
 
+type CustomerObject = Omit<StoredDocument, "kind">
+
+const customerFolder = (document: Omit<StoredDocument, "id" | "kind">) =>
+  `${document.organizationId}/customers/${document.customerId}`
+
 /** Where a document's content lives: its bucket and object key. */
 export function documentStorage(document: StoredDocument) {
-  const folder = `${document.organizationId}/customers/${document.customerId}`
+  const folder = customerFolder(document)
   return document.kind === "file"
     ? { storage: fileStorage, key: `${folder}/files/${document.id}` }
-    : { storage: contractStorage, key: `${folder}/contracts/${document.id}.json` }
+    : {
+        storage: contractStorage,
+        key: `${folder}/contracts/${document.id}.json`,
+      }
 }
 
-/** Stores a contract's editor content. Overwrites the previous version. */
-export function saveContractContent(
-  document: Omit<StoredDocument, "kind">,
-  content: unknown
+/** Where a proof of payment's file lives: with the customer's uploads. */
+export function paymentProofLocation(proof: CustomerObject) {
+  return {
+    storage: fileStorage,
+    key: `${customerFolder(proof)}/payment-proofs/${proof.id}`,
+  }
+}
+
+/** Where a contract sent for signature keeps its PDF, beside its content. */
+export function signedPdfKey(document: CustomerObject) {
+  return `${customerFolder(document)}/contracts/${document.id}.signed.pdf`
+}
+
+/**
+ * Stores a contract's editor content. Overwrites the previous version.
+ * Signatures are never part of it: they are kept apart and only filled into
+ * the signature fields when the contract is shown. Returns the exact text
+ * stored, so callers can fingerprint it without reading it back.
+ */
+export async function saveContractContent(
+  document: CustomerObject,
+  content: DocumentContent
 ) {
   const { storage, key } = documentStorage({ ...document, kind: "contract" })
-  return storage.upload({
-    key,
-    body: JSON.stringify(content),
-    contentType: "application/json",
-  })
+  const text = JSON.stringify(fillDocumentSignatures(content, {}))
+  await storage.upload({ key, body: text, contentType: "application/json" })
+  return text
+}
+
+/**
+ * A contract's content as stored, and the exact text it is stored as, or
+ * null when nothing is.
+ */
+export async function readContractContent(document: CustomerObject) {
+  const { storage, key } = documentStorage({ ...document, kind: "contract" })
+  const text = await storage.getObjectText(key)
+  if (text === null) return null
+  return { text, content: documentContentSchema.parse(JSON.parse(text)) }
 }
 
 /**

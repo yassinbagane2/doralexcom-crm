@@ -8,7 +8,7 @@ import { Check, Loader2, Mail, X } from "@workspace/ui/icons"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { inviteRoute, routes, signInRoute } from "@/config/routes"
 import {
   useAcceptInvitation,

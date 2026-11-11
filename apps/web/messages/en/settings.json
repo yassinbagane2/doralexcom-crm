@@ -159,6 +159,8 @@
     "print": "Print",
     "back": "Back",
     "missingDetails": "Your bank and registration details aren't filled in yet. <link>Add them in Business details</link> to show them on receipts.",
-    "missingDetailsCollaborator": "The business's bank and registration details aren't filled in yet. Ask the owner to add them."
+    "missingDetailsCollaborator": "The business's bank and registration details aren't filled in yet. Ask the owner to add them.",
+    "invoice": "For invoice",
+    "invoiceLine": "No. {number}, {start} – {end} ({total})"
   }
 }

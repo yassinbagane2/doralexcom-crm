@@ -2,9 +2,7 @@
 
 import {
   currentTermEnd,
-  leaseBalance,
   leaseMonths,
-  leaseStatus,
   localToday,
   monthlyDue,
   renewsAutomatically,
@@ -12,6 +10,7 @@ import {
   CUSTOMER_LIMITS,
   type NoteVisibility,
 } from "@workspace/api/lease"
+import { invoiceBalance } from "@workspace/api/invoice"
 import { Badge } from "@workspace/ui/components/ui/badge"
 import { Button } from "@workspace/ui/components/ui/button"
 import {
@@ -38,7 +37,6 @@ import {
   DotsHorizontal,
   EyeOff,
   FilePen,
-  HandCoins,
   Loader2,
   LoaderCircle,
   Lock,
@@ -49,7 +47,6 @@ import {
   Phone,
   Plus,
   RefreshCw,
-  Receipt,
   Trash,
   UserCircle,
 } from "@workspace/ui/icons"
@@ -63,7 +60,6 @@ import { PropertyTypeIcon } from "@/components/properties/property-type-icon"
 import {
   BalanceSummary,
   LeaseDialog,
-  PaymentDialog,
   TerminateLeaseDialog,
 } from "@/components/customers/lease-dialogs"
 import {
@@ -72,18 +68,18 @@ import {
   UploadDocumentDialog,
 } from "@/components/customers/customer-documents"
 import { LeaseBadge } from "@/components/customers/customer-list"
+import { LeaseInvoices } from "@/components/customers/lease-invoices"
 import {
   CustomerSheet,
   type CustomerEditor,
 } from "@/components/customers/customer-sheet"
 import { Section, SectionEmpty } from "@/components/customers/section"
-import { UserAvatar } from "@/components/user-avatar"
+import { UserAvatar } from "@/components/shared/user-avatar"
 import { routes } from "@/config/routes"
 import {
   useAddCustomerNote,
   useDeleteLease,
   useDeleteCustomer,
-  useRemovePayment,
   useRemoveCustomerNote,
   useCustomer,
   type CustomerDetail as Customer,
@@ -355,13 +351,7 @@ function Contacts({ customer }: { customer: Customer }) {
   )
 }
 
-type LeaseAction =
-  | "edit"
-  | "payment"
-  | "terminate"
-  | "delete"
-  | "contract"
-  | "attach"
+type LeaseAction = "edit" | "terminate" | "delete" | "contract" | "attach"
 
 function LeaseCard({
   customer,
@@ -375,10 +365,8 @@ function LeaseCard({
   const t = useTranslations("Leases")
   const locale = useLocale()
   const [action, setAction] = useState<LeaseAction | null>(null)
-  const removePayment = useRemovePayment()
-  const balance = leaseBalance(lease, lease.paid, today)
+  const balance = invoiceBalance(lease.invoices)
   const terminated = lease.terminatedAt !== null
-  const status = leaseStatus(lease, today)
   const money = (amount: number) => formatMoney(amount, lease.currency, locale)
   const close = (open: boolean) => !open && setAction(null)
   const months = leaseMonths(lease)
@@ -460,10 +448,6 @@ function LeaseCard({
             <DotsHorizontal size={16} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onClick={() => setAction("payment")}>
-              <HandCoins className="size-4" />
-              {t("recordPayment")}
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setAction("contract")}>
               <FilePen className="size-4" />
               {t("generateContract")}
@@ -484,7 +468,7 @@ function LeaseCard({
                 </DropdownMenuItem>
               </>
             )}
-            {lease.payments.length === 0 ? (
+            {lease.paid === 0 ? (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -500,7 +484,7 @@ function LeaseCard({
         </DropdownMenu>
       </div>
 
-      {status === "upcoming" && lease.paid === 0 ? null : (
+      {lease.invoices.length === 0 ? null : (
         <BalanceSummary
           balance={balance}
           currency={lease.currency}
@@ -509,60 +493,11 @@ function LeaseCard({
         />
       )}
 
-      {lease.payments.length > 0 ? (
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-xs font-medium text-muted-foreground">
-            {t("paymentsTitle")}
-          </h3>
-          <ul className="-mx-2 flex flex-col text-sm">
-            {lease.payments.map((payment) => (
-              <li
-                key={payment.id}
-                className="flex items-center gap-3 rounded-md px-2 py-1 transition-colors hover:bg-background/70"
-              >
-                <span className="w-28 shrink-0 text-muted-foreground tabular-nums">
-                  {formatDate(payment.paidOn, locale)}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                  {payment.note}
-                </span>
-                <span className="tabular-nums">{money(payment.amount)}</span>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={t("receipt")}
-                  title={t("receipt")}
-                  render={
-                    <Link
-                      href={`${routes.customers}/${customer.id}/receipts/${payment.id}`}
-                    />
-                  }
-                >
-                  <Receipt size={12} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={t("removePayment")}
-                  disabled={removePayment.isPending}
-                  onClick={() => removePayment.mutate({ id: payment.id })}
-                >
-                  <Trash size={12} />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <LeaseInvoices customerId={customer.id} lease={lease} today={today} />
 
       <LeaseDialog
         lease={lease}
         open={action === "edit"}
-        onOpenChange={close}
-      />
-      <PaymentDialog
-        lease={lease}
-        open={action === "payment"}
         onOpenChange={close}
       />
       <TerminateLeaseDialog
@@ -776,7 +711,7 @@ function DeleteCustomerDialog({
   const tc = useTranslations("Common")
   const router = useRouter()
   const remove = useDeleteCustomer()
-  const hasPayments = customer.leases.some((lease) => lease.payments.length > 0)
+  const hasPayments = customer.leases.some((lease) => lease.paid > 0)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

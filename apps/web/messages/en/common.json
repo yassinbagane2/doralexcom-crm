@@ -93,7 +93,7 @@
     "INVALID_IBAN": "Check the IBAN: it doesn't add up",
     "INVALID_LEGAL_STRUCTURE": "Choose a legal structure from the list",
     "ORGANIZATION_FIELD_TOO_LONG": "One of the details is too long",
-    "PAYMENT_NOT_FOUND": "That payment no longer exists",
+    "PAYMENT_NOT_FOUND": "Payment not found.",
     "INVITATION_NOT_FOUND": "This invitation is no longer valid",
     "INVITATION_EXPIRED": "This invitation has expired. Ask for a new one.",
     "INVITATION_REQUIRED": "You need an invitation to create an account",
@@ -109,6 +109,15 @@
     "YOU_ARE_NOT_ALLOWED_TO_CANCEL_THIS_INVITATION": "Only the owner of the business can cancel invitations",
     "YOU_ARE_NOT_ALLOWED_TO_DELETE_THIS_MEMBER": "Only the owner of the business can remove people",
     "MEMBER_NOT_FOUND": "That person is no longer part of the business",
-    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "This business has reached its member limit"
+    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "This business has reached its member limit",
+    "INVOICE_NOT_FOUND": "Invoice not found.",
+    "INVOICE_VOID": "This invoice was voided.",
+    "INVOICE_HAS_PAYMENTS": "Payments are recorded on this invoice. Remove them first.",
+    "PAYMENT_EXCEEDS_INVOICE": "The payment is more than what's left to pay on this invoice.",
+    "NO_BUSINESS_SIGNATURE": "Set up your business's signature in Settings → Signature before sending contracts for signature.",
+    "NO_CUSTOMER_SIGNATURE_FIELD": "Add a signature field for the customer to the contract first.",
+    "DOCUMENT_LOCKED": "This contract was sent for signature. Withdraw it before editing.",
+    "DOCUMENT_NOT_PENDING": "This document isn't waiting for a signature.",
+    "DOCUMENT_TAMPERED": "This document changed after it was sent. Ask your landlord to send it again."
   }
 }

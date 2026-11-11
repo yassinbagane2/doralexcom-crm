@@ -71,6 +71,27 @@
       "when": 1794335097649,
       "tag": "0009_documents_in_r2",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794392446195,
+      "tag": "0010_invoices_and_signatures",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794392596354,
+      "tag": "0011_invoice_live_period",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794396989755,
+      "tag": "0012_payment_proofs",
+      "breakpoints": true
     }
   ]
 }

@@ -93,7 +93,7 @@
     "INVALID_IBAN": "Verifică IBAN-ul: cifrele de control nu se potrivesc",
     "INVALID_LEGAL_STRUCTURE": "Alege o formă juridică din listă",
     "ORGANIZATION_FIELD_TOO_LONG": "Unul dintre câmpuri este prea lung",
-    "PAYMENT_NOT_FOUND": "Plata nu mai există",
+    "PAYMENT_NOT_FOUND": "Plata nu a fost găsită.",
     "INVITATION_NOT_FOUND": "Această invitație nu mai este valabilă",
     "INVITATION_EXPIRED": "Această invitație a expirat. Cere una nouă.",
     "INVITATION_REQUIRED": "Ai nevoie de o invitație ca să îți creezi un cont",
@@ -109,6 +109,15 @@
     "YOU_ARE_NOT_ALLOWED_TO_CANCEL_THIS_INVITATION": "Doar proprietarul firmei poate anula invitații",
     "YOU_ARE_NOT_ALLOWED_TO_DELETE_THIS_MEMBER": "Doar proprietarul firmei poate elimina persoane",
     "MEMBER_NOT_FOUND": "Persoana nu mai face parte din firmă",
-    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "Firma a atins numărul maxim de membri"
+    "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED": "Firma a atins numărul maxim de membri",
+    "INVOICE_NOT_FOUND": "Factura nu a fost găsită.",
+    "INVOICE_VOID": "Această factură a fost anulată.",
+    "INVOICE_HAS_PAYMENTS": "Pe această factură sunt înregistrate plăți. Șterge-le mai întâi.",
+    "PAYMENT_EXCEEDS_INVOICE": "Plata depășește suma rămasă de plată pe această factură.",
+    "NO_BUSINESS_SIGNATURE": "Configurează semnătura firmei în Setări → Semnătură înainte de a trimite contracte spre semnare.",
+    "NO_CUSTOMER_SIGNATURE_FIELD": "Adaugă mai întâi în contract un câmp pentru semnătura clientului.",
+    "DOCUMENT_LOCKED": "Acest contract a fost trimis spre semnare. Retrage-l înainte de a-l edita.",
+    "DOCUMENT_NOT_PENDING": "Acest document nu așteaptă o semnătură.",
+    "DOCUMENT_TAMPERED": "Documentul a fost modificat după ce a fost trimis. Roagă proprietarul să îl trimită din nou."
   }
 }

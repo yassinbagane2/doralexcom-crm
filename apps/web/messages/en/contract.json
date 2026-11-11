@@ -315,7 +315,8 @@
     "dropTitle": "Drop files here",
     "dropDescription": "Or browse for a PDF, Word document, text file or photo",
     "uploadFailed": "Upload failed",
-    "uploadSubmitCount": "Upload {count} files"
+    "uploadSubmitCount": "Upload {count} files",
+    "pdfMissing": "The PDF of this contract isn't ready yet. Try again in a moment."
   },
   "StarterContract": {
     "title": "Residential lease agreement",

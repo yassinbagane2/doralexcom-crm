@@ -229,5 +229,7 @@ export function useRemoveDomain() {
 // --- Receipts ----------------------------------------------------------------
 
 export function usePaymentReceipt(paymentId: string) {
-  return useQuery(orpc.lease.receipt.queryOptions({ input: { id: paymentId } }))
+  return useQuery(
+    orpc.invoice.receipt.queryOptions({ input: { id: paymentId } })
+  )
 }

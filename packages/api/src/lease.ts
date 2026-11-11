@@ -270,3 +270,51 @@ export function daysBetween(from: string, to: string) {
 export function addDays(day: string, days: number) {
   return fromUtc(toUtc(day) + days * DAY)
 }
+
+/** One month of a lease, as billed: a final, partial one is a `ratio` of it. */
+export interface BillingPeriod {
+  start: string
+  end: string
+  /** 1 for a whole month; the share of it lived in for a partial last one. */
+  ratio: number
+}
+
+/**
+ * The months of a lease that have begun by `through`, in order, the way
+ * `rentDue` charges them: each from a monthly anniversary of the entry date,
+ * the last cut short at the exit date.
+ */
+export function billingPeriods(
+  lease: LeaseDates,
+  through: string
+): BillingPeriod[] {
+  const limit = toUtc(through)
+  const exit = effectiveEnd(lease)
+  const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
+  const periods: BillingPeriod[] = []
+
+  // Bounded like rentDue: 100 years of months.
+  for (let month = 0; month < 1200; month++) {
+    const periodStart = addMonths(lease.startDate, month)
+    if (periodStart > limit || periodStart > end) break
+
+    const nextPeriod = addMonths(lease.startDate, month + 1)
+    if (end < nextPeriod - DAY) {
+      const daysLived = (end - periodStart) / DAY + 1
+      const daysInPeriod = (nextPeriod - periodStart) / DAY
+      periods.push({
+        start: fromUtc(periodStart),
+        end: fromUtc(end),
+        ratio: daysLived / daysInPeriod,
+      })
+      break
+    }
+    periods.push({
+      start: fromUtc(periodStart),
+      end: fromUtc(nextPeriod - DAY),
+      ratio: 1,
+    })
+  }
+
+  return periods
+}

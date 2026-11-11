@@ -6,6 +6,7 @@ import { onError, ORPCError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
 import { createContext } from "@workspace/api/context"
+import { startInvoiceScheduler } from "@workspace/api/jobs"
 import { appRouter } from "@workspace/api/routers"
 import { auth } from "@workspace/auth"
 import { isActiveCustomDomain } from "@workspace/auth/custom-domains"
@@ -162,4 +163,5 @@ app.get("/", (c) => c.text("OK"))
 serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`Server running at ${env.NEXT_PUBLIC_SERVER_URL}`)
   console.log(`API reference: ${env.NEXT_PUBLIC_SERVER_URL}/api-reference`)
+  startInvoiceScheduler()
 })

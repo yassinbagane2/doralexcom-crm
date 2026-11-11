@@ -159,6 +159,8 @@
     "print": "Tipărește",
     "back": "Înapoi",
     "missingDetails": "Datele bancare și de înregistrare nu sunt completate încă. <link>Adaugă-le în Date firmă</link> ca să apară pe chitanțe.",
-    "missingDetailsCollaborator": "Datele bancare și de înregistrare ale firmei nu sunt completate încă. Cere-i proprietarului să le adauge."
+    "missingDetailsCollaborator": "Datele bancare și de înregistrare ale firmei nu sunt completate încă. Cere-i proprietarului să le adauge.",
+    "invoice": "Pentru factura",
+    "invoiceLine": "Nr. {number}, {start} – {end} ({total})"
   }
 }

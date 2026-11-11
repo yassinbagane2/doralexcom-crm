@@ -6,7 +6,6 @@ import {
 } from "@workspace/auth/organization"
 import { db } from "@workspace/db"
 import {
-  customDomain,
   invitation,
   member,
   organization,
@@ -16,9 +15,9 @@ import {
 import { and, asc, eq, inArray, max } from "drizzle-orm"
 import { z } from "zod"
 
-import { env } from "../env"
 import { businessProcedure, o, ownerProcedure, publicProcedure } from "../index"
 import { callAuth } from "../lib/auth-error"
+import { appOrigin } from "../lib/links"
 import { deliveryFailed, sendOrganizationEmail } from "../lib/mailer"
 
 /*
@@ -46,18 +45,6 @@ function invitationNotFound() {
     message: "Invitation not found.",
     data: { code: "INVITATION_NOT_FOUND" },
   })
-}
-
-/** Where the invitation sends them: the business's own domain, if it has one. */
-async function appOrigin(organizationId: string) {
-  const domain = await db.query.customDomain.findFirst({
-    where: and(
-      eq(customDomain.organizationId, organizationId),
-      eq(customDomain.status, "active")
-    ),
-    columns: { hostname: true },
-  })
-  return domain ? `https://${domain.hostname}` : env.NEXT_PUBLIC_APP_URL
 }
 
 async function sendInvitation(

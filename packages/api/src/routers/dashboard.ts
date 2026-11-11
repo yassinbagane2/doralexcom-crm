@@ -1,12 +1,13 @@
 import { db } from "@workspace/db"
 import {
   customerDocument,
+  invoice,
   lease,
   payment,
   property,
   user,
 } from "@workspace/db/schema"
-import { and, asc, eq, gte, isNotNull, lte, sql } from "drizzle-orm"
+import { and, asc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
@@ -14,7 +15,6 @@ import {
   addDays,
   currentTermEnd,
   daysBetween,
-  leaseBalance,
   leaseStatus,
   localToday,
   monthlyDue,
@@ -166,16 +166,16 @@ export const dashboardRouter = o.prefix("/dashboard").router({
       const org = context.organizationId
       const month = monthBounds(today)
 
-      const paid = db
+      const paidOn = db
         .select({
-          leaseId: payment.leaseId,
+          invoiceId: payment.invoiceId,
           total: sql<string>`sum(${payment.amount})`.as("total"),
         })
         .from(payment)
-        .groupBy(payment.leaseId)
-        .as("paid")
+        .groupBy(payment.invoiceId)
+        .as("paid_on")
 
-      const [properties, leaseRows, documented, monthPayments] =
+      const [properties, leaseRows, documented, monthPayments, invoiceRows] =
         await Promise.all([
           db
             .select({
@@ -190,11 +190,9 @@ export const dashboardRouter = o.prefix("/dashboard").router({
             .select({
               lease,
               customer: { id: user.id, name: user.name },
-              paid: paid.total,
             })
             .from(lease)
             .innerJoin(user, eq(user.id, lease.customerId))
-            .leftJoin(paid, eq(paid.leaseId, lease.id))
             .where(eq(lease.organizationId, org))
             .orderBy(asc(lease.startDate)),
           db
@@ -221,7 +219,31 @@ export const dashboardRouter = o.prefix("/dashboard").router({
               )
             )
             .groupBy(lease.currency),
+          // Live invoices with what's been paid on each.
+          db
+            .select({
+              leaseId: invoice.leaseId,
+              total: invoice.total,
+              dueOn: invoice.dueOn,
+              paid: paidOn.total,
+            })
+            .from(invoice)
+            .leftJoin(paidOn, eq(paidOn.invoiceId, invoice.id))
+            .where(
+              and(eq(invoice.organizationId, org), isNull(invoice.voidedAt))
+            ),
         ])
+
+      /** What's still owed on each lease's invoices, and how much is late. */
+      const owed = new Map<string, { balance: number; late: number }>()
+      for (const row of invoiceRows) {
+        const left = Math.max(0, row.total - Number(row.paid ?? 0))
+        if (left <= 0) continue
+        const entry = owed.get(row.leaseId) ?? { balance: 0, late: 0 }
+        entry.balance += left
+        if (row.dueOn < today) entry.late += left
+        owed.set(row.leaseId, entry)
+      }
 
       const places = new Map(properties.map((p) => [p.id, p]))
       const withDocuments = new Set(documented.map((d) => d.leaseId))
@@ -230,7 +252,6 @@ export const dashboardRouter = o.prefix("/dashboard").router({
         .map((row) => ({
           ...row.lease,
           customer: row.customer,
-          paid: Number(row.paid ?? 0),
           property: places.get(row.lease.propertyId)!,
           status: leaseStatus(row.lease, today),
         }))
@@ -269,19 +290,27 @@ export const dashboardRouter = o.prefix("/dashboard").router({
           l.currency,
           rentDue(l, month.end) - rentDue(l, addDays(month.start, -1))
         )
-        if (l.status === "upcoming") continue
+        const { balance: unrounded, late } = owed.get(l.id) ?? {
+          balance: 0,
+          late: 0,
+        }
+        const balance = Math.round(unrounded * 100) / 100
+        // An upcoming lease shows up once its first invoice is out.
+        if (l.status === "upcoming" && balance <= 0) continue
 
-        const { balance } = leaseBalance(l, l.paid, today)
         const isCurrent = l.status === "active" || l.status === "ending"
         // Past leases only matter while something is still owed on them.
-        if (!isCurrent && balance <= 0) continue
+        if (!isCurrent && l.status !== "upcoming" && balance <= 0) continue
         if (balance > 0) tally(outstanding, l.currency, balance)
 
         const nextDue = isCurrent ? nextRentDate(l, today) : null
+        // Overdue once an invoice is past its due date; due while one is
+        // open or the next rent date is close.
         const status =
-          balance > 0
+          late > 0
             ? "overdue"
-            : nextDue && daysBetween(today, nextDue) <= DUE_SOON_DAYS
+            : balance > 0 ||
+                (nextDue && daysBetween(today, nextDue) <= DUE_SOON_DAYS)
               ? "due"
               : "paid"
 

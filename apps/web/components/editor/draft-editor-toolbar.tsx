@@ -53,6 +53,7 @@ import { ColorPicker } from "./toolbar-color-picker"
 import { FontFamilyMenu, FontSizeControl } from "./toolbar-font-controls"
 import { LinkControl } from "./toolbar-link-control"
 import { FieldMenu } from "./toolbar-field-menu"
+import { SignatureMenu } from "./toolbar-signature-menu"
 import {
   LineSpacingMenu,
   PageSetupMenu,
@@ -530,11 +531,10 @@ export function DraftEditorToolbar({
           </div>
         </div>
 
-        {fields ? (
-          <div className="flex items-center border-l border-border px-3">
-            <FieldMenu editor={editor} disabled={locked} />
-          </div>
-        ) : null}
+        <div className="flex items-center gap-2 border-l border-border px-3">
+          <SignatureMenu editor={editor} disabled={locked} />
+          {fields ? <FieldMenu editor={editor} disabled={locked} /> : null}
+        </div>
 
         <input
           ref={imageInputRef}

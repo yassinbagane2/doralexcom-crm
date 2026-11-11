@@ -10,7 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core"
 
-import { organization } from "./auth"
+import { organization, user } from "./auth"
 
 /*
  * A business's settings beyond its legal details (which live on
@@ -82,3 +82,23 @@ export const customDomain = pgTable(
       .where(sql`status = 'active'`),
   ]
 )
+
+/**
+ * The signature a business signs its contracts with, set by its owner and
+ * applied for it whenever a contract is sent for signature. `image` is a PNG
+ * as a data URL; `signerName` is printed with it.
+ */
+export const organizationSignature = pgTable("organization_signature", {
+  organizationId: uuid("organization_id")
+    .primaryKey()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  signerName: text("signer_name").notNull(),
+  image: text("image").notNull(),
+  updatedById: uuid("updated_by_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+})
