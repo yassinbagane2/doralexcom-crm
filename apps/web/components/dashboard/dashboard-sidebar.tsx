@@ -23,7 +23,6 @@ import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
-import { InboxBell } from "@/components/inbox/inbox-bell"
 import { LogoMark } from "@/components/shared/logo"
 import { UserAvatar } from "@/components/shared/user-avatar"
 import { homeRouteFor } from "@/config/routes"
@@ -76,15 +75,7 @@ export function DashboardSidebar({
             </span>
           )}
         </Link>
-        <div
-          className={cn(
-            "flex items-center gap-1",
-            collapsed ? "flex-col-reverse" : "flex-row"
-          )}
-        >
-          <InboxBell side={collapsed ? "right" : "bottom"} align="start" />
-          <SidebarTrigger />
-        </div>
+        <SidebarTrigger />
       </SidebarHeader>
 
       <SidebarContent className="gap-4 p-2">

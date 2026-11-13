@@ -28,6 +28,8 @@ export const routes = {
   customers: "/customers",
   /** Business accounts: contract templates, filled in for each lease. */
   templates: "/templates",
+  /** Businesses and customers: messages with each other, and notifications. */
+  inbox: "/inbox",
   /** User accounts linked to a customer record: their own leases and notes. */
   myHome: "/my-home",
   /** The page the API's headless Chrome prints a signed contract from. */
@@ -78,6 +80,7 @@ export const PROTECTED_ROUTES: readonly string[] = [
   routes.customers,
   routes.templates,
   routes.myHome,
+  routes.inbox,
   routes.admin,
 ]
 
@@ -123,4 +126,11 @@ export function myDocumentRoute(documentId: string) {
 /** The signed-in customer's receipt for one payment. */
 export function myReceiptRoute(paymentId: string) {
   return `${routes.myHome}/receipts/${encodeURIComponent(paymentId)}`
+}
+
+/** The inbox, opened on a conversation, or on the one with a customer. */
+export function inboxRoute(
+  open?: { conversation: string } | { customer: string }
+) {
+  return open ? `${routes.inbox}?${new URLSearchParams(open)}` : routes.inbox
 }

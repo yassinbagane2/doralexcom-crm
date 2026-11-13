@@ -1,4 +1,5 @@
 import { novu } from "./client"
+import { novuError } from "./errors"
 
 type Payload = Record<string, unknown>
 
@@ -31,10 +32,17 @@ export async function notify(
     return
   }
 
-  await sdk.trigger({
-    workflowId,
-    to: recipients.map((subscriberId) => ({ subscriberId })),
-    payload,
-    ...(options.transactionId ? { transactionId: options.transactionId } : {}),
-  })
+  try {
+    await sdk.trigger({
+      workflowId,
+      to: recipients.map((subscriberId) => ({ subscriberId })),
+      payload,
+      ...(options.transactionId
+        ? { transactionId: options.transactionId }
+        : {}),
+    })
+  } catch (error) {
+    // Callers log what they catch; the SDK's error would carry the key.
+    throw novuError(error, `trigger "${workflowId}"`)
+  }
 }

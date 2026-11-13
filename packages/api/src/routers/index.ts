@@ -5,6 +5,7 @@ import { adminRouter } from "./admin"
 import { businessRouter } from "./business"
 import { collaboratorRouter, invitationRouter } from "./collaborator"
 import { contractRouter } from "./contract"
+import { conversationRouter } from "./conversation"
 import { dashboardRouter } from "./dashboard"
 import { documentRouter } from "./document"
 import { invoiceRouter } from "./invoice"
@@ -37,6 +38,7 @@ export const appRouter = {
   settings: settingsRouter,
   signature: signatureRouter,
   portal: portalRouter,
+  conversation: conversationRouter,
 }
 
 export type AppRouter = typeof appRouter

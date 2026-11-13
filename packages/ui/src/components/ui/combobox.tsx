@@ -52,6 +52,11 @@ function ComboboxTrigger({
   )
 }
 
+/** A trigger with no styling of its own: pass `render` to use any element (an icon button). */
+function ComboboxBareTrigger(props: ComboboxPrimitive.Trigger.Props) {
+  return <ComboboxPrimitive.Trigger data-slot="combobox-trigger" {...props} />
+}
+
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
 }
@@ -210,6 +215,7 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
 export {
   Combobox,
   ComboboxTrigger,
+  ComboboxBareTrigger,
   ComboboxValue,
   ComboboxContent,
   ComboboxInput,

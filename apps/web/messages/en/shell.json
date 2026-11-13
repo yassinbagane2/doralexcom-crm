@@ -22,7 +22,8 @@
     "email": "Email",
     "domain": "Web address",
     "settings": "Settings",
-    "signature": "Signature"
+    "signature": "Signature",
+    "inbox": "Inbox"
   },
   "Preferences": {
     "metaTitle": "Preferences",

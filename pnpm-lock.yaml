@@ -229,6 +229,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../db
+      '@workspace/novu':
+        specifier: workspace:*
+        version: link:../novu
       better-auth:
         specifier: ^1.7.18
         version: 1.7.18(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@types/pg@8.23.1)(kysely@0.29.8)(pg@8.23.1))(next@16.4.2(@babel/core@8.0.7)(@types/node@20.19.43)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(pg@8.23.1)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(solid-js@1.9.19)

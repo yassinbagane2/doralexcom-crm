@@ -67,6 +67,7 @@ export { Fingerprint } from "@workspace/ui/icons/fingerprint"
 export { HandRaised } from "@workspace/ui/icons/raised-hand"
 export { Workflow } from "@workspace/ui/icons/workflows"
 export { LanguageIcon } from "@workspace/ui/icons/language"
+export { Inbox } from "@workspace/ui/icons/inbox"
 
 // --- Lucide re-exports -------------------------------------------------------
 // `ActivityIcon` is lucide's alias for its Activity — the plain name is taken
@@ -74,7 +75,10 @@ export { LanguageIcon } from "@workspace/ui/icons/language"
 // (Loader).
 export {
   ActivityIcon,
+  AlarmClockOff,
   AlertCircle,
+  Archive,
+  ArchiveRestore,
   AlertTriangle,
   ArrowDown,
   ArrowUp,
@@ -93,6 +97,7 @@ export {
   CalendarClock,
   CalendarX,
   Check,
+  CheckCheck,
   CheckIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -100,11 +105,13 @@ export {
   ChevronsUpDown,
   ChevronUpIcon,
   CircleCheck,
+  ClockIcon,
   Compass,
   Contact,
   Copy,
   CreditCard,
   DoorOpen,
+  Ellipsis,
   Eraser,
   ExternalLink,
   EyeOff,
@@ -119,6 +126,9 @@ export {
   Heart,
   ImageUp,
   Info,
+  MailIcon,
+  MailOpen,
+  MessageSquare,
   KeyRound,
   Landmark,
   LifeBuoy,
@@ -143,14 +153,18 @@ export {
   Scale,
   Scissors,
   SearchIcon,
+  Settings2,
   Shapes,
   Signature,
+  Smartphone,
   Sparkles,
   SquareParking,
+  SquarePen,
   Star,
   Stethoscope,
   StickyNote,
   Store,
+  Trash2,
   Sun,
   Type,
   Undo2,

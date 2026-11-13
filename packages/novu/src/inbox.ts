@@ -1,4 +1,5 @@
 import { env } from "./env"
+import { novuError } from "./errors"
 import { subscriberHash, syncSubscriber, type NotifiedUser } from "./subscriber"
 import type { InboxSession } from "./types"
 
@@ -19,7 +20,7 @@ export function inboxSession(
   // Keeps the subscriber's name, email and language current for the email
   // steps of workflows. The inbox itself doesn't need it, so don't wait.
   void syncSubscriber(user, locale?.slice(0, 16)).catch((error) =>
-    console.error(`Could not sync Novu subscriber ${user.id}`, error)
+    console.error(novuError(error, `sync subscriber ${user.id}`).message)
   )
 
   return {

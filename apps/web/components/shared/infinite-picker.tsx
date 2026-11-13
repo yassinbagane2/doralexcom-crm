@@ -6,12 +6,13 @@ import {
   ComboboxEmpty,
   ComboboxItem,
   ComboboxList,
+  ComboboxBareTrigger,
   ComboboxSearch,
   ComboboxTrigger,
   ComboboxValue,
 } from "@workspace/ui/components/ui/combobox"
 import { LoaderCircle } from "@workspace/ui/icons"
-import type { ReactNode } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 import {
   InfiniteScrollTrigger,
@@ -38,6 +39,9 @@ export function InfinitePicker<T extends { id: string }>({
   searchPlaceholder,
   emptyText,
   invalid,
+  trigger,
+  align,
+  contentClassName,
 }: {
   id?: string
   items: T[]
@@ -53,6 +57,10 @@ export function InfinitePicker<T extends { id: string }>({
   searchPlaceholder: string
   emptyText: string
   invalid?: boolean
+  /** Replaces the select-like trigger, e.g. with an icon button. */
+  trigger?: ReactElement
+  align?: "start" | "center" | "end"
+  contentClassName?: string
 }) {
   return (
     <Combobox<T>
@@ -74,16 +82,20 @@ export function InfinitePicker<T extends { id: string }>({
       itemToStringLabel={itemLabel}
       isItemEqualToValue={(item, chosen) => item.id === chosen.id}
     >
-      <ComboboxTrigger id={id} aria-invalid={invalid || undefined}>
-        <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-left">
-          {value ? (
-            renderItem(value)
-          ) : (
-            <ComboboxValue placeholder={placeholder} />
-          )}
-        </span>
-      </ComboboxTrigger>
-      <ComboboxContent>
+      {trigger ? (
+        <ComboboxBareTrigger id={id} render={trigger} />
+      ) : (
+        <ComboboxTrigger id={id} aria-invalid={invalid || undefined}>
+          <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-left">
+            {value ? (
+              renderItem(value)
+            ) : (
+              <ComboboxValue placeholder={placeholder} />
+            )}
+          </span>
+        </ComboboxTrigger>
+      )}
+      <ComboboxContent align={align} className={contentClassName}>
         <ComboboxSearch placeholder={searchPlaceholder} />
         {query.isPending ? (
           <div className="flex justify-center py-6">

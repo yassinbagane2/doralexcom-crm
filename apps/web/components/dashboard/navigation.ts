@@ -9,6 +9,7 @@ import {
   FilePen,
   FileText,
   Home,
+  Inbox,
   LayoutDashboard,
   Lock,
   Logout,
@@ -23,6 +24,7 @@ import { useMemo, type ComponentType } from "react"
 
 import { matchesRoute, routes } from "@/config/routes"
 import { useSignOut } from "@/hooks/queries/auth"
+import { useUnreadConversations } from "@/hooks/queries/conversation"
 
 export type NavigationIcon = ComponentType<{
   size?: number
@@ -47,6 +49,8 @@ export type Route = {
   readonly link: string
   readonly if?: boolean
   readonly subs?: SubRoute[]
+  /** A count shown beside the title (unread messages); hidden at 0. */
+  readonly badge?: number
   /** Overrides the default "the path starts with the link" check. */
   readonly checkIsActive?: (currentPath: string) => boolean
 }
@@ -143,13 +147,14 @@ export const useGeneralRoutes = (
 ): RouteWithActive[] => {
   const t = useTranslations("Navigation")
   const isAccountPage = useIsAccountPage()
+  const unread = useUnreadConversations(role !== "admin").data ?? 0
 
   const list = useMemo(
     () =>
       isAccountPage
         ? accountRoutesList(role, isOwner, t)
-        : generalRoutesList(role, t),
-    [role, isOwner, t, isAccountPage]
+        : generalRoutesList(role, t, unread),
+    [role, isOwner, t, isAccountPage, unread]
   )
 
   return useResolveRoutes(list, allowAll)
@@ -161,12 +166,13 @@ export const useGeneralRoutes = (
  */
 export const useDockRoutes = (role: UserRole, isOwner: boolean) => {
   const t = useTranslations("Navigation")
+  const unread = useUnreadConversations(role !== "admin").data ?? 0
   const list = useMemo(
     () => ({
-      pages: generalRoutesList(role, t),
+      pages: generalRoutesList(role, t, unread),
       account: accountRoutesList(role, isOwner, t),
     }),
-    [role, isOwner, t]
+    [role, isOwner, t, unread]
   )
   return {
     pages: useResolveRoutes(list.pages),
@@ -242,7 +248,11 @@ const getDropdownMenuRoutes = (ctx: {
   ]
 }
 
-const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
+const generalRoutesList = (
+  role: UserRole,
+  t: Translate,
+  unread = 0
+): Route[] => {
   const isAdmin = role === "admin"
   const isBusiness = role === "business"
 
@@ -287,6 +297,14 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       if: isBusiness,
     },
     {
+      id: "inbox",
+      title: t("inbox"),
+      icon: Inbox,
+      link: routes.inbox,
+      badge: unread,
+      if: isBusiness,
+    },
+    {
       id: "templates",
       title: t("templates"),
       icon: FileText,
@@ -299,6 +317,14 @@ const generalRoutesList = (role: UserRole, t: Translate): Route[] => {
       title: t("myHome"),
       icon: Home,
       link: routes.myHome,
+      if: role === "user",
+    },
+    {
+      id: "inbox",
+      title: t("inbox"),
+      icon: Inbox,
+      link: routes.inbox,
+      badge: unread,
       if: role === "user",
     },
   ]

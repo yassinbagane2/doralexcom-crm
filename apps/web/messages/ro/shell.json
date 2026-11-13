@@ -22,7 +22,8 @@
     "email": "Email",
     "domain": "Adresă web",
     "settings": "Setări",
-    "signature": "Semnătură"
+    "signature": "Semnătură",
+    "inbox": "Mesaje"
   },
   "Preferences": {
     "metaTitle": "Preferințe",

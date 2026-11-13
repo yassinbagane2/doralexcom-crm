@@ -11,6 +11,7 @@ import {
 } from "@workspace/ui/components/ui/dropdown-menu"
 import {
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -92,6 +93,11 @@ export function NavigationRoutes({
                     {route.title}
                   </span>
                 </SidebarMenuButton>
+                {route.badge ? (
+                  <SidebarMenuBadge className="rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-active/menu-button:text-primary-foreground">
+                    {route.badge > 99 ? "99+" : route.badge}
+                  </SidebarMenuBadge>
+                ) : null}
                 {route.isActive && route.subs ? (
                   <SidebarMenuSub className="my-1 gap-y-0.5 pr-0">
                     {route.subs.map((subRoute) => {

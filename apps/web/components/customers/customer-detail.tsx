@@ -42,6 +42,7 @@ import {
   Lock,
   Mail,
   MapPin,
+  MessageSquare,
   Paperclip,
   Pencil,
   Phone,
@@ -75,7 +76,7 @@ import {
 } from "@/components/customers/customer-sheet"
 import { Section, SectionEmpty } from "@/components/customers/section"
 import { UserAvatar } from "@/components/shared/user-avatar"
-import { routes } from "@/config/routes"
+import { inboxRoute, routes } from "@/config/routes"
 import {
   useAddCustomerNote,
   useDeleteLease,
@@ -90,6 +91,7 @@ import { formatDate, formatMoney } from "@/lib/format"
 /** One customer: who they are, what they rent, what they owe, and notes. */
 export function CustomerDetail({ customerId }: { customerId: string }) {
   const t = useTranslations("Customer")
+  const tInbox = useTranslations("Inbox")
   const locale = useLocale()
   const { data: customer, isPending, isError } = useCustomer(customerId)
   const [editor, setEditor] = useState<CustomerEditor | null>(null)
@@ -143,6 +145,13 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            render={<Link href={inboxRoute({ customer: customer.id })} />}
+          >
+            <MessageSquare className="size-3.5" />
+            {tInbox("message")}
+          </Button>
           <Button
             variant="secondary"
             onClick={() => setEditor({ mode: "edit", customerId: customer.id })}
