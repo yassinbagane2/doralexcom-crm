@@ -26,7 +26,7 @@ import { paymentProofSchema, toPaymentProof } from "./payment-proof"
 /*
  * Issuing invoices. Every lease is billed the same way, whoever asks: when
  * it is created, when its dates change, and on each rent date (the server's
- * scheduler, see `issueDueInvoices`). Issuing is idempotent: one live
+ * daily 08:00 Romanian-time run, see `issueDueInvoices` and jobs.ts). Issuing is idempotent: one live
  * invoice per month of a lease, enforced by a unique index.
  */
 
@@ -160,7 +160,7 @@ export async function notifyInvoicesIssued(invoiceIds: string[]) {
 
 /**
  * Issues what has fallen due on every lease still billing: run by the
- * server on start and every hour after. Leases that ended (or were
+ * server every day at 08:00 Romanian time. Leases that ended (or were
  * terminated) more than a month ago have nothing left to bill.
  */
 export async function issueDueInvoices(today = localToday()) {
