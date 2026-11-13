@@ -13,6 +13,7 @@
   "dependencies": {
     "@better-auth/passkey": "^1.7.18",
     "@hookform/resolvers": "^5.2.2",
+    "@novu/nextjs": "^3.19.2",
     "@orpc/client": "^1.16.2",
     "@orpc/tanstack-query": "^1.16.2",
     "@t3-oss/env-nextjs": "^0.13.11",
@@ -31,6 +32,7 @@
     "@tiptap/starter-kit": "3.32.0",
     "@workspace/api": "workspace:*",
     "@workspace/auth": "workspace:*",
+    "@workspace/novu": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.7.18",
     "docx": "^9.15.3",

@@ -10,6 +10,7 @@ import { startInvoiceScheduler } from "@workspace/api/jobs"
 import { appRouter } from "@workspace/api/routers"
 import { auth } from "@workspace/auth"
 import { isActiveCustomDomain } from "@workspace/auth/custom-domains"
+import { inboxSession } from "@workspace/novu"
 import { Hono } from "hono"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
@@ -66,6 +67,19 @@ async function scopeCookiesToHost(request: Request, response: Response) {
 app.on(["GET", "POST"], "/api/auth/*", async (c) =>
   scopeCookiesToHost(c.req.raw, await auth.handler(c.req.raw))
 )
+
+/**
+ * The signed-in user's Novu inbox credentials, for the web app's bell
+ * (`{ enabled: false }` while Novu isn't configured). `?locale=` keeps the
+ * language Novu emails them in current.
+ */
+app.get("/novu/inbox", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers })
+  if (!session) return c.json({ message: "Unauthorized" }, 401)
+
+  c.header("Cache-Control", "private, no-store")
+  return c.json(inboxSession(session.user, c.req.query("locale")))
+})
 
 /**
  * Caddy's on-demand TLS asks here before getting a certificate for a

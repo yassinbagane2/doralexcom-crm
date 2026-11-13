@@ -16,7 +16,9 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import type { ReactElement } from "react"
 
+import { InboxBell } from "@/components/inbox/inbox-bell"
 import { useSignOut } from "@/hooks/queries/auth"
+import { useInboxSession } from "@/hooks/queries/inbox"
 
 import { useDockRoutes, type RouteWithActive } from "./navigation"
 
@@ -37,6 +39,8 @@ export function CustomerDock({
   const t = useTranslations("Navigation")
   const { pages, account } = useDockRoutes(role, isOwner)
   const signOut = useSignOut()
+  // Only makes room for the bell when Novu is set up on the server.
+  const inbox = useInboxSession()
 
   return (
     <Dock>
@@ -47,6 +51,15 @@ export function CustomerDock({
       {account.map((route) => (
         <RouteItem key={route.id} route={route} />
       ))}
+      {inbox.data?.enabled ? (
+        <DockItem>
+          <InboxBell
+            side="top"
+            align="center"
+            className="size-full hover:bg-transparent"
+          />
+        </DockItem>
+      ) : null}
       <DockSeparator />
       <DockItem>
         <Labelled label={t("signOut")}>

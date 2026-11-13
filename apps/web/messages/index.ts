@@ -10,6 +10,7 @@ import enSettings from "./en/settings.json"
 import enCustomer from "./en/customer.json"
 import enShell from "./en/shell.json"
 import enSigning from "./en/signing.json"
+import enInbox from "./en/inbox.json"
 import roAccount from "./ro/account.json"
 import roAdmin from "./ro/admin.json"
 import roAuth from "./ro/auth.json"
@@ -22,6 +23,7 @@ import roSettings from "./ro/settings.json"
 import roCustomer from "./ro/customer.json"
 import roShell from "./ro/shell.json"
 import roSigning from "./ro/signing.json"
+import roInbox from "./ro/inbox.json"
 
 import type { Locale } from "@/i18n/locale"
 
@@ -43,6 +45,7 @@ const en = {
   ...enSettings,
   ...enDashboard,
   ...enSigning,
+  ...enInbox,
 }
 
 export type Messages = typeof en
@@ -60,6 +63,7 @@ const ro = {
   ...roSettings,
   ...roDashboard,
   ...roSigning,
+  ...roInbox,
 } satisfies Messages
 
 export const messages: Record<Locale, Messages> = { en, ro }
