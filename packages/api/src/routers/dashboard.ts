@@ -12,22 +12,17 @@ import { z } from "zod"
 
 import { businessProcedure, o } from "../index"
 import {
-  addDays,
   currentTermEnd,
   daysBetween,
   leaseStatus,
   localToday,
   monthlyDue,
-  nextRentDate,
-  rentDue,
   renewsAutomatically,
 } from "../lease"
 import { PROPERTY_TYPES, RENT_CURRENCIES } from "../property"
 
 /** How far ahead the renewals list looks. */
 const RENEWAL_WINDOW_DAYS = 90
-/** Paid up, but rent falls due again within this many days. */
-const DUE_SOON_DAYS = 7
 /** Move-ins this close get a task to prepare them. */
 const MOVE_IN_WINDOW_DAYS = 14
 /** Fixed-term leases ending this close need a decision. */
@@ -206,25 +201,27 @@ export const dashboardRouter = o.prefix("/dashboard").router({
             ),
           db
             .select({
-              currency: lease.currency,
+              currency: invoice.currency,
               total: sql<string>`sum(${payment.amount})`,
             })
             .from(payment)
-            .innerJoin(lease, eq(lease.id, payment.leaseId))
+            .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
             .where(
               and(
-                eq(lease.organizationId, org),
+                eq(invoice.organizationId, org),
                 gte(payment.paidOn, month.start),
                 lte(payment.paidOn, month.end)
               )
             )
-            .groupBy(lease.currency),
+            .groupBy(invoice.currency),
           // Live invoices with what's been paid on each.
           db
             .select({
               leaseId: invoice.leaseId,
               total: invoice.total,
               dueOn: invoice.dueOn,
+              periodStart: invoice.periodStart,
+              currency: invoice.currency,
               paid: paidOn.paid,
             })
             .from(invoice)
@@ -235,12 +232,21 @@ export const dashboardRouter = o.prefix("/dashboard").router({
         ])
 
       /** What's still owed on each lease's invoices, and how much is late. */
-      const owed = new Map<string, { balance: number; late: number }>()
+      const owed = new Map<
+        string,
+        { balance: number; late: number; firstDue: string | null }
+      >()
       for (const row of invoiceRows) {
         const left = Math.max(0, row.total - Number(row.paid ?? 0))
         if (left <= 0) continue
-        const entry = owed.get(row.leaseId) ?? { balance: 0, late: 0 }
+        const entry = owed.get(row.leaseId) ?? {
+          balance: 0,
+          late: 0,
+          firstDue: null,
+        }
         entry.balance += left
+        if (!entry.firstDue || row.dueOn < entry.firstDue)
+          entry.firstDue = row.dueOn
         if (row.dueOn < today) entry.late += left
         owed.set(row.leaseId, entry)
       }
@@ -282,17 +288,23 @@ export const dashboardRouter = o.prefix("/dashboard").router({
       for (const row of monthPayments) {
         tally(collected, row.currency, Number(row.total ?? 0))
       }
+      // What's billed is what's invoiced: the invoices for this month.
+      for (const row of invoiceRows) {
+        if (row.periodStart >= month.start && row.periodStart <= month.end) {
+          tally(billed, row.currency, row.total)
+        }
+      }
 
       const rentRows: Overview["rent"]["leases"] = []
       for (const l of leases) {
-        tally(
-          billed,
-          l.currency,
-          rentDue(l, month.end) - rentDue(l, addDays(month.start, -1))
-        )
-        const { balance: unrounded, late } = owed.get(l.id) ?? {
+        const {
+          balance: unrounded,
+          late,
+          firstDue,
+        } = owed.get(l.id) ?? {
           balance: 0,
           late: 0,
+          firstDue: null,
         }
         const balance = Math.round(unrounded * 100) / 100
         // An upcoming lease shows up once its first invoice is out.
@@ -303,16 +315,10 @@ export const dashboardRouter = o.prefix("/dashboard").router({
         if (!isCurrent && l.status !== "upcoming" && balance <= 0) continue
         if (balance > 0) tally(outstanding, l.currency, balance)
 
-        const nextDue = isCurrent ? nextRentDate(l, today) : null
-        // Overdue once an invoice is past its due date; due while one is
-        // open or the next rent date is close.
-        const status =
-          late > 0
-            ? "overdue"
-            : balance > 0 ||
-                (nextDue && daysBetween(today, nextDue) <= DUE_SOON_DAYS)
-              ? "due"
-              : "paid"
+        // Payment status comes from invoices alone; the lease only says whose
+        // they are. Overdue once an invoice is past due, due while one is open.
+        const nextDue = balance > 0 ? firstDue : null
+        const status = late > 0 ? "overdue" : balance > 0 ? "due" : "paid"
 
         rentRows.push({
           leaseId: l.id,

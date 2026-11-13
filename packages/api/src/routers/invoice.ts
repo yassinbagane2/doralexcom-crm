@@ -99,11 +99,11 @@ export const invoiceRouter = o.prefix("/invoices").router({
             exists(
               db
                 .select({ one: sql`1` })
-                .from(lease)
+                .from(invoice)
                 .where(
                   and(
-                    eq(lease.id, payment.leaseId),
-                    eq(lease.organizationId, context.organizationId)
+                    eq(invoice.id, payment.invoiceId),
+                    eq(invoice.organizationId, context.organizationId)
                   )
                 )
             )

@@ -45,7 +45,7 @@ export async function loadReceipt(
     .select({ payment, invoice, lease, property, customer: user })
     .from(payment)
     .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
-    .innerJoin(lease, eq(lease.id, payment.leaseId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .innerJoin(property, eq(property.id, lease.propertyId))
     .innerJoin(user, eq(user.id, lease.customerId))
     .where(and(eq(payment.id, id), scope))
@@ -64,7 +64,7 @@ export async function loadReceipt(
     amount: row.payment.amount,
     paidOn: row.payment.paidOn,
     note: row.payment.note,
-    currency: row.lease.currency,
+    currency: row.invoice.currency,
     invoice: {
       number: formatInvoiceNumber(row.invoice.number),
       periodStart: row.invoice.periodStart,

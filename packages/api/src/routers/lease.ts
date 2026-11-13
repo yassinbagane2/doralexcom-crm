@@ -2,9 +2,9 @@ import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
 import {
   customerDocument,
+  invoice,
   lease,
   payment,
-  paymentProof,
   property,
 } from "@workspace/db/schema"
 import {
@@ -15,7 +15,6 @@ import {
   ne,
   notExists,
   sql,
-  sum,
   TransactionRollbackError,
 } from "drizzle-orm"
 import { z } from "zod"
@@ -162,7 +161,7 @@ async function assertPropertyFree(
   return locked
 }
 
-/** A lease of this organization, with the rent received on it. */
+/** A lease of this organization. */
 async function findLease(organizationId: string, id: string) {
   const [found] = await db
     .select()
@@ -171,13 +170,7 @@ async function findLease(organizationId: string, id: string) {
     .limit(1)
 
   if (!found) throw leaseNotFound()
-
-  const [received] = await db
-    .select({ total: sum(payment.amount) })
-    .from(payment)
-    .where(eq(payment.leaseId, id))
-
-  return { ...found, paid: Number(received?.total ?? 0) }
+  return found
 }
 
 function assertNotTerminated(row: { terminatedAt: Date | null }) {
@@ -189,15 +182,18 @@ function assertNotTerminated(row: { terminatedAt: Date | null }) {
   }
 }
 
+/** Payments on any invoice the lease produced. */
 const paymentsOf = (leaseId: typeof lease.id) =>
   db
     .select({ one: sql`1` })
     .from(payment)
-    .where(eq(payment.leaseId, leaseId))
+    .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
+    .where(eq(invoice.leaseId, leaseId))
 
 /**
- * Which property a customer occupies, when, for how much, and the rent paid on
- * it. A new lease takes the property's rent; editing a lease can change it.
+ * Which property a customer occupies, when, and for how much: the agreement.
+ * Its invoices carry what is owed and paid. A new lease takes the property's
+ * rent; editing a lease can change it.
  * Scoped to `context.organizationId` like every business procedure.
  */
 export const leaseRouter = o.prefix("/leases").router({
@@ -413,7 +409,7 @@ export const leaseRouter = o.prefix("/leases").router({
           // Proofs of payment go with the lease; their files after it.
           const proofs = await proofOwners(
             tx,
-            eq(paymentProof.leaseId, input.id)
+            eq(invoice.leaseId, input.id)
           )
           // Before the lease: deleting it sets its documents' leaseId to null.
           const documents = await tx

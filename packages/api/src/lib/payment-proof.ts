@@ -152,7 +152,8 @@ export function proofOwners(executor: Transaction | typeof db, where: SQL) {
       customerId: lease.customerId,
     })
     .from(paymentProof)
-    .innerJoin(lease, eq(lease.id, paymentProof.leaseId))
+    .innerJoin(invoice, eq(invoice.id, paymentProof.invoiceId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .where(where)
 }
 
@@ -209,7 +210,6 @@ export async function submitPaymentProof(
       await tx.insert(paymentProof).values({
         id: owner.id,
         organizationId: locked.organizationId,
-        leaseId: locked.leaseId,
         invoiceId: locked.id,
         amount: input.amount,
         paidOn: input.paidOn,
@@ -238,10 +238,11 @@ export async function cancelPaymentProof(customerId: string, id: string) {
         exists(
           db
             .select({ one: sql`1` })
-            .from(lease)
+            .from(invoice)
+            .innerJoin(lease, eq(lease.id, invoice.leaseId))
             .where(
               and(
-                eq(lease.id, paymentProof.leaseId),
+                eq(invoice.id, paymentProof.invoiceId),
                 eq(lease.customerId, customerId)
               )
             )
@@ -358,7 +359,6 @@ export async function recordPaymentWithProof(
       await tx.insert(paymentProof).values({
         id: owner.id,
         organizationId: locked.organizationId,
-        leaseId: locked.leaseId,
         invoiceId: locked.id,
         paymentId,
         status: "confirmed",
@@ -404,7 +404,8 @@ export async function readProofFile(id: string, scope: SQL) {
       mimeType: paymentProof.mimeType,
     })
     .from(paymentProof)
-    .innerJoin(lease, eq(lease.id, paymentProof.leaseId))
+    .innerJoin(invoice, eq(invoice.id, paymentProof.invoiceId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .where(and(eq(paymentProof.id, id), scope))
   if (!found) throw proofNotFound()
 
@@ -430,7 +431,7 @@ async function loadForEmail(id: string) {
     })
     .from(paymentProof)
     .innerJoin(invoice, eq(invoice.id, paymentProof.invoiceId))
-    .innerJoin(lease, eq(lease.id, paymentProof.leaseId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .innerJoin(user, eq(user.id, lease.customerId))
     .innerJoin(property, eq(property.id, lease.propertyId))
     .innerJoin(organization, eq(organization.id, paymentProof.organizationId))

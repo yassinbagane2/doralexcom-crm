@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { db } from "@workspace/db"
 import {
+  invoice,
   lease,
   payment,
   property,
@@ -106,7 +107,8 @@ const paymentsOn = (propertyId: typeof property.id) =>
   db
     .select({ one: sql`1` })
     .from(payment)
-    .innerJoin(lease, eq(lease.id, payment.leaseId))
+    .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .where(eq(lease.propertyId, propertyId))
 
 /** Leases shown with a property: holding it since the reader's yesterday. */

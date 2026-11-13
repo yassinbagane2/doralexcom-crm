@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { auth } from "@workspace/auth"
 import { db } from "@workspace/db"
-import { lease, member, payment, user } from "@workspace/db/schema"
+import { invoice, lease, member, payment, user } from "@workspace/db/schema"
 import { and, eq, exists, notExists, sql } from "drizzle-orm"
 import { z } from "zod"
 
@@ -191,7 +191,8 @@ const paymentsOf = (customerId: typeof user.id) =>
   db
     .select({ one: sql`1` })
     .from(payment)
-    .innerJoin(lease, eq(lease.id, payment.leaseId))
+    .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
+    .innerJoin(lease, eq(lease.id, invoice.leaseId))
     .where(eq(lease.customerId, customerId))
 
 /**

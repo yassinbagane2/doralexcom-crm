@@ -88,7 +88,7 @@ export async function recordPayment(
   assertPaymentFits(locked, values.amount)
   const [created] = await tx
     .insert(payment)
-    .values({ ...values, invoiceId: locked.id, leaseId: locked.leaseId })
+    .values({ ...values, invoiceId: locked.id })
     .returning({ id: payment.id })
   return created!.id
 }

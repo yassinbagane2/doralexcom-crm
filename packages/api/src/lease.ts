@@ -179,7 +179,7 @@ export function currentTermEnd(lease: LeaseDates, today: string) {
   if (!renewsAutomatically(lease)) return lease.endDate
   const months = lease.termMonths!
   const limit = toUtc(today)
-  // Bounded like rentDue: renewals stop counting after 100 years.
+  // Bounded: renewals stop counting after 100 years.
   for (let term = 1; term * months <= 1200; term++) {
     const end = addMonths(lease.startDate, term * months) - DAY
     if (end >= limit) return fromUtc(end)
@@ -191,74 +191,6 @@ export function currentTermEnd(lease: LeaseDates, today: string) {
 export function localToday(now = new Date()) {
   const pad = (value: number) => String(value).padStart(2, "0")
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
-
-/**
- * Rent charged on a lease by the end of `asOf`: the monthly bill (rent,
- * charges and costs, less the discount) is due in advance on the entry date
- * and every month after it; a final, partial month is charged by the day.
- * Pass the exit date as `asOf` for the lease's total.
- */
-export function rentDue(
-  lease: LeaseDates & LeaseCharges,
-  asOf: string
-): number {
-  const monthly = monthlyDue(lease)
-  if (monthly <= 0) return 0
-
-  const limit = toUtc(asOf)
-  const exit = effectiveEnd(lease)
-  const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
-  let total = 0
-
-  // Bounded so a nonsense date can't spin forever: 100 years of months.
-  for (let month = 0; month < 1200; month++) {
-    const periodStart = addMonths(lease.startDate, month)
-    if (periodStart > limit || periodStart > end) break
-
-    const nextPeriod = addMonths(lease.startDate, month + 1)
-    if (end < nextPeriod - DAY) {
-      const daysLived = (end - periodStart) / DAY + 1
-      const daysInPeriod = (nextPeriod - periodStart) / DAY
-      total += (monthly * daysLived) / daysInPeriod
-      break
-    }
-    total += monthly
-  }
-
-  return Math.round(total * 100) / 100
-}
-
-/**
- * What the customer still owes on a lease (negative: what they overpaid). A
- * terminated lease is settled against everything it ever charged; an open
- * one against what's been charged so far.
- */
-export function leaseBalance(
-  lease: LeaseDates & LeaseCharges & { terminatedAt: Date | string | null },
-  paid: number,
-  today: string
-) {
-  const asOf = lease.terminatedAt && lease.endDate ? lease.endDate : today
-  const due = rentDue(lease, asOf)
-  return { due, paid, balance: Math.round((due - paid) * 100) / 100 }
-}
-
-/**
- * The next day rent falls due after `today`: the next monthly anniversary of
- * the entry date, while the lease still runs then. Null once it has ended.
- */
-export function nextRentDate(lease: LeaseDates, today: string) {
-  const limit = toUtc(today)
-  const exit = effectiveEnd(lease)
-  const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
-  // Bounded like rentDue: 100 years of months.
-  for (let month = 0; month < 1200; month++) {
-    const due = addMonths(lease.startDate, month)
-    if (due > end) return null
-    if (due > limit) return fromUtc(due)
-  }
-  return null
 }
 
 /** Whole days from `from` to `to` ("YYYY-MM-DD"); negative when `to` is earlier. */
@@ -280,9 +212,10 @@ export interface BillingPeriod {
 }
 
 /**
- * The months of a lease that have begun by `through`, in order, the way
- * `rentDue` charges them: each from a monthly anniversary of the entry date,
- * the last cut short at the exit date.
+ * The months of a lease that have begun by `through`, in order, the way its
+ * invoices bill them: each from a monthly anniversary of the entry date, the
+ * last cut short at the exit date. The lease only sets the schedule; what is
+ * owed and paid lives on the invoices.
  */
 export function billingPeriods(
   lease: LeaseDates,
@@ -293,7 +226,7 @@ export function billingPeriods(
   const end = exit ? toUtc(exit) : Number.POSITIVE_INFINITY
   const periods: BillingPeriod[] = []
 
-  // Bounded like rentDue: 100 years of months.
+  // Bounded so a nonsense date can't spin forever: 100 years of months.
   for (let month = 0; month < 1200; month++) {
     const periodStart = addMonths(lease.startDate, month)
     if (periodStart > limit || periodStart > end) break

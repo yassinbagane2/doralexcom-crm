@@ -131,17 +131,21 @@ function customerMatches(search: string) {
   )
 }
 
-/** Leases of the given customers, with their property and the rent received. */
+/**
+ * Leases of the given customers, with their property and what their invoices
+ * add up to: billed, and paid on them.
+ */
 async function loadLeases(customerIds: string[]) {
   if (customerIds.length === 0) return []
 
   const paid = db
     .select({
-      leaseId: payment.leaseId,
+      leaseId: invoice.leaseId,
       total: sql<string>`sum(${payment.amount})`.as("total"),
     })
     .from(payment)
-    .groupBy(payment.leaseId)
+    .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
+    .groupBy(invoice.leaseId)
     .as("paid")
 
   const invoiced = db

@@ -237,15 +237,19 @@ export async function loadInvoices(
       .where(inArray(invoice.leaseId, leaseIds))
       .orderBy(desc(invoice.periodStart), desc(invoice.number)),
     db
-      .select()
+      .select({ payment })
       .from(payment)
-      .where(inArray(payment.leaseId, leaseIds))
-      .orderBy(asc(payment.paidOn), asc(payment.createdAt)),
+      .innerJoin(invoice, eq(invoice.id, payment.invoiceId))
+      .where(inArray(invoice.leaseId, leaseIds))
+      .orderBy(asc(payment.paidOn), asc(payment.createdAt))
+      .then((rows) => rows.map((row) => row.payment)),
     db
-      .select()
+      .select({ proof: paymentProof })
       .from(paymentProof)
-      .where(inArray(paymentProof.leaseId, leaseIds))
-      .orderBy(desc(paymentProof.createdAt)),
+      .innerJoin(invoice, eq(invoice.id, paymentProof.invoiceId))
+      .where(inArray(invoice.leaseId, leaseIds))
+      .orderBy(desc(paymentProof.createdAt))
+      .then((rows) => rows.map((row) => row.proof)),
   ])
   const proofOfPayment = new Map(
     proofs.flatMap((proof) =>

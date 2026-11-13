@@ -155,8 +155,9 @@ export const invoice = pgTable(
 )
 
 /**
- * Money received against one invoice, in the lease's currency. An invoice
- * can be paid in several parts.
+ * Money received against one invoice, in the invoice's currency. An invoice
+ * can be paid in several parts. Payments belong to invoices only: the lease is
+ * the agreement, and reaches its payments through the invoices it produced.
  */
 export const payment = pgTable(
   "payment",
@@ -164,9 +165,6 @@ export const payment = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    leaseId: uuid("lease_id")
-      .notNull()
-      .references(() => lease.id, { onDelete: "cascade" }),
     invoiceId: uuid("invoice_id")
       .notNull()
       .references(() => invoice.id, { onDelete: "cascade" }),
@@ -179,10 +177,7 @@ export const payment = pgTable(
     note: text("note"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    index("payment_leaseId_idx").on(table.leaseId),
-    index("payment_invoiceId_idx").on(table.invoiceId),
-  ]
+  (table) => [index("payment_invoiceId_idx").on(table.invoiceId)]
 )
 
 export const PAYMENT_PROOF_STATUSES = [
@@ -209,9 +204,6 @@ export const paymentProof = pgTable(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    leaseId: uuid("lease_id")
-      .notNull()
-      .references(() => lease.id, { onDelete: "cascade" }),
     invoiceId: uuid("invoice_id")
       .notNull()
       .references(() => invoice.id, { onDelete: "cascade" }),
@@ -244,7 +236,6 @@ export const paymentProof = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
-    index("paymentProof_leaseId_idx").on(table.leaseId),
     index("paymentProof_invoiceId_idx").on(table.invoiceId),
     uniqueIndex("paymentProof_paymentId_idx").on(table.paymentId),
     uniqueIndex("paymentProof_pending_idx")
@@ -267,7 +258,6 @@ export const leaseRelations = relations(lease, ({ one, many }) => ({
     fields: [lease.propertyId],
     references: [property.id],
   }),
-  payments: many(payment),
   invoices: many(invoice),
 }))
 
@@ -278,7 +268,6 @@ export const invoiceRelations = relations(invoice, ({ one, many }) => ({
 }))
 
 export const paymentRelations = relations(payment, ({ one }) => ({
-  lease: one(lease, { fields: [payment.leaseId], references: [lease.id] }),
   invoice: one(invoice, {
     fields: [payment.invoiceId],
     references: [invoice.id],
@@ -286,10 +275,6 @@ export const paymentRelations = relations(payment, ({ one }) => ({
 }))
 
 export const paymentProofRelations = relations(paymentProof, ({ one }) => ({
-  lease: one(lease, {
-    fields: [paymentProof.leaseId],
-    references: [lease.id],
-  }),
   invoice: one(invoice, {
     fields: [paymentProof.invoiceId],
     references: [invoice.id],
