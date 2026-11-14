@@ -3,8 +3,14 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CONTRACT_LIMITS, signatureRoles } from "@workspace/api/contract"
-import { invoiceRemaining, reconciledBalance } from "@workspace/api/invoice"
 import {
+  invoiceRemaining,
+  reconciledBalance,
+  reconcileInvoices,
+} from "@workspace/api/invoice"
+import {
+  addDays,
+  billingPeriods,
   localToday,
   MAX_TERM_MONTHS,
   monthlyDue,
@@ -35,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/ui/select"
-import { FileText, Loader2 } from "@workspace/ui/icons"
+import { FileText, Loader2, Receipt } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
@@ -351,14 +357,40 @@ function LeaseDialogBody({
     months && /^\d{4}-\d{2}-\d{2}$/.test(startDate)
       ? termEndDate(startDate, months)
       : null
-  const monthly = monthlyDue({
+  const charges = {
     rent: lease
       ? (parseAmount(form.watch("rent")) ?? 0)
       : (chosenProperty?.rent ?? 0),
     charges: parseAmount(form.watch("charges")) ?? 0,
     additionalCosts: parseAmount(form.watch("additionalCosts")) ?? 0,
     discount: parseAmount(form.watch("discount")) ?? 0,
-  })
+  }
+  const monthly = monthlyDue(charges)
+
+  // What saving an edit does to the customer's invoices, worked out the way
+  // the server will: null until the dates entered make sense.
+  const endDateField = form.watch("endDate")
+  const autoRenew = form.watch("autoRenew")
+  const isDay = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+  const editedEnd =
+    lengthMode === "months"
+      ? termEnd
+      : lengthMode === "date"
+        ? isDay(endDateField) && endDateField >= startDate
+          ? endDateField
+          : undefined
+        : null
+  const invoicePlan =
+    lease && isDay(startDate) && editedEnd !== undefined
+      ? planInvoices(lease, {
+          ...charges,
+          startDate,
+          endDate: editedEnd,
+          termMonths: lengthMode === "months" ? months : null,
+          autoRenew: lengthMode === "months" && autoRenew,
+          deposit: parseAmount(form.watch("deposit")) ?? 0,
+        })
+      : null
 
   const templateItems = (templates ?? []).map((template) => ({
     value: template.id,
@@ -784,6 +816,10 @@ function LeaseDialogBody({
             </Field>
           )}
 
+          {invoicePlan && currency ? (
+            <InvoiceNotice plan={invoicePlan} currency={currency} />
+          ) : null}
+
           {needsSignature ? (
             <p className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
               {t.rich("signatureSetup", {
@@ -810,7 +846,11 @@ function LeaseDialogBody({
             <Button type="submit" disabled={isPending || needsSignature}>
               {isPending ? <Loader2 className="animate-spin" /> : null}
               {lease
-                ? tc("saveChanges")
+                ? invoicePlan?.issued.length
+                  ? t("invoiceNotice.saveAndSend", {
+                      count: invoicePlan.issued.length,
+                    })
+                  : tc("saveChanges")
                 : pickCustomer
                   ? t("assignCustomerSubmit")
                   : t("assignSubmit")}
@@ -819,6 +859,108 @@ function LeaseDialogBody({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** What saving a lease's new terms does to its invoices. */
+interface InvoicePlan {
+  /** Unpaid invoices cancelled because their month no longer fits. */
+  cancelled: string[]
+  /** Invoices issued and emailed to the customer as soon as it's saved. */
+  issued: { start: string; end: string; total: number }[]
+  /** The amounts changed, but only invoices from `nextOn` on use them. */
+  amountsChanged: boolean
+  nextOn: string | null
+}
+
+function planInvoices(
+  lease: CustomerLease,
+  edited: Parameters<typeof reconcileInvoices>[1] & { deposit: number }
+): InvoicePlan {
+  const today = localToday()
+  const { toVoid, toIssue } = reconcileInvoices(lease.invoices, edited, today)
+  const nextOn =
+    billingPeriods(edited, addDays(today, 32)).find(
+      (period) => period.start > today
+    )?.start ?? null
+  return {
+    cancelled: lease.invoices
+      .filter((invoice) => toVoid.includes(invoice.id))
+      .map((invoice) => invoice.number),
+    issued: toIssue.map(({ period, total }) => ({
+      start: period.start,
+      end: period.end,
+      total,
+    })),
+    amountsChanged:
+      monthlyDue(edited) !== monthlyDue(lease) ||
+      edited.deposit !== lease.deposit,
+    nextOn,
+  }
+}
+
+/**
+ * Tells the business, before it saves, which invoices its edit sends the
+ * customer (and which it cancels), or that sent invoices stay as they are.
+ */
+function InvoiceNotice({
+  plan,
+  currency,
+}: {
+  plan: InvoicePlan
+  currency: string
+}) {
+  const t = useTranslations("Leases.invoiceNotice")
+  const locale = useLocale()
+
+  if (plan.issued.length === 0 && plan.cancelled.length === 0) {
+    if (!plan.amountsChanged) return null
+    return (
+      <p className="rounded-lg border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+        {plan.nextOn
+          ? t("amountsLater", { date: formatDate(plan.nextOn, locale) })
+          : t("amountsUnchanged")}
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+      <Receipt className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <p className="font-medium">
+          {plan.issued.length > 0
+            ? t("newTitle", { count: plan.issued.length })
+            : t("cancelTitle", { count: plan.cancelled.length })}
+        </p>
+        {plan.issued.length > 0 ? (
+          <ul className="flex flex-col gap-1 text-xs">
+            {plan.issued.map((invoice) => (
+              <li key={invoice.start} className="flex justify-between gap-3">
+                <span className="text-muted-foreground">
+                  {t("period", {
+                    start: formatDate(invoice.start, locale),
+                    end: formatDate(invoice.end, locale),
+                  })}
+                </span>
+                <span className="font-medium tabular-nums">
+                  {formatMoney(invoice.total, currency, locale)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p className="text-xs text-muted-foreground">
+          {plan.cancelled.length > 0
+            ? t(plan.issued.length > 0 ? "replaces" : "cancels", {
+                count: plan.cancelled.length,
+                numbers: plan.cancelled.join(", "),
+              })
+            : null}{" "}
+          {plan.issued.length > 0 ? t("emailed") : null}
+        </p>
+      </div>
+    </div>
   )
 }
 

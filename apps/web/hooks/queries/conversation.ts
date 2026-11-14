@@ -12,9 +12,9 @@ import { useCallback } from "react"
 import { orpc } from "@/lib/orpc"
 
 /*
- * Business ↔ customer messages. New ones arrive through Novu's socket (see
- * components/inbox/novu.tsx, which refetches these on each notification);
- * the interval is the fallback for when Novu isn't set up or the socket drops.
+ * Business ↔ customer messages. New ones arrive over the live notification
+ * stream (components/inbox/notifications-provider.tsx refetches these on each
+ * notification); the interval is the fallback while the stream is down.
  */
 const REFETCH_INTERVAL = 30_000
 

@@ -10,13 +10,20 @@ import { startInvoiceScheduler } from "@workspace/api/jobs"
 import { appRouter } from "@workspace/api/routers"
 import { auth } from "@workspace/auth"
 import { isActiveCustomDomain } from "@workspace/auth/custom-domains"
-import { inboxSession } from "@workspace/novu"
+import {
+  startNotificationWorker,
+  stopNotifications,
+} from "@workspace/notifications"
 import { Hono } from "hono"
 import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 
 import { env } from "./env"
+import { notificationStream } from "./notification-stream"
+
+/** Aborted on shutdown, to end the long-lived notification streams. */
+const shuttingDown = new AbortController()
 
 const appOrigin = new URL(env.NEXT_PUBLIC_APP_URL).origin
 
@@ -68,18 +75,10 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) =>
   scopeCookiesToHost(c.req.raw, await auth.handler(c.req.raw))
 )
 
-/**
- * The signed-in user's Novu inbox credentials, for the web app's bell
- * (`{ enabled: false }` while Novu isn't configured). `?locale=` keeps the
- * language Novu emails them in current.
- */
-app.get("/novu/inbox", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers })
-  if (!session) return c.json({ message: "Unauthorized" }, 401)
-
-  c.header("Cache-Control", "private, no-store")
-  return c.json(inboxSession(session.user, c.req.query("locale")))
-})
+/** Live notification events for the signed-in user (server-sent events). */
+app.get("/notifications/stream", (c) =>
+  notificationStream(c, shuttingDown.signal)
+)
 
 /**
  * Caddy's on-demand TLS asks here before getting a certificate for a
@@ -204,8 +203,31 @@ app.use("/*", async (c, next) => {
 
 app.get("/", (c) => c.text("OK"))
 
-serve({ fetch: app.fetch, port: env.PORT }, () => {
+let stopInvoiceScheduler: (() => void) | undefined
+
+const server = serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`Server running at ${env.NEXT_PUBLIC_SERVER_URL}`)
   console.log(`API reference: ${env.NEXT_PUBLIC_SERVER_URL}/api-reference`)
-  startInvoiceScheduler()
+  stopInvoiceScheduler = startInvoiceScheduler()
+  startNotificationWorker().catch((error: unknown) =>
+    console.error("Could not start the notification worker", error)
+  )
 })
+
+/**
+ * Stops taking requests, ends the open notification streams (browsers
+ * reconnect on their own) and lets jobs in progress finish.
+ */
+async function shutdown(signal: string) {
+  console.log(`${signal} received, shutting down…`)
+  stopInvoiceScheduler?.()
+  shuttingDown.abort()
+  server.close()
+  await stopNotifications().catch((error: unknown) =>
+    console.error("Could not stop notifications cleanly", error)
+  )
+  process.exit(0)
+}
+
+process.once("SIGINT", () => void shutdown("SIGINT"))
+process.once("SIGTERM", () => void shutdown("SIGTERM"))

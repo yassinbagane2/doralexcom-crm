@@ -10,7 +10,6 @@ import {
 import { Button } from "@workspace/ui/components/ui/button"
 import { Input } from "@workspace/ui/components/ui/input"
 import {
-  Bell,
   LoaderCircle,
   MessageSquare,
   SearchIcon,
@@ -36,60 +35,64 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatRelative } from "@/lib/format"
 
-import { NotificationFeed, NovuInbox, useNovuEnabled } from "./novu"
+import { NotificationBell, NotificationFeed } from "./notifications"
 import { Thread } from "./thread"
 
 type Side = "business" | "customer"
 
 /**
  * The inbox: messages between a business and its customers, and the user's
- * Novu notifications. The open conversation lives in the address
+ * notifications. The open conversation lives in the address
  * (`?conversation=`), so notifications and other pages can link straight to
  * one; `?customer=` (businesses only) opens the one with that customer.
  */
 export function InboxPage({ side }: { side: Side }) {
   const t = useTranslations("Inbox")
   const [tab, setTab] = useState("messages")
+  const conversation = useSearchParams().get("conversation")
+
+  // Opening a notification about a message lands on its conversation.
+  useEffect(() => {
+    if (conversation) setTab("messages")
+  }, [conversation])
 
   return (
-    <NovuInbox>
-      <div className="flex flex-col gap-6 pb-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-medium tracking-[-0.02em]">
-            {t("title")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {side === "business"
-              ? t("descriptionBusiness")
-              : t("descriptionCustomer")}
-          </p>
-        </div>
-
-        <Tabs value={tab} onValueChange={setTab} variant="underline">
-          <TabsList className="mb-4 flex w-full">
-            <TabsTrigger value="messages" className="gap-2">
-              <MessageSquare className="size-4" />
-              {t("tabMessages")}
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
-              <Bell className="size-4" />
-              {t("tabNotifications")}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="messages">
-            <Panel>
-              <Messages side={side} />
-            </Panel>
-          </TabsContent>
-          <TabsContent value="notifications">
-            <Panel>
-              <Notifications />
-            </Panel>
-          </TabsContent>
-        </Tabs>
+    <div className="flex flex-col gap-6 pb-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-2xl font-medium tracking-[-0.02em]">
+          {t("title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {side === "business"
+            ? t("descriptionBusiness")
+            : t("descriptionCustomer")}
+        </p>
       </div>
-    </NovuInbox>
+
+      <Tabs value={tab} onValueChange={setTab} variant="underline">
+        <TabsList className="mb-4 flex w-full">
+          <TabsTrigger value="messages" className="gap-2">
+            <MessageSquare className="size-4" />
+            {t("tabMessages")}
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <NotificationBell />
+            {t("tabNotifications")}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="messages">
+          <Panel>
+            <Messages side={side} />
+          </Panel>
+        </TabsContent>
+        <TabsContent value="notifications">
+          <Panel>
+            <NotificationFeed />
+          </Panel>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
 
@@ -100,15 +103,6 @@ function Panel({ children }: { children: ReactNode }) {
       {children}
     </div>
   )
-}
-
-function Notifications() {
-  const t = useTranslations("Inbox")
-  const enabled = useNovuEnabled()
-
-  if (enabled === undefined) return <Centered spinner />
-  if (!enabled) return <Centered icon={<Bell />} text={t("notificationsOff")} />
-  return <NotificationFeed />
 }
 
 /** The conversation list beside the open conversation (one or the other on small screens). */
@@ -446,27 +440,13 @@ function ListSkeleton() {
   )
 }
 
-function Centered({
-  icon,
-  text,
-  spinner,
-}: {
-  icon?: ReactNode
-  text?: string
-  spinner?: boolean
-}) {
+function Centered({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      {spinner ? (
-        <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
-      ) : (
-        <>
-          <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5">
-            {icon}
-          </span>
-          <p className="text-sm text-muted-foreground">{text}</p>
-        </>
-      )}
+      <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5">
+        {icon}
+      </span>
+      <p className="text-sm text-muted-foreground">{text}</p>
     </div>
   )
 }

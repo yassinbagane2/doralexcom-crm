@@ -22,9 +22,13 @@ https:// {
 
 	# On a business's domain the browser reaches the API on the same origin,
 	# which keeps the session cookie first-party (see apps/web/lib/server-url.ts).
-	@api path /rpc/* /api/auth/* /files/* /novu/*
+	@api path /rpc/* /api/auth/* /files/* /notifications/*
 	handle @api {
-		reverse_proxy localhost:3001
+		reverse_proxy localhost:3001 {
+			# Live notifications (/notifications/stream) are server-sent
+			# events: pass each one on as it's written, not buffered.
+			flush_interval -1
+		}
 	}
 
 	handle {

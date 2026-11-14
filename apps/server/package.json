@@ -21,7 +21,7 @@
     "@workspace/api": "workspace:*",
     "@workspace/auth": "workspace:*",
     "@workspace/db": "workspace:*",
-    "@workspace/novu": "workspace:*",
+    "@workspace/notifications": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.17",
     "puppeteer": "^25.16.0",

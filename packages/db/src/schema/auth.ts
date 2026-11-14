@@ -29,6 +29,8 @@ export const user = pgTable("user", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   metadata: jsonb("metadata"),
+  /** The language notifications are written in for them ("en", "ro"). */
+  locale: text("locale"),
 })
 
 export const session = pgTable(

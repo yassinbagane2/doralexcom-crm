@@ -246,7 +246,18 @@
     "documentSent": "Lease document generated, signed for your business and sent to the customer to sign.",
     "templateNotSignable": "This template has no signature field for the customer. Add one to the template first.",
     "signatureSetup": "Lease documents are signed for your business and sent to the customer right away. <link>Add your business signature</link> to assign a property.",
-    "proofHint": "A PDF, or a photo or screenshot of the transfer, up to 10 MB."
+    "proofHint": "A PDF, or a photo or screenshot of the transfer, up to 10 MB.",
+    "invoiceNotice": {
+      "newTitle": "{count, plural, one {A new invoice will be sent to the customer} other {# new invoices will be sent to the customer}}",
+      "cancelTitle": "{count, plural, one {An invoice will be cancelled} other {# invoices will be cancelled}}",
+      "period": "{start} – {end}",
+      "replaces": "{count, plural, one {It replaces invoice {numbers}, which is cancelled.} other {They replace invoices {numbers}, which are cancelled.}}",
+      "cancels": "{count, plural, one {Invoice {numbers} no longer fits the new dates and is cancelled.} other {Invoices {numbers} no longer fit the new dates and are cancelled.}}",
+      "emailed": "The customer is emailed as soon as you save.",
+      "amountsLater": "Invoices already sent keep their amounts. The new amounts apply from the next invoice, on {date}.",
+      "amountsUnchanged": "Invoices already sent keep their amounts.",
+      "saveAndSend": "{count, plural, one {Save and send invoice} other {Save and send # invoices}}"
+    }
   },
   "MyHome": {
     "metaTitle": "My home",

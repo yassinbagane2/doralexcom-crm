@@ -1,47 +1,4 @@
 {
   "version": 2,
-  "skills": {
-    "novu-dashboard-workflows": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/dashboard-workflows/SKILL.md",
-      "computedHash": "51ab1655149d2010aa779925f8cdf92e3917d6927441d2588f32d73cad2e706a"
-    },
-    "novu-design-workflow": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/design-workflow/SKILL.md",
-      "computedHash": "defe4f194e5ee60ef172a49c5f4f31585be04b3fa265693da02cdbf2ace676f4"
-    },
-    "novu-framework-integration": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/framework-integration/SKILL.md",
-      "computedHash": "d34cb80c551974256b09cf73df85137993bfffe5f58a67f6070203a8ace7fc9f"
-    },
-    "novu-inbox-integration": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/inbox-integration/SKILL.md",
-      "computedHash": "0b05a29572f3a43a48f846313836caf7f601d438f780295a43024d97ce64f99c"
-    },
-    "novu-manage-preferences": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/manage-preferences/SKILL.md",
-      "computedHash": "3d392c94f1dfe00c1a519a944f086456bddce9a910b89279619c8549b43991c6"
-    },
-    "novu-manage-subscribers": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/manage-subscribers/SKILL.md",
-      "computedHash": "0679b0e7ad85efa649b522ff9267e40d26d8e05b2d51edddc50a444a30ab8f93"
-    },
-    "novu-trigger-notification": {
-      "source": "novuhq/skills",
-      "sourceType": "github",
-      "skillPath": "skills/trigger-notification/SKILL.md",
-      "computedHash": "6463f56311382cf67d2517218b5db9181b50fa8f4a2af45c9a5c7b3fe5038248"
-    }
-  }
+  "skills": {}
 }

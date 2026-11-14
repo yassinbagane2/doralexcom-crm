@@ -9,7 +9,7 @@ import {
   organization,
   type ConversationSide,
 } from "@workspace/db/schema"
-import { NOVU_WORKFLOWS, notify } from "@workspace/novu"
+import { notify } from "@workspace/notifications"
 import { and, eq, inArray, ne } from "drizzle-orm"
 
 import { MESSAGE_PREVIEW_LENGTH } from "../conversation"
@@ -103,7 +103,7 @@ export function preview(body: string) {
 
 /**
  * Adds a message, moves the conversation's preview to it, and marks it read
- * for the side that wrote it. The other side hears about it through Novu.
+ * for the side that wrote it. The other side gets a notification.
  */
 export async function sendMessage(
   found: Conversation,
@@ -134,7 +134,7 @@ export async function sendMessage(
   })
 
   inBackground(
-    notifyOtherSide(found, side, sender, body),
+    notifyOtherSide(found, side, sender, message),
     `notify about message ${message.id}`
   )
 
@@ -149,7 +149,7 @@ async function notifyOtherSide(
   found: Conversation,
   side: ConversationSide,
   sender: { id: string; name: string },
-  body: string
+  message: { id: string; body: string }
 ) {
   const recipients =
     side === "business"
@@ -174,12 +174,18 @@ async function notifyOtherSide(
     .where(eq(organization.id, found.organizationId))
   const path = conversationPath(found.id)
 
-  await notify(NOVU_WORKFLOWS.newMessage, recipients, {
-    conversationId: found.id,
-    senderName: sender.name,
-    organizationName: business?.name ?? "",
-    preview: preview(body),
-    path,
-    link: await appLink(found.organizationId, path),
-  })
+  await notify(
+    "new-message",
+    recipients,
+    {
+      conversationId: found.id,
+      senderName: sender.name,
+      organizationName: business?.name ?? "",
+      preview: preview(message.body),
+      path,
+      link: await appLink(found.organizationId, path),
+    },
+    // One notification per message, however often this is retried.
+    { transactionId: message.id, organizationId: found.organizationId }
+  )
 }

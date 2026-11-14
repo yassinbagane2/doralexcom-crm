@@ -1,6 +1,7 @@
 import { getUserRole } from "@workspace/auth/roles"
 
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
+import { NotificationsProvider } from "@/components/inbox/notifications-provider"
 import { getMemberRole, requireOrganization, requireSession } from "@/lib/auth"
 
 /** Shell for every signed-in page. Its links live in components/dashboard/navigation.ts. */
@@ -23,7 +24,12 @@ export default async function AppLayout({
       name={user.name}
       email={user.email}
     >
-      {children}
+      {/* Admins run the platform and get no notifications. */}
+      {role === "admin" ? (
+        children
+      ) : (
+        <NotificationsProvider>{children}</NotificationsProvider>
+      )}
     </DashboardLayout>
   )
 }

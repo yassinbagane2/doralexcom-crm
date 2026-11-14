@@ -10,6 +10,7 @@ import { dashboardRouter } from "./dashboard"
 import { documentRouter } from "./document"
 import { invoiceRouter } from "./invoice"
 import { leaseRouter } from "./lease"
+import { notificationRouter } from "./notification"
 import { portalRouter } from "./portal"
 import { propertyRouter } from "./property"
 import { propertyPhotoRouter } from "./property-photo"
@@ -39,6 +40,7 @@ export const appRouter = {
   signature: signatureRouter,
   portal: portalRouter,
   conversation: conversationRouter,
+  notification: notificationRouter,
 }
 
 export type AppRouter = typeof appRouter

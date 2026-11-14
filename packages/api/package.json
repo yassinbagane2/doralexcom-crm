@@ -15,7 +15,8 @@
     "./storage": "./src/lib/storage.ts",
     "./invoice": "./src/invoice.ts",
     "./jobs": "./src/jobs.ts",
-    "./conversation": "./src/conversation.ts"
+    "./conversation": "./src/conversation.ts",
+    "./notification": "./src/notification.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -26,7 +27,7 @@
     "@t3-oss/env-core": "^0.13.11",
     "@workspace/auth": "workspace:*",
     "@workspace/db": "workspace:*",
-    "@workspace/novu": "workspace:*",
+    "@workspace/notifications": "workspace:*",
     "better-auth": "^1.7.18",
     "drizzle-orm": "^0.45.4",
     "nodemailer": "^10.4.0",

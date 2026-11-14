@@ -246,7 +246,18 @@
     "documentSent": "Contractul a fost generat, semnat pentru firmă și trimis clientului spre semnare.",
     "templateNotSignable": "Acest șablon nu are un câmp pentru semnătura clientului. Adaugă unul în șablon mai întâi.",
     "signatureSetup": "Contractele de închiriere sunt semnate pentru firmă și trimise clientului imediat. <link>Adaugă semnătura firmei</link> pentru a atribui o proprietate.",
-    "proofHint": "Un PDF sau o fotografie ori captură a transferului, de maximum 10 MB."
+    "proofHint": "Un PDF sau o fotografie ori captură a transferului, de maximum 10 MB.",
+    "invoiceNotice": {
+      "newTitle": "{count, plural, one {Clientul va primi o factură nouă} few {Clientul va primi # facturi noi} other {Clientul va primi # de facturi noi}}",
+      "cancelTitle": "{count, plural, one {O factură va fi anulată} few {# facturi vor fi anulate} other {# de facturi vor fi anulate}}",
+      "period": "{start} – {end}",
+      "replaces": "{count, plural, one {Înlocuiește factura {numbers}, care se anulează.} other {Înlocuiesc facturile {numbers}, care se anulează.}}",
+      "cancels": "{count, plural, one {Factura {numbers} nu se mai potrivește cu noile date și se anulează.} other {Facturile {numbers} nu se mai potrivesc cu noile date și se anulează.}}",
+      "emailed": "Clientul primește un email imediat ce salvați.",
+      "amountsLater": "Facturile deja trimise își păstrează sumele. Noile sume se aplică de la următoarea factură, pe {date}.",
+      "amountsUnchanged": "Facturile deja trimise își păstrează sumele.",
+      "saveAndSend": "{count, plural, one {Salvează și trimite factura} few {Salvează și trimite # facturi} other {Salvează și trimite # de facturi}}"
+    }
   },
   "MyHome": {
     "metaTitle": "Locuința mea",
