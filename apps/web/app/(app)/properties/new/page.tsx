@@ -20,7 +20,7 @@ export default async function NewPropertyPage({
   const copyFrom = Array.isArray(from) ? from[0] : from
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <PropertyEditor
         // A fresh form when switching between a blank one and a copy.
         key={copyFrom ?? "new"}

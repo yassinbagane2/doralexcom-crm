@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   await requireRole("business")
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <BusinessDashboard />
     </DashboardBody>
   )

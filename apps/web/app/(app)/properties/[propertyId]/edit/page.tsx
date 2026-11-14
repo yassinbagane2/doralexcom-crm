@@ -19,7 +19,7 @@ export default async function EditPropertyPage({
   const { propertyId } = await params
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <PropertyEditor propertyId={propertyId} />
     </DashboardBody>
   )

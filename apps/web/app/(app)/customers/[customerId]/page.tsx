@@ -19,7 +19,7 @@ export default async function CustomerPage({
   const { customerId } = await params
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <CustomerDetail customerId={customerId} />
     </DashboardBody>
   )

@@ -57,7 +57,7 @@ export function NavigationRoutes({
                 {...getTargetProps()}
               >
                 <ArrowLeftIcon className="size-4" />
-                <span className="ml-2 text-sm font-medium">
+                <span className="ml-1 text-sm font-medium">
                   {t("accountSettings")}
                 </span>
               </SidebarMenuButton>
@@ -89,7 +89,7 @@ export function NavigationRoutes({
                       <Icon size={16} color="currentColor" />
                     </span>
                   ) : null}
-                  <span className="ml-2 text-sm font-medium">
+                  <span className="ml-1 text-sm font-medium">
                     {route.title}
                   </span>
                 </SidebarMenuButton>

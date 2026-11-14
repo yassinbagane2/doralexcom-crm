@@ -3,12 +3,7 @@
 import { MESSAGE_MAX_LENGTH } from "@workspace/api/conversation"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Textarea } from "@workspace/ui/components/ui/textarea"
-import {
-  ArrowUp,
-  ChevronLeftIcon,
-  LoaderCircle,
-  MessageSquare,
-} from "@workspace/ui/icons"
+import { ArrowUp, ChevronLeftIcon, LoaderCircle } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react"
@@ -63,7 +58,7 @@ export function Thread({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4 md:px-5">
+      <header className="flex h-14 shrink-0 items-center gap-2.5 border-b px-4">
         {onBack ? (
           <Button
             variant="ghost"
@@ -77,11 +72,8 @@ export function Thread({
         ) : null}
         {header.data ? (
           <>
-            <UserAvatar
-              name={header.data.with.name}
-              className="size-10 text-sm"
-            />
-            <div className="flex min-w-0 flex-col">
+            <UserAvatar name={header.data.with.name} />
+            <div className="flex min-w-0 flex-col leading-tight">
               <span className="truncate text-sm font-semibold">
                 {header.data.with.name}
               </span>
@@ -93,51 +85,47 @@ export function Thread({
             </div>
           </>
         ) : (
-          <div className="flex items-center gap-3">
-            <div className="size-10 animate-pulse rounded-full bg-muted" />
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 animate-pulse rounded-full bg-muted" />
             <div className="h-3 w-32 animate-pulse rounded-full bg-muted" />
           </div>
         )}
       </header>
 
-      <div
-        ref={scroller}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 md:px-5"
-      >
-        {messages.hasNextPage ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="self-center rounded-full text-xs text-muted-foreground"
-            disabled={messages.isFetchingNextPage}
-            onClick={() => void messages.fetchNextPage()}
-          >
-            {messages.isFetchingNextPage ? (
-              <LoaderCircle className="size-3.5 animate-spin" />
-            ) : null}
-            {t("loadOlder")}
-          </Button>
-        ) : null}
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col">
+          {messages.hasNextPage ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-center rounded-full text-xs text-muted-foreground"
+              disabled={messages.isFetchingNextPage}
+              onClick={() => void messages.fetchNextPage()}
+            >
+              {messages.isFetchingNextPage ? (
+                <LoaderCircle className="size-3.5 animate-spin" />
+              ) : null}
+              {t("loadOlder")}
+            </Button>
+          ) : null}
 
-        {messages.isPending ? (
-          <div className="flex flex-1 items-center justify-center">
-            <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
-          </div>
-        ) : list.length === 0 && !send.isPending ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
-              <MessageSquare className="size-5" />
-            </span>
-            <p className="text-sm text-muted-foreground">{t("emptyThread")}</p>
-          </div>
-        ) : (
-          <MessageList
-            messages={list}
-            readerSide={header.data?.side}
-            counterpart={header.data?.with.name}
-            pending={send.isPending ? send.variables : undefined}
-          />
-        )}
+          {messages.isPending ? (
+            <div className="flex flex-1 items-center justify-center">
+              <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : list.length === 0 && !send.isPending ? (
+            <p className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {t("noMessagesYet")}
+            </p>
+          ) : (
+            <MessageList
+              messages={list}
+              readerSide={header.data?.side}
+              counterpart={header.data?.with.name}
+              pending={send.isPending ? send.variables : undefined}
+            />
+          )}
+        </div>
       </div>
 
       <Composer
@@ -275,7 +263,7 @@ function Bubble({
         ) : null}
         <div
           className={cn(
-            "rounded-[20px] px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap",
+            "rounded-2xl px-3 py-1.5 text-sm leading-relaxed break-words whitespace-pre-wrap",
             mine
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-foreground",
@@ -340,13 +328,13 @@ function Composer({
 
   return (
     <form
-      className="shrink-0 px-3 pt-1 pb-3 md:px-4 md:pb-4"
+      className="mx-auto w-full max-w-[calc(48rem+2rem)] shrink-0 px-4 pt-1 pb-4"
       onSubmit={(event) => {
         event.preventDefault()
         submit()
       }}
     >
-      <div className="flex items-end gap-2 rounded-3xl border bg-background py-1.5 pr-1.5 pl-4 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
+      <div className="flex items-end gap-2 rounded-2xl border bg-background py-1 pr-1 pl-3.5 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
         <Textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -370,7 +358,7 @@ function Composer({
         <Button
           type="submit"
           size="icon-sm"
-          className="size-8 shrink-0 rounded-full"
+          className="mb-0.5 size-7 shrink-0 rounded-full"
           aria-label={t("send")}
           disabled={!body || sending}
         >

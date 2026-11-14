@@ -20,7 +20,7 @@ export default async function ReceiptPage({
   const isOwner = (await getMemberRole()) === "owner"
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <PaymentReceipt
         customerId={customerId}
         paymentId={paymentId}

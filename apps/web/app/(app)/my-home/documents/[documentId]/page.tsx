@@ -20,7 +20,7 @@ export default async function MyDocumentPage({
   const { documentId } = await params
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <SignDocument id={documentId} signerName={session.user.name} />
     </DashboardBody>
   )

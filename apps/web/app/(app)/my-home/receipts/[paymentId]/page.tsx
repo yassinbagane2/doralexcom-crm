@@ -20,7 +20,7 @@ export default async function MyReceiptPage({
   const { paymentId } = await params
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <CustomerReceipt paymentId={paymentId} />
     </DashboardBody>
   )

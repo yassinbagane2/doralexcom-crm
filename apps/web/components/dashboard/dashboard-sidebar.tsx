@@ -1,6 +1,7 @@
 "use client"
 
 import type { UserRole } from "@workspace/auth/roles"
+import { Button } from "@workspace/ui/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,14 +19,16 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@workspace/ui/components/ui/sidebar"
-import { ChevronsUpDown } from "@workspace/ui/icons"
+import { Bell, ChevronsUpDown } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 
+import { NotificationsPopover } from "@/components/inbox/notifications-popover"
 import { LogoMark } from "@/components/shared/logo"
 import { UserAvatar } from "@/components/shared/user-avatar"
 import { homeRouteFor } from "@/config/routes"
+import { useUnreadNotificationCount } from "@/hooks/queries/notifications"
 
 import { DropdownMenuRoutes, NavigationRoutes } from "./dashboard-navigation"
 
@@ -51,8 +54,8 @@ export function DashboardSidebar({
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader
         className={cn(
-          "flex items-center justify-between md:pt-3.5",
-          collapsed ? "flex-col gap-3" : "flex-row"
+          "flex items-center justify-between",
+          collapsed ? "flex-col gap-3" : "flex-row md:px-0"
         )}
       >
         <Link
@@ -75,14 +78,23 @@ export function DashboardSidebar({
             </span>
           )}
         </Link>
-        <SidebarTrigger />
+        <div
+          className={cn(
+            "flex items-center",
+            collapsed ? "flex-col gap-1" : "gap-0.5"
+          )}
+        >
+          {/* Admins run the platform and get no notifications. */}
+          {role === "admin" ? null : <Notifications />}
+          <SidebarTrigger />
+        </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-4 p-2">
+      <SidebarContent className={cn("gap-4 p-2", !collapsed && "md:px-0")}>
         <NavigationRoutes role={role} isOwner={isOwner} />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className={cn(!collapsed && "md:p-0")}>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -121,5 +133,39 @@ export function DashboardSidebar({
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+/** The bell beside the sidebar's toggle: the feed opens under it. */
+function Notifications() {
+  const t = useTranslations("Inbox")
+  const { setOpenMobile } = useSidebar()
+  const count = useUnreadNotificationCount().data ?? 0
+
+  return (
+    <NotificationsPopover
+      side="bottom"
+      align="start"
+      onNavigate={() => setOpenMobile(false)}
+      trigger={
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("notifications")}
+          title={t("notifications")}
+          className="relative"
+        >
+          <Bell />
+          {count > 0 ? (
+            <span
+              aria-label={t("unreadNotifications", { count })}
+              className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-1 text-[9px] leading-none font-semibold text-primary-foreground tabular-nums ring-2 ring-sidebar"
+            >
+              {count > 99 ? "99+" : count}
+            </span>
+          ) : null}
+        </Button>
+      }
+    />
   )
 }

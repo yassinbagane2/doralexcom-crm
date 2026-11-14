@@ -1,24 +1,13 @@
 "use client"
 
 import { localToday } from "@workspace/api/lease"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@workspace/ui/components/motion/tabs"
 import { Button } from "@workspace/ui/components/ui/button"
 import { Input } from "@workspace/ui/components/ui/input"
-import {
-  LoaderCircle,
-  MessageSquare,
-  SearchIcon,
-  SquarePen,
-} from "@workspace/ui/icons"
+import { LoaderCircle, SearchIcon, SquarePen } from "@workspace/ui/icons"
 import { cn } from "@workspace/ui/lib/utils"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { InfinitePicker } from "@/components/shared/infinite-picker"
 import { UserAvatar } from "@/components/shared/user-avatar"
@@ -35,78 +24,18 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatRelative } from "@/lib/format"
 
-import { NotificationBell, NotificationFeed } from "./notifications"
 import { Thread } from "./thread"
 
 type Side = "business" | "customer"
 
 /**
- * The inbox: messages between a business and its customers, and the user's
- * notifications. The open conversation lives in the address
- * (`?conversation=`), so notifications and other pages can link straight to
- * one; `?customer=` (businesses only) opens the one with that customer.
+ * Messages between a business and its customers: the conversation list
+ * beside the open conversation (one or the other on small screens), filling
+ * the page. The open conversation lives in the address (`?conversation=`),
+ * so notifications and other pages can link straight to one; `?customer=`
+ * (businesses only) opens the one with that customer.
  */
 export function InboxPage({ side }: { side: Side }) {
-  const t = useTranslations("Inbox")
-  const [tab, setTab] = useState("messages")
-  const conversation = useSearchParams().get("conversation")
-
-  // Opening a notification about a message lands on its conversation.
-  useEffect(() => {
-    if (conversation) setTab("messages")
-  }, [conversation])
-
-  return (
-    <div className="flex flex-col gap-6 pb-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-medium tracking-[-0.02em]">
-          {t("title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {side === "business"
-            ? t("descriptionBusiness")
-            : t("descriptionCustomer")}
-        </p>
-      </div>
-
-      <Tabs value={tab} onValueChange={setTab} variant="underline">
-        <TabsList className="mb-4 flex w-full">
-          <TabsTrigger value="messages" className="gap-2">
-            <MessageSquare className="size-4" />
-            {t("tabMessages")}
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <NotificationBell />
-            {t("tabNotifications")}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="messages">
-          <Panel>
-            <Messages side={side} />
-          </Panel>
-        </TabsContent>
-        <TabsContent value="notifications">
-          <Panel>
-            <NotificationFeed />
-          </Panel>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
-}
-
-/** A bordered box of fixed height: its panes scroll inside it. */
-function Panel({ children }: { children: ReactNode }) {
-  return (
-    <div className="h-[min(760px,calc(100svh-15rem))] min-h-[460px] overflow-hidden rounded-2xl border bg-card shadow-xs">
-      {children}
-    </div>
-  )
-}
-
-/** The conversation list beside the open conversation (one or the other on small screens). */
-function Messages({ side }: { side: Side }) {
   const t = useTranslations("Inbox")
   const router = useRouter()
   const pathname = usePathname()
@@ -122,17 +51,24 @@ function Messages({ side }: { side: Side }) {
   useOpenCustomerFromAddress(side, select)
 
   return (
-    <div className="grid h-full md:grid-cols-[340px_1fr]">
+    <div
+      className={cn(
+        "grid min-h-0 w-full flex-1 grid-rows-[minmax(0,1fr)] overflow-hidden rounded-2xl border bg-card shadow-xs md:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]",
+        // Customers' pages grow with their content on small screens, above
+        // the dock: there, the height is set here.
+        side === "customer" && "max-md:h-[calc(100svh-6.5rem)] max-md:flex-none"
+      )}
+    >
       <aside
         className={cn(
           "flex min-h-0 flex-col md:border-r",
           selected && "max-md:hidden"
         )}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between gap-2 px-4">
-          <h2 className="text-base font-semibold tracking-[-0.01em]">
-            {t("tabMessages")}
-          </h2>
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2 pr-2.5 pl-4">
+          <h1 className="font-heading text-lg font-medium tracking-[-0.02em]">
+            {t("messages")}
+          </h1>
           {side === "business" ? <NewConversation onOpened={select} /> : null}
         </div>
         {side === "business" ? (
@@ -149,7 +85,7 @@ function Messages({ side }: { side: Side }) {
             onBack={() => select(null)}
           />
         ) : (
-          <Centered icon={<MessageSquare />} text={t("selectConversation")} />
+          <Empty text={t("selectConversation")} className="h-full" />
         )}
       </section>
     </div>
@@ -190,16 +126,16 @@ function BusinessConversations({
 
   return (
     <>
-      <div className="px-3 pb-2">
+      <div className="px-2.5 pb-2">
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("searchConversations")}
             aria-label={t("searchConversations")}
-            className="h-9 rounded-full border-transparent bg-muted pl-9 shadow-none focus-visible:border-ring dark:bg-muted"
+            className="h-8 rounded-lg border-transparent bg-muted pl-8 shadow-none focus-visible:border-ring dark:bg-muted"
           />
         </div>
       </div>
@@ -207,20 +143,9 @@ function BusinessConversations({
         {conversations.isPending ? (
           <ListSkeleton />
         ) : list.length === 0 ? (
-          searched ? (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-              {t("noResults")}
-            </p>
-          ) : (
-            <div className="flex flex-col items-center gap-1 px-6 py-10 text-center">
-              <p className="text-sm font-medium">{t("noConversationsTitle")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("noConversationsDescription")}
-              </p>
-            </div>
-          )
+          <Empty text={t(searched ? "noResults" : "noConversations")} />
         ) : (
-          <ul className="flex flex-col gap-0.5 px-2 pb-2">
+          <ul className="flex flex-col gap-0.5 px-1.5 pb-1.5">
             {list.map((conversation) => (
               <ConversationRow
                 key={conversation.id}
@@ -322,15 +247,11 @@ function CustomerConversations({
 
   if (conversations.isPending) return <ListSkeleton />
   if (list.length === 0) {
-    return (
-      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-        {t("noBusinesses")}
-      </p>
-    )
+    return <Empty text={t("noBusinesses")} />
   }
 
   return (
-    <ul className="flex min-h-0 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
+    <ul className="flex min-h-0 flex-col gap-0.5 overflow-y-auto px-1.5 pb-1.5">
       {list.map((conversation) => (
         <ConversationRow
           key={conversation.id}
@@ -377,14 +298,19 @@ function ConversationRow({
         onClick={onClick}
         aria-current={active ? "true" : undefined}
         className={cn(
-          "flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-muted/60",
+          "flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-muted/60",
           active && "bg-muted hover:bg-muted"
         )}
       >
-        <UserAvatar name={name} className="size-11 text-sm" />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <UserAvatar name={name} className="size-9" />
+        <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-baseline gap-2">
-            <span className="flex-1 truncate text-sm font-semibold">
+            <span
+              className={cn(
+                "flex-1 truncate text-sm",
+                unread ? "font-semibold" : "font-medium"
+              )}
+            >
               {name}
             </span>
             {at ? (
@@ -414,7 +340,7 @@ function ConversationRow({
             {unread ? (
               <span
                 aria-label={t("unread")}
-                className="size-2.5 shrink-0 rounded-full bg-primary"
+                className="size-2 shrink-0 rounded-full bg-primary"
               />
             ) : null}
           </span>
@@ -426,10 +352,10 @@ function ConversationRow({
 
 function ListSkeleton() {
   return (
-    <div className="flex flex-col gap-0.5 px-2">
+    <div className="flex flex-col gap-0.5 px-1.5">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-3 px-2.5 py-2.5">
-          <div className="size-11 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div key={i} className="flex items-center gap-2.5 p-2">
+          <div className="size-9 shrink-0 animate-pulse rounded-full bg-muted" />
           <div className="flex flex-1 flex-col gap-2">
             <div className="h-3 w-2/5 animate-pulse rounded-full bg-muted" />
             <div className="h-3 w-4/5 animate-pulse rounded-full bg-muted" />
@@ -440,13 +366,15 @@ function ListSkeleton() {
   )
 }
 
-function Centered({ icon, text }: { icon: ReactNode; text: string }) {
+function Empty({ text, className }: { text: string; className?: string }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5">
-        {icon}
-      </span>
-      <p className="text-sm text-muted-foreground">{text}</p>
-    </div>
+    <p
+      className={cn(
+        "flex items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground",
+        className
+      )}
+    >
+      {text}
+    </p>
   )
 }

@@ -28,7 +28,7 @@ export const routes = {
   customers: "/customers",
   /** Business accounts: contract templates, filled in for each lease. */
   templates: "/templates",
-  /** Businesses and customers: messages with each other, and notifications. */
+  /** Businesses and customers: messages with each other. */
   inbox: "/inbox",
   /** User accounts linked to a customer record: their own leases and notes. */
   myHome: "/my-home",

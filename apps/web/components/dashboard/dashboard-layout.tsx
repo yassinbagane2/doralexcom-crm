@@ -47,7 +47,11 @@ export async function DashboardLayout({
 
   return (
     <TooltipProvider>
-      <SidebarProvider defaultOpen={defaultOpen} className="h-svh">
+      <SidebarProvider
+        defaultOpen={defaultOpen}
+        className="h-svh"
+        style={{ "--sidebar-width": "15rem" } as React.CSSProperties}
+      >
         <DashboardSidebar
           role={role}
           isOwner={isOwner}

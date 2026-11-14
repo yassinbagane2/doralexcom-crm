@@ -37,7 +37,6 @@ import {
   AlarmClockOff,
   Archive,
   ArchiveRestore,
-  Bell,
   Check,
   CheckCheck,
   ClockIcon,
@@ -62,7 +61,6 @@ import {
   useNotifications,
   useSnoozeNotification,
   useUnarchiveNotification,
-  useUnreadNotificationCount,
   useUnsnoozeNotification,
   type NotificationItem,
 } from "@/hooks/queries/notifications"
@@ -76,7 +74,6 @@ const FILTERS = [
   { value: "all", label: "inbox" },
   { value: "unread", label: "unread" },
   { value: "archived", label: "archived" },
-  { value: "snoozed", label: "snoozed" },
 ] as const satisfies readonly {
   value: NotificationFilter
   label: Parameters<Translate>[0]
@@ -116,41 +113,35 @@ function show(item: NotificationItem, t: Translate): Shown | null {
   return render(item.payload, t)
 }
 
-/** The bell, with how many notifications are unread. */
-export function NotificationBell({ className }: { className?: string }) {
-  const t = useTranslations("Inbox")
-  const count = useUnreadNotificationCount().data ?? 0
-
-  return (
-    <span className={cn("relative inline-flex", className)}>
-      <Bell className="size-4" />
-      {count > 0 ? (
-        <span
-          aria-label={t("unreadNotifications", { count })}
-          className="absolute -top-1.5 -right-2 h-4 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 font-semibold text-primary-foreground tabular-nums"
-        >
-          {count > 99 ? "99+" : count}
-        </span>
-      ) : null}
-    </span>
-  )
-}
-
 /**
  * The notification feed, filling its container, with its preferences one
  * click away (the settings button).
  */
-export function NotificationFeed() {
+export function NotificationFeed({
+  onNavigate,
+}: {
+  /** Called when a notification is opened, as the page changes. */
+  onNavigate?: () => void
+}) {
   const [preferences, setPreferences] = useState(false)
 
   return preferences ? (
     <NotificationPreferences onBack={() => setPreferences(false)} />
   ) : (
-    <Feed onOpenPreferences={() => setPreferences(true)} />
+    <Feed
+      onOpenPreferences={() => setPreferences(true)}
+      onNavigate={onNavigate}
+    />
   )
 }
 
-function Feed({ onOpenPreferences }: { onOpenPreferences: () => void }) {
+function Feed({
+  onOpenPreferences,
+  onNavigate,
+}: {
+  onOpenPreferences: () => void
+  onNavigate?: () => void
+}) {
   const t = useTranslations("Inbox")
   const [filter, setFilter] = useState<NotificationFilter>("all")
   const notifications = useNotifications(filter)
@@ -163,49 +154,58 @@ function Feed({ onOpenPreferences }: { onOpenPreferences: () => void }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
+      <header className="flex shrink-0 flex-col gap-2 border-b px-3 pt-2.5 pb-2.5">
+        <div className="flex items-center justify-between gap-2 pl-1">
+          <h2 className="text-sm font-semibold">{t("notifications")}</h2>
+          <div className="flex items-center">
+            <FeedActions />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("preferencesTitle")}
+              title={t("preferencesTitle")}
+              className="text-muted-foreground hover:text-foreground"
+              onClick={onOpenPreferences}
+            >
+              <Settings2 className="size-4" />
+            </Button>
+          </div>
+        </div>
         <Tabs
           value={filter}
           onValueChange={(value) => setFilter(value as NotificationFilter)}
           variant="segment"
         >
-          <TabsList>
+          <TabsList className="w-full">
             {FILTERS.map(({ value, label }) => (
-              <TabsTrigger key={value} value={value} className="px-3 text-sm">
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="flex-1 px-2 text-[13px]"
+              >
                 {t(label)}
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
-        <div className="flex items-center gap-1">
-          <FeedActions />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t("preferencesTitle")}
-            title={t("preferencesTitle")}
-            className="text-muted-foreground hover:text-foreground"
-            onClick={onOpenPreferences}
-          >
-            <Settings2 className="size-4" />
-          </Button>
-        </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {notifications.isPending ? (
           <FeedSkeleton />
         ) : items.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
-              <Bell className="size-5" />
-            </span>
-            <p className="text-sm text-muted-foreground">{t("empty")}</p>
-          </div>
+          <p className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+            {t("empty")}
+          </p>
         ) : (
-          <ul className="flex flex-col gap-0.5 p-2">
+          <ul className="flex flex-col gap-0.5 p-1.5">
             {items.map(({ item, shown }) => (
-              <NotificationRow key={item.id} item={item} shown={shown} />
+              <NotificationRow
+                key={item.id}
+                item={item}
+                shown={shown}
+                onNavigate={onNavigate}
+              />
             ))}
             <InfiniteScrollTrigger query={notifications} />
           </ul>
@@ -259,9 +259,11 @@ function FeedActions() {
 function NotificationRow({
   item,
   shown,
+  onNavigate,
 }: {
   item: NotificationItem
   shown: Shown
+  onNavigate?: () => void
 }) {
   const t = useTranslations("Inbox")
   const locale = useLocale()
@@ -273,6 +275,7 @@ function NotificationRow({
   function open() {
     if (unread) markRead.mutate(item.id)
     router.push(shown.path)
+    onNavigate?.()
   }
 
   return (
@@ -280,9 +283,9 @@ function NotificationRow({
       <button
         type="button"
         onClick={open}
-        className="flex w-full items-start gap-3 rounded-xl py-3 pr-12 pl-3 text-left transition-colors hover:bg-muted/60"
+        className="flex w-full items-start gap-2.5 rounded-lg py-2 pr-10 pl-2 text-left transition-colors hover:bg-muted/60"
       >
-        <UserAvatar name={shown.avatar} className="size-9 text-xs" />
+        <UserAvatar name={shown.avatar} className="mt-0.5" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span
             className={cn(
@@ -308,7 +311,7 @@ function NotificationRow({
           />
         ) : null}
       </button>
-      <div className="absolute top-2.5 right-2">
+      <div className="absolute top-1.5 right-1.5">
         <NotificationMenu item={item} snoozed={snoozed} />
       </div>
     </li>
@@ -515,10 +518,10 @@ function SnoozeDialog({
 
 function FeedSkeleton() {
   return (
-    <div className="flex flex-col gap-0.5 p-2">
+    <div className="flex flex-col gap-0.5 p-1.5">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-start gap-3 px-3 py-3">
-          <div className="size-9 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div key={i} className="flex items-start gap-2.5 p-2">
+          <div className="size-8 shrink-0 animate-pulse rounded-full bg-muted" />
           <div className="flex flex-1 flex-col gap-2 pt-1">
             <div className="h-3 w-2/5 animate-pulse rounded-full bg-muted" />
             <div className="h-3 w-4/5 animate-pulse rounded-full bg-muted" />

@@ -14,7 +14,7 @@ export default async function PropertiesPage() {
   await requireRole("business")
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <BusinessProperties />
     </DashboardBody>
   )

@@ -14,7 +14,7 @@ export default async function MyHomePage() {
   await requireRole("user")
 
   return (
-    <DashboardBody className="pt-6">
+    <DashboardBody className="pt-5">
       <MyHome />
     </DashboardBody>
   )

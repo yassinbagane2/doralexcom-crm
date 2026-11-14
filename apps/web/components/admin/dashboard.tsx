@@ -21,9 +21,9 @@ export function DashboardBody({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col rounded-2xl border-border px-4 md:overflow-y-auto md:border md:bg-card md:px-8 md:shadow-xs">
+    <div className="flex min-h-0 w-full flex-1 flex-col rounded-2xl border-border px-4 md:overflow-y-auto md:border md:bg-card md:px-6 md:shadow-xs">
       {title ? (
-        <div className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 py-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-1">
             <h1 className="font-heading text-2xl font-semibold tracking-[-0.02em]">
               {title}
@@ -37,7 +37,7 @@ export function DashboardBody({
           ) : null}
         </div>
       ) : null}
-      <div className={cn("flex w-full flex-1 flex-col pb-8", className)}>
+      <div className={cn("flex w-full flex-1 flex-col pb-6", className)}>
         {children}
       </div>
     </div>
@@ -57,7 +57,7 @@ export function MasterDetail({
       <div className="h-80 w-full shrink-0 overflow-hidden rounded-2xl border bg-card md:h-auto md:max-w-[300px] md:shadow-xs xl:max-w-[340px]">
         {list}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col rounded-2xl border-border px-4 md:overflow-y-auto md:border md:bg-card md:px-8 md:shadow-xs">
+      <div className="flex min-w-0 flex-1 flex-col rounded-2xl border-border px-4 md:overflow-y-auto md:border md:bg-card md:px-6 md:shadow-xs">
         {children}
       </div>
     </div>
