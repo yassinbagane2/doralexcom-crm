@@ -6,6 +6,7 @@ export {
   enabledChannels,
   savePreference,
   userPreferences,
+  usesChannel,
   type ChannelSettings,
 } from "./preferences"
 export { startNotificationWorker, stopNotifications } from "./worker"

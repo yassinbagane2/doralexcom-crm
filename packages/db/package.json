@@ -6,8 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./env": "./src/env.ts",
-    "./test": "./test/fixtures.ts"
+    "./env": "./src/env.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

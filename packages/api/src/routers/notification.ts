@@ -5,6 +5,7 @@ import {
   NOTIFICATION_LOCALES,
   NOTIFICATION_TYPE_IDS,
   savePreference,
+  usesChannel,
   userPreferences,
 } from "@workspace/notifications"
 import {
@@ -263,20 +264,23 @@ export const notificationRouter = o.prefix("/notifications").router({
     (now) => ({ archivedAt: now })
   ),
 
-  /** Which channels each notification type reaches the user on. */
+  /**
+   * Whether each notification type reaches the user on each channel it uses
+   * (a channel a type is never sent on is left out).
+   */
   getPreferences: protectedProcedure
     .route({ method: "GET", path: "/preferences", tags: ["notification"] })
     .output(
       z.array(
         z.object({
           type: z.enum(NOTIFICATION_TYPE_IDS),
-          channels: z.record(z.enum(NOTIFICATION_CHANNELS), z.boolean()),
+          channels: z.partialRecord(z.enum(NOTIFICATION_CHANNELS), z.boolean()),
         })
       )
     )
     .handler(({ context }) => userPreferences(context.session.user.id)),
 
-  /** Turns one notification type on or off on one channel. */
+  /** Turns one notification type on or off on one of its channels. */
   setPreference: protectedProcedure
     .route({ method: "PUT", path: "/preferences", tags: ["notification"] })
     .input(
@@ -287,14 +291,19 @@ export const notificationRouter = o.prefix("/notifications").router({
       })
     )
     .output(z.void())
-    .handler(({ context, input }) =>
-      savePreference(
+    .handler(async ({ context, input }) => {
+      if (!usesChannel(input.type, input.channel)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "This notification isn't sent on that channel.",
+        })
+      }
+      await savePreference(
         context.session.user.id,
         input.type,
         input.channel,
         input.enabled
       )
-    ),
+    }),
 
   /** The language the user reads the app in, which their emails follow. */
   setLocale: protectedProcedure

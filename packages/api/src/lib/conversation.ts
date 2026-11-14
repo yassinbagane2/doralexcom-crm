@@ -14,7 +14,6 @@ import { and, eq, inArray, ne } from "drizzle-orm"
 
 import { MESSAGE_PREVIEW_LENGTH } from "../conversation"
 import { inBackground } from "./background"
-import { appLink } from "./links"
 
 /*
  * Business ↔ customer conversations. The business side is anyone who works
@@ -172,7 +171,6 @@ async function notifyOtherSide(
     .select({ name: organization.name })
     .from(organization)
     .where(eq(organization.id, found.organizationId))
-  const path = conversationPath(found.id)
 
   await notify(
     "new-message",
@@ -182,8 +180,7 @@ async function notifyOtherSide(
       senderName: sender.name,
       organizationName: business?.name ?? "",
       preview: preview(message.body),
-      path,
-      link: await appLink(found.organizationId, path),
+      path: conversationPath(found.id),
     },
     // One notification per message, however often this is retried.
     { transactionId: message.id, organizationId: found.organizationId }

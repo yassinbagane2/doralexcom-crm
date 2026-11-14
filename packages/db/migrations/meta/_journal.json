@@ -120,6 +120,13 @@
       "when": 1794647252585,
       "tag": "0016_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794650489161,
+      "tag": "0017_remove_message_email_preferences",
+      "breakpoints": true
     }
   ]
 }

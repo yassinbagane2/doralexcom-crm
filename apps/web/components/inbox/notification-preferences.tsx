@@ -37,7 +37,7 @@ const TYPE_LABELS = {
 
 /**
  * The user's notification settings: every notification type, with a switch
- * for each channel it can reach them on.
+ * for each channel it's sent on.
  */
 export function NotificationPreferences({ onBack }: { onBack: () => void }) {
   const t = useTranslations("Inbox")
@@ -86,16 +86,19 @@ export function NotificationPreferences({ onBack }: { onBack: () => void }) {
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-6">
-                  {CHANNELS.map((channel) => (
-                    <Switch
-                      key={channel}
-                      checked={channels[channel]}
-                      onCheckedChange={(enabled) =>
-                        setPreference.mutate({ type, channel, enabled })
-                      }
-                      label={t(CHANNEL_LABELS[channel])}
-                    />
-                  ))}
+                  {/* Only the channels this type is sent on. */}
+                  {CHANNELS.filter((channel) => channel in channels).map(
+                    (channel) => (
+                      <Switch
+                        key={channel}
+                        checked={channels[channel] ?? false}
+                        onCheckedChange={(enabled) =>
+                          setPreference.mutate({ type, channel, enabled })
+                        }
+                        label={t(CHANNEL_LABELS[channel])}
+                      />
+                    )
+                  )}
                 </div>
               </li>
             ))}

@@ -34,9 +34,13 @@ export async function deliverNotificationEmail(job: NotificationEmailJob) {
     if (sent?.readAt) return false
   }
 
-  await sendEmail({
-    to: recipient.email,
-    ...renderEmail(job.type, job.payload, notificationLocale(recipient.locale)),
-  })
+  const email = renderEmail(
+    job.type,
+    job.payload,
+    notificationLocale(recipient.locale)
+  )
+  if (!email) return false
+
+  await sendEmail({ to: recipient.email, ...email })
   return true
 }

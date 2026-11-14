@@ -1,16 +1,19 @@
 /*
  * Every notification the app can send: its type id, what its payload holds,
- * and which channels it reaches by default. A user's notification_preference
- * rows override the defaults per type and channel. Keep this file free of
- * server imports: the web app renders notifications with these types.
+ * and which channels it can reach people on. A user's notification_preference
+ * rows turn those channels on or off per type. Keep this file free of server
+ * imports: the web app renders notifications with these types.
  */
 import type { NotificationChannel } from "@workspace/db/schema"
 import { z } from "zod"
 
+/** For each channel a type uses, whether it's on for someone who hasn't chosen. */
+export type ChannelDefaults = Partial<Record<NotificationChannel, boolean>>
+
 type NotificationDefinition = {
   payload: z.ZodType<Record<string, unknown>>
-  /** Whether each channel is on for someone who hasn't chosen. */
-  defaults: Record<NotificationChannel, boolean>
+  /** The channels it's sent on; one left out is never used for this type. */
+  channels: ChannelDefaults
 }
 
 export const NOTIFICATION_TYPES = {
@@ -26,10 +29,10 @@ export const NOTIFICATION_TYPES = {
       preview: z.string(),
       /** Where the app opens the conversation. */
       path: z.string(),
-      /** The same, absolute, for emails. */
-      link: z.url(),
     }),
-    defaults: { in_app: true, email: true },
+    channels: {
+      in_app: true,
+    },
   },
 } satisfies Record<string, NotificationDefinition>
 
@@ -38,6 +41,11 @@ export type NotificationType = keyof typeof NOTIFICATION_TYPES
 export const NOTIFICATION_TYPE_IDS = Object.keys(
   NOTIFICATION_TYPES
 ) as NotificationType[]
+
+/** The channels `type` is sent on, with their defaults. */
+export function channelDefaults(type: NotificationType): ChannelDefaults {
+  return NOTIFICATION_TYPES[type].channels
+}
 
 export type NotificationPayload<T extends NotificationType> = z.infer<
   (typeof NOTIFICATION_TYPES)[T]["payload"]
